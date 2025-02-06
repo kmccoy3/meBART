@@ -1,0 +1,29 @@
+---
+title: "test"
+output: html_document
+---
+
+
+
+```{r}
+library("BART")
+library(MASS)
+
+# Data
+
+x = Boston[,c(6,13)] #rm=number of rooms and lstat= percent lower status
+y = Boston$medv # median value
+
+set.seed(99)  ## MCMC posterior sampling: set seed for reproducibility
+nd=200        ## number of draws to keep
+burn=50      
+
+# Run two fifferent BARTS
+bf1 = BART::wbart(x,y,nskip=burn,ndpost=nd)
+
+set.seed(99)
+bf2 = MEBART::wbart(x,y,nskip=burn,ndpost=nd)
+
+all.equal(bf1, bf2)
+
+```
