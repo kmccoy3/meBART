@@ -30,7 +30,7 @@
 #define TRDRAW(a, b) trdraw(a, b)
 #define TEDRAW(a, b) tedraw(a, b)
 
-RcppExport SEXP cwbart(
+RcppExport SEXP cmebart(
    SEXP _in,            //number of observations in training data
    SEXP _ip,		//dimension of x
    SEXP _inp,		//number of observations in test data
@@ -146,7 +146,7 @@ RcppExport SEXP cwbart(
 #define TRDRAW(a, b) trdraw[a][b]
 #define TEDRAW(a, b) tedraw[a][b]
 
-void cwbart(
+void cmebart(
    size_t n,            //number of observations in training data
    size_t p,		//dimension of x
    size_t np,		//number of observations in test data
