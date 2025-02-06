@@ -1,4 +1,4 @@
-Package: BART
+Package: meBART
 Type: Package
 Title: Bayesian Additive Regression Trees
 Version: 2.9.9
