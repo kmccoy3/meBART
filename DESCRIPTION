@@ -20,3 +20,5 @@ Authors@R: c(
     person(given="Kevin", family="McCoy", email="kmm12@rice.edu", role = c("aut", "cre")),
     person("Christine", "Peterson", role = "aut")
   )
+RoxygenNote: 7.3.2
+Encoding: UTF-8
