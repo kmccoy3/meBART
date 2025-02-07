@@ -74,7 +74,7 @@
 #' \item{varprob.mean}{The mean of the variable probabilities.}
 #' \item{rm.const}{A vector specifying which columns were removed from `x.train`.}
 #' @export
-#' 
+#'
 #' @examples
 #' # Example usage:
 #' set.seed(42)
@@ -82,8 +82,8 @@
 #' y.train <- rnorm(100)
 #' result <- mebart(x.train, y.train, ntree = 50)
 #' print(result$yhat.train.mean)
-#' 
-mebart = function(x.train, # explanatory variables for training data, matrix or dataframe
+#'
+mebart <- function(x.train, # explanatory variables for training data, matrix or dataframe
                  y.train, # continuous outcome variable
                  x.test = matrix(0.0, 0, 0), # x test data, same structure as x.train
                  sparse = FALSE, # use Dirichlet prior for variable selection
@@ -121,10 +121,10 @@ mebart = function(x.train, # explanatory variables for training data, matrix or 
 {
     #--------------------------------------------------
     #data
-    n = length(y.train)
+    n <- length(y.train)
     
     if (!transposed) { # if being called wbart, skipped if being called by mc.wbart
-        temp = bartModelMatrix(
+        temp <- bartModelMatrix(
             x.train,
             numcut,
             usequants = usequants, # if false makes cutpoints uniform, if true uniform quantiles are used
@@ -132,12 +132,12 @@ mebart = function(x.train, # explanatory variables for training data, matrix or 
             xinfo = xinfo, # cutpoints, if you want to specify them
             rm.const = rm.const # remove constant columns from x.train
         )
-        x.train = t(temp$X) # transpose data matrix, has been converted to matrix
-        numcut = temp$numcut # number of cutpoints, vector of each variable
-        xinfo = temp$xinfo # cutpoints, now specified
+        x.train <- t(temp$X) # transpose data matrix, has been converted to matrix
+        numcut <- temp$numcut # number of cutpoints, vector of each variable
+        xinfo <- temp$xinfo # cutpoints, now specified
         if (length(x.test) > 0) {
-            x.test = bartModelMatrix(x.test)
-            x.test = t(x.test[, temp$rm.const])
+            x.test <- bartModelMatrix(x.test)
+            x.test <- t(x.test[, temp$rm.const])
         }
         rm.const <- temp$rm.const # removed variables or all if kept
         grp <- temp$grp # counts out which variables are unique / which ones are factors
@@ -162,7 +162,7 @@ mebart = function(x.train, # explanatory variables for training data, matrix or 
     
     ##if(p>1 & length(numcut)==1) numcut=rep(numcut, p)
     
-    y.train = y.train - fmean # centers output data
+    y.train <- y.train - fmean # centers output data
     #------------------------------------------------------------------------------------------------------------
     #set nkeeps for thinning ######### Basically makes sure these variables dont conflict with one another
     if ((nkeeptrain != 0) & ((ndpost %% nkeeptrain) != 0)) { # if 
