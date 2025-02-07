@@ -210,7 +210,7 @@ mebart <- function(x.train, # explanatory variables for training data, matrix or
     ptm <- proc.time() # how much real and CPU time (in seconds) the currently running R process has already taken.
     #call
     res = .Call(
-        "cwbart",
+        "cmebart",
         n, #number of observations in training data
         p, #dimension of x
         np, #number of observations in test data
