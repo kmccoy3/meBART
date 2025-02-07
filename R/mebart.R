@@ -17,6 +17,72 @@
 ## along with this program; if not, a copy is available at
 ## https://www.R-project.org/Licenses/GPL-2
 
+
+
+
+#' Fit a Bayesian Additive Regression Tree (BART) Model
+#'
+#' This function fits a Bayesian Additive Regression Tree model for continuous data using a set of explanatory variables. 
+#' It provides options for handling test data, priors, and other model parameters, including options for variable selection and sparsity control.
+#'
+#' @param x.train A matrix or data frame containing the explanatory variables for the training data.
+#' @param y.train A numeric vector containing the continuous outcome variable for the training data.
+#' @param x.test A matrix or data frame of test data (optional, default is an empty matrix). The structure should match `x.train`.
+#' @param sparse A logical value (default is FALSE). If TRUE, uses a Dirichlet prior for variable selection.
+#' @param theta A numeric value (default is 0). Parameter for model specification (unspecified usage).
+#' @param omega A numeric value (default is 1). Parameter for model specification (unspecified usage).
+#' @param a A numeric value (default is 0.5). Beta parameter used in DART (Dropout Additive Regression Trees).
+#' @param b A numeric value (default is 1). Beta parameter used in DART.
+#' @param augment A logical value (default is FALSE). An additional parameter (unspecified usage).
+#' @param rho A numeric value (default is NULL). Sparsity parameter used in DART.
+#' @param xinfo A matrix of cutpoints (default is an empty matrix). Specifies cutpoints for the model if desired.
+#' @param usequants A logical value (default is FALSE). If TRUE, uniform quantiles are used for cutpoints; otherwise, uniform cutpoints are used.
+#' @param cont A logical value (default is FALSE). Specifies if all variables are continuous.
+#' @param rm.const A logical value (default is TRUE). If TRUE, removes constant columns from `x.train`.
+#' @param sigest A numeric value (default is NA). Prior estimate for sigma; if NA, it is estimated from the data.
+#' @param sigdf A numeric value (default is 3). Degrees of freedom for the sigma prior.
+#' @param sigquant A numeric value (default is 0.90). Quantile for the sigma prior.
+#' @param k A numeric value (default is 2.0). Prior parameter for the mean of the output data.
+#' @param power A numeric value (default is 2.0). Tree depth prior, beta in the CGM (Conditional Gaussian Model).
+#' @param base A numeric value (default is 0.95). Tree depth prior, alpha in the CGM.
+#' @param sigmaf A numeric value (default is NA). Parameter for the sigma prior, not scaled by the number of trees.
+#' @param lambda A numeric value (default is NA). Scale parameter used in the sigma prior.
+#' @param fmean A numeric value (default is the mean of `y.train`). The mean of the output variable `y.train`.
+#' @param w A numeric vector (default is a vector of ones). Weights to multiply the standard deviation.
+#' @param ntree An integer (default is 200L). The number of trees to use in the model.
+#' @param numcut An integer (default is 100L). The number of cutpoints to consider for each variable.
+#' @param ndpost An integer (default is 1000L). The number of posterior draws to return.
+#' @param nskip An integer (default is 100L). The number of observations for burn-in (MCMC).
+#' @param keepevery An integer (default is 1L). The thinning parameter for MCMC.
+#' @param nkeeptrain An integer (default is equal to `ndpost`). The number of training data posterior draws to keep.
+#' @param nkeeptest An integer (default is equal to `ndpost`). The number of test data posterior draws to keep.
+#' @param nkeeptestmean An integer (default is equal to `ndpost`). The number of MCMC iterations to return for the test mean.
+#' @param nkeeptreedraws An integer (default is equal to `ndpost`). The number of MCMC iterations to return for tree draws.
+#' @param printevery An integer (default is 100L). The number of iterations before progress is printed.
+#' @param transposed A logical value (default is FALSE). Used if called by `mc.wbart`.
+#'
+#' @return A list with the following elements:
+#' \item{mu}{The mean of the outcome variable `y.train`, centered back in the predictions.}
+#' \item{yhat.train.mean}{The mean of the posterior predictions for the training data.}
+#' \item{yhat.train}{The posterior predictions for the training data, centered.}
+#' \item{yhat.test.mean}{The mean of the posterior predictions for the test data.}
+#' \item{yhat.test}{The posterior predictions for the test data, centered.}
+#' \item{treedraws}{A list of posterior tree draws (if `nkeeptreedraws > 0`).}
+#' \item{varcount}{A matrix of variable counts in the model.}
+#' \item{varprob}{A matrix of variable probabilities in the model.}
+#' \item{varcount.mean}{The mean of the variable counts.}
+#' \item{varprob.mean}{The mean of the variable probabilities.}
+#' \item{rm.const}{A vector specifying which columns were removed from `x.train`.}
+#' @export
+#' 
+#' @examples
+#' # Example usage:
+#' set.seed(42)
+#' x.train <- matrix(rnorm(1000), ncol = 10)
+#' y.train <- rnorm(100)
+#' result <- mebart(x.train, y.train, ntree = 50)
+#' print(result$yhat.train.mean)
+#' 
 mebart = function(x.train, # explanatory variables for training data, matrix or dataframe
                  y.train, # continuous outcome variable
                  x.test = matrix(0.0, 0, 0), # x test data, same structure as x.train
