@@ -1,3 +1,27 @@
+# R project files
 ^.*\.Rproj$
 ^\.Rproj\.user$
-^\testing
+
+# Unnecessary R files
+R/abart.R
+R/class.ind.R
+R/crisk.*.R
+R/draw_lambda.R
+R/draw_lambda_i.R
+R/draw_z.R
+R/gbart.R
+R/gewekediag.R
+R/lbart.R
+R/mbart.R
+R/mbart2.R
+R/mc.*.R
+R/pbart.R
+R/predict.*.R
+R/pwbart.R
+R/recur.*.R
+R/rs.pbart.R
+R/rt.*.R
+R/spectrum0ar.R
+R/srstepwise.R
+R/stratrs.R
+R/surv.*.R
