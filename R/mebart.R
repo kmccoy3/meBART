@@ -74,7 +74,8 @@
 #' \item{varprob.mean}{The mean of the variable probabilities.}
 #' \item{rm.const}{A vector specifying which columns were removed from `x.train`.}
 #' @export
-#'
+#' @importFrom stats lm
+#' 
 #' @examples
 #' # Example usage:
 #' set.seed(42)
