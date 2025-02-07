@@ -27,8 +27,8 @@
  
  #ifndef NoRcpp
  
- #define TRDRAW(a, b) trdraw(a, b) // pre-processor directive to replace former with latter 
- #define TEDRAW(a, b) tedraw(a, b) // same as above
+ #define TRDRAW(a, b) trdraw(a, b)
+ #define TEDRAW(a, b) tedraw(a, b)
  
  RcppExport SEXP cwbart(
     SEXP _in,            //number of observations in training data
@@ -41,31 +41,31 @@
     SEXP _inc,		//number of cut points
     SEXP _ind,		//number of kept draws (except for thinnning ..)
     SEXP _iburn,		//number of burn-in draws skipped
-    SEXP _ipower, // tree depth prior, beta in CGM
-    SEXP _ibase, // tree depth prior, alpha in CGM
-    SEXP _itau, // sigma from mu prior, now scaled by number of trees
-    SEXP _inu, // DOF in sigma prior
-    SEXP _ilambda, // scale parameter used in sigma prior
-    SEXP _isigest, // sigma prior, estimated from the data
-    SEXP _iw, // vector of weights to multiply the standard deviation, defaults to one
-    SEXP _idart, // use Dirichlet prior for variable selection
-    SEXP _itheta, // TODO ???
-    SEXP _iomega,  // TODO ???
-    SEXP _igrp, // counts out which variables are unique / which ones are factors
-    SEXP _ia, // Beta parameters, used in DART only
-    SEXP _ib, // Beta parameters, used in DART only
-    SEXP _irho, // Sparsity parameter, used in DART only
-    SEXP _iaug, // TODO ???
-    SEXP _inkeeptrain, // number of training data posterior draws to keep
-    SEXP _inkeeptest, // number of test data posterior draws to keep
-    SEXP _inkeeptestme, // number of MCMC iters to be returned for test mean
-    SEXP _inkeeptreedraws, // number of MCMC iters to be returned for tree draws
-    SEXP _inprintevery, // print progress every printevery iterations
+    SEXP _ipower,
+    SEXP _ibase,
+    SEXP _itau,
+    SEXP _inu,
+    SEXP _ilambda,
+    SEXP _isigest,
+    SEXP _iw,
+    SEXP _idart,
+    SEXP _itheta,
+    SEXP _iomega,
+    SEXP _igrp,
+    SEXP _ia,
+    SEXP _ib,
+    SEXP _irho,
+    SEXP _iaug,
+    SEXP _inkeeptrain,
+    SEXP _inkeeptest,
+    SEXP _inkeeptestme,
+    SEXP _inkeeptreedraws,
+    SEXP _inprintevery,
  //   SEXP _treesaslists,
-    SEXP _Xinfo // cutpoints, now specified
+    SEXP _Xinfo
  )
  {
-    printf("FIRST HEADER RAN\n");
+ 
     //--------------------------------------------------
     //process args
     size_t n = Rcpp::as<int>(_in);
@@ -105,8 +105,8 @@
     else aug=false;
     double theta = Rcpp::as<double>(_itheta);
     double omega = Rcpp::as<double>(_iomega);
-    // Rcpp::IntegerVector _grp(_igrp); // I removed this, was causing warning because unused
-    // int *grp = &_grp[0];
+    Rcpp::IntegerVector _grp(_igrp);
+    int *grp = &_grp[0];
     size_t nkeeptrain = Rcpp::as<int>(_inkeeptrain);
     size_t nkeeptest = Rcpp::as<int>(_inkeeptest);
     size_t nkeeptestme = Rcpp::as<int>(_inkeeptestme);
@@ -188,8 +188,6 @@
  )
  {
  
-    printf("SECOND HEADER RAN\n");
- 
     //return data structures (using C++)
     std::vector<double*> trdraw(nkeeptrain);
     std::vector<double*> tedraw(nkeeptest);
@@ -209,7 +207,7 @@
     for(size_t i=0;i<n;i++) trmean[i]=0.0;
     for(size_t i=0;i<np;i++) temean[i]=0.0;
  
-    printf("*****Into main of wbart --- KEVINS CODE :)\n");
+    printf("*****Into main of wbart\n");
     //-----------------------------------------------------------
  
     size_t skiptr,skipte,skipteme,skiptreedraws;
@@ -275,7 +273,7 @@
  
     //--------------------------------------------------
     //mcmc
-    printf("\nMCMC  -------- KEVINS CODE :)\n");
+    printf("\nMCMC\n");
     //size_t index;
     size_t trcnt=0; //count kept train draws
     size_t tecnt=0; //count kept test draws
@@ -298,9 +296,6 @@
        sigma = sqrt((nu*lambda + rss)/gen.chi_square(n+nu));
        for(size_t k=0;k<n;k++) svec[k]=iw[k]*sigma;
        sdraw[i]=sigma;
- 
-       // Add in X_true draw
- 
        if(i>=burn) {
           for(size_t k=0;k<n;k++) trmean[k]+=bm.f(k);
           if(nkeeptrain && (((i-burn+1) % skiptr) ==0)) {
