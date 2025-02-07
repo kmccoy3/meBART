@@ -25,3 +25,12 @@ R/spectrum0ar.R
 R/srstepwise.R
 R/stratrs.R
 R/surv.*.R
+
+# Unnecessary C++ files
+src/cabart.cpp
+src/cgbart.cpp
+src/clbart.cpp
+src/cpbart.cpp
+src/cpwbart.cpp
+src/mc_cores_openmp.cpp
+src/cmebart.cpp
