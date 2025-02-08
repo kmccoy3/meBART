@@ -79,8 +79,7 @@ RcppExport SEXP cmebart(
     double *ix = &xv[0];
     Rcpp::NumericVector yv(_iy);
     double *iy = &yv[0];
-    // Rcpp::NumericVector  xpv(_ixp);
-    // double *ixp = &xpv[0];
+
     Rcpp::NumericMatrix xpv(_ixp); // test data
     double *ixp = nullptr;
     if (np > 0)
@@ -88,7 +87,6 @@ RcppExport SEXP cmebart(
     size_t m = Rcpp::as<int>(_im); // number of trees
     Rcpp::IntegerVector _nc(_inc); // number of cut points
     int *numcut = &_nc[0];
-    // size_t nc = Rcpp::as<int>(_inc);
     size_t nd = Rcpp::as<int>(_ind);
     size_t burn = Rcpp::as<int>(_iburn);
     double mybeta = Rcpp::as<double>(_ipower);
@@ -121,9 +119,7 @@ RcppExport SEXP cmebart(
     size_t nkeeptestme = Rcpp::as<int>(_inkeeptestme);
     size_t nkeeptreedraws = Rcpp::as<int>(_inkeeptreedraws);
     size_t printevery = Rcpp::as<int>(_inprintevery);
-    //   int treesaslists = Rcpp::as<int>(_treesaslists);
     Rcpp::NumericMatrix Xinfo(_Xinfo);
-    //   Rcpp::IntegerMatrix varcount(nkeeptreedraws, p);
 
     // return data structures (using Rcpp)
     Rcpp::NumericVector trmean(n); // train
@@ -131,7 +127,6 @@ RcppExport SEXP cmebart(
     Rcpp::NumericVector sdraw(nd + burn);
     Rcpp::NumericMatrix trdraw(nkeeptrain, n);
     Rcpp::NumericMatrix tedraw(nkeeptest, np);
-    //   Rcpp::List list_of_lists(nkeeptreedraws*treesaslists);
     Rcpp::NumericMatrix varprb(nkeeptreedraws, p);
     Rcpp::IntegerMatrix varcnt(nkeeptreedraws, p);
 
@@ -150,7 +145,6 @@ RcppExport SEXP cmebart(
         for (size_t i = 0; i < p; i++)
         {
             _xi[i].resize(numcut[i]); // resizes each internal vector to correct number of cut points
-            // Rcpp::IntegerVector cutpts(Xinfo[i]);
             for (size_t j = 0; j < (size_t)numcut[i]; j++)
                 _xi[i][j] = Xinfo(i, j); // Sets values to the cut points
         }
@@ -217,14 +211,13 @@ RcppExport SEXP cmebart(
     printf("*****skiptr,skipte,skipteme,skiptreedraws: %zu,%zu,%zu,%zu\n", skiptr, skipte, skipteme, skiptreedraws);
 
     //--------------------------------------------------
-    // heterbart bm(m);
+
     bm.setprior(alpha, mybeta, tau);
     bm.setdata(p, n, ix, iy, numcut); // TODO: makes data part of the bm object
     bm.setdart(a, b, rho, aug, dart, theta, omega);
 
     //--------------------------------------------------
     // sigma = sigest, adjusts prior of mu
-    // gen.set_df(n+nu);
     double *svec = new double[n];
     for (size_t i = 0; i < n; i++)
         svec[i] = iw[i] * sigma; // incorporate weights into sigma hat estimate
@@ -251,7 +244,7 @@ RcppExport SEXP cmebart(
     //--------------------------------------------------
     // mcmc
     printf("\nMCMC  -------- KEVINS CODE :)\n");
-    // size_t index;
+
     size_t trcnt = 0;        // count kept train draws
     size_t tecnt = 0;        // count kept test draws
     size_t temecnt = 0;      // count test draws into posterior mean
@@ -259,9 +252,9 @@ RcppExport SEXP cmebart(
     bool keeptest, keeptestme, keeptreedraw;
 
     time_t tp;
-    int time1 = time(&tp); // start time
-    xinfo &xi = bm.getxinfo(); // get cutpoints back
-    size_t total = nd + burn; // total number of MCMC iterations
+    int time1 = time(&tp);             // start time
+    xinfo &xi = bm.getxinfo();         // get cutpoints back
+    size_t total = nd + burn;          // total number of MCMC iterations
     for (size_t i = 0; i < total; i++) // main MCMC loop
     {
         if (i % printevery == 0)
@@ -270,7 +263,6 @@ RcppExport SEXP cmebart(
             bm.startdart();
         // draw bart
         bm.draw(svec, gen);
-
 
         // Calculate the residual sum of squares
         rss = 0.0;
@@ -287,28 +279,34 @@ RcppExport SEXP cmebart(
         // Save sigma to sdraw
         sdraw[i] = sigma;
 
+        // ----------------------------------------------
         // Add in X_true draw
+
+        // potentially just call bm.setdata(p, n, ix, iy, numcut) with new x data
+
+        // ----------------------------------------------
 
         if (i >= burn)
         {
+            // add to the mean of the training data
             for (size_t k = 0; k < n; k++)
                 trmean[k] += bm.f(k);
+
+            // if ...
             if (nkeeptrain && (((i - burn + 1) % skiptr) == 0))
             {
-                // index = trcnt*n;;
-                // for(size_t k=0;k<n;k++) trdraw[index+k]=bm.f(k);
+
                 for (size_t k = 0; k < n; k++)
                     TRDRAW(trcnt, k) = bm.f(k);
                 trcnt += 1;
             }
-            keeptest = nkeeptest && (((i - burn + 1) % skipte) == 0) && np;
-            keeptestme = nkeeptestme && (((i - burn + 1) % skipteme) == 0) && np;
+            keeptest = nkeeptest && (((i - burn + 1) % skipte) == 0) && np;       // if we are keeping test data
+            keeptestme = nkeeptestme && (((i - burn + 1) % skipteme) == 0) && np; // if we are keeping test data for posterior mean
             if (keeptest || keeptestme)
                 bm.predict(p, np, ixp, fhattest);
             if (keeptest)
             {
-                // index=tecnt*np;
-                // for(size_t k=0;k<np;k++) tedraw[index+k]=fhattest[k];
+
                 for (size_t k = 0; k < np; k++)
                     TEDRAW(tecnt, k) = fhattest[k];
                 tecnt += 1;
@@ -322,37 +320,28 @@ RcppExport SEXP cmebart(
             keeptreedraw = nkeeptreedraws && (((i - burn + 1) % skiptreedraws) == 0);
             if (keeptreedraw)
             {
-                //	   #ifndef NoRcpp
-                //	   Rcpp::List lists(m*treesaslists);
-                //	   #endif
 
                 for (size_t j = 0; j < m; j++)
                 {
-                    treess << bm.gettree(j);
-                    /*
-                             #ifndef NoRcpp
-                             varcount.row(treedrawscnt)=varcount.row(treedrawscnt)+bm.gettree(j).tree2count(p);
-                             if(treesaslists) lists(j)=bm.gettree(j).tree2list(xi, 0., 1.);
-                             #endif
-                    */
+                    treess << bm.gettree(j); // write tree to string stream
                 }
 
-                //	    if(treesaslists) list_of_lists(treedrawscnt)=lists;
                 ivarcnt = bm.getnv();
                 ivarprb = bm.getpv();
                 size_t k = (i - burn) / skiptreedraws;
                 for (size_t j = 0; j < p; j++)
                 {
                     varcnt(k, j) = ivarcnt[j];
-                    // varcnt(i-burn,j)=ivarcnt[j];
+
                     varprb(k, j) = ivarprb[j];
-                    // varprb(i-burn,j)=ivarprb[j];
                 }
 
                 treedrawscnt += 1;
             }
         }
-    }
+    } // end of MCMC loop
+    //--------------------------------------------------
+
     int time2 = time(&tp);
     printf("time: %ds\n", time2 - time1);
     for (size_t k = 0; k < n; k++)
@@ -362,7 +351,6 @@ RcppExport SEXP cmebart(
     printf("check counts\n");
     printf("trcnt,tecnt,temecnt,treedrawscnt: %zu,%zu,%zu,%zu\n", trcnt, tecnt, temecnt, treedrawscnt);
     //--------------------------------------------------
-    // PutRNGstate();
 
     if (fhattest)
         delete[] fhattest;
@@ -378,13 +366,8 @@ RcppExport SEXP cmebart(
     ret["yhat.train"] = trdraw;
     ret["yhat.test.mean"] = temean;
     ret["yhat.test"] = tedraw;
-    // ret["varcount"]=varcount;
     ret["varcount"] = varcnt;
     ret["varprob"] = varprb;
-
-    // for(size_t i=0;i<m;i++) {
-    //   bm.gettree(i).pr();
-    //}
 
     Rcpp::List xiret(xi.size());
     for (size_t i = 0; i < xi.size(); i++)
@@ -395,14 +378,9 @@ RcppExport SEXP cmebart(
     }
 
     Rcpp::List treesL;
-    // treesL["nkeeptreedraws"] = Rcpp::wrap<int>(nkeeptreedraws); //in trees
-    // treesL["ntree"] = Rcpp::wrap<int>(m); //in trees
-    // treesL["numx"] = Rcpp::wrap<int>(p); //in cutpoints
     treesL["cutpoints"] = xiret;
     treesL["trees"] = Rcpp::CharacterVector(treess.str());
-    //   if(treesaslists) treesL["lists"]=list_of_lists;
     ret["treedraws"] = treesL;
 
     return ret;
-
 }
