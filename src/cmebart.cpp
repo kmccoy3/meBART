@@ -17,73 +17,78 @@
  *  https://www.R-project.org/Licenses/GPL-2
  */
 
- #include "tree.h"
- #include "treefuns.h"
- #include "info.h"
- #include "bartfuns.h"
- #include "bd.h"
- #include "bart.h"
- #include "heterbart.h"
- 
- #ifndef NoRcpp
- 
- #define TRDRAW(a, b) trdraw(a, b) // pre-processor directive to replace former with latter 
- #define TEDRAW(a, b) tedraw(a, b) // same as above
- 
- RcppExport SEXP cmebart(
-    SEXP _in,            //number of observations in training data
-    SEXP _ip,		//dimension of x
-    SEXP _inp,		//number of observations in test data
-    SEXP _ix,		//x, train,  pxn (transposed so rows are contiguous in memory)
-    SEXP _iy,		//y, train,  nx1
-    SEXP _ixp,		//x, test, pxnp (transposed so rows are contiguous in memory)
-    SEXP _im,		//number of trees
-    SEXP _inc,		//number of cut points
-    SEXP _ind,		//number of kept draws (except for thinnning ..)
-    SEXP _iburn,		//number of burn-in draws skipped
-    SEXP _ipower, // tree depth prior, beta in CGM
-    SEXP _ibase, // tree depth prior, alpha in CGM
-    SEXP _itau, // sigma from mu prior, now scaled by number of trees
-    SEXP _inu, // DOF in sigma prior
-    SEXP _ilambda, // scale parameter used in sigma prior
-    SEXP _isigest, // sigma prior, estimated from the data
-    SEXP _iw, // vector of weights to multiply the standard deviation, defaults to one
-    SEXP _idart, // use Dirichlet prior for variable selection
-    SEXP _itheta, // TODO ???
-    SEXP _iomega,  // TODO ???
-    SEXP _igrp, // counts out which variables are unique / which ones are factors
-    SEXP _ia, // Beta parameters, used in DART only
-    SEXP _ib, // Beta parameters, used in DART only
-    SEXP _irho, // Sparsity parameter, used in DART only
-    SEXP _iaug, // TODO ???
-    SEXP _inkeeptrain, // number of training data posterior draws to keep
-    SEXP _inkeeptest, // number of test data posterior draws to keep
-    SEXP _inkeeptestme, // number of MCMC iters to be returned for test mean
+#include "tree.h"
+#include "treefuns.h"
+#include "info.h"
+#include "bartfuns.h"
+#include "bd.h"
+#include "bart.h"
+#include "heterbart.h"
+
+#define TRDRAW(a, b) trdraw(a, b) // pre-processor directive to replace former with latter
+#define TEDRAW(a, b) tedraw(a, b) // same as above
+
+RcppExport SEXP cmebart(
+    SEXP _in,              // number of observations in training data
+    SEXP _ip,              // dimension of x
+    SEXP _inp,             // number of observations in test data
+    SEXP _ix,              // x, train,  pxn (transposed so rows are contiguous in memory)
+    SEXP _iy,              // y, train,  nx1
+    SEXP _ixp,             // x, test, pxnp (transposed so rows are contiguous in memory)
+    SEXP _im,              // number of trees
+    SEXP _inc,             // number of cut points
+    SEXP _ind,             // number of kept draws (except for thinnning ..)
+    SEXP _iburn,           // number of burn-in draws skipped
+    SEXP _ipower,          // tree depth prior, beta in CGM
+    SEXP _ibase,           // tree depth prior, alpha in CGM
+    SEXP _itau,            // sigma from mu prior, now scaled by number of trees
+    SEXP _inu,             // DOF in sigma prior
+    SEXP _ilambda,         // scale parameter used in sigma prior
+    SEXP _isigest,         // sigma prior, estimated from the data
+    SEXP _iw,              // vector of weights to multiply the standard deviation, defaults to one
+    SEXP _idart,           // use Dirichlet prior for variable selection
+    SEXP _itheta,          // TODO ???
+    SEXP _iomega,          // TODO ???
+    SEXP _igrp,            // counts out which variables are unique / which ones are factors
+    SEXP _ia,              // Beta parameters, used in DART only
+    SEXP _ib,              // Beta parameters, used in DART only
+    SEXP _irho,            // Sparsity parameter, used in DART only
+    SEXP _iaug,            // TODO ???
+    SEXP _inkeeptrain,     // number of training data posterior draws to keep
+    SEXP _inkeeptest,      // number of test data posterior draws to keep
+    SEXP _inkeeptestme,    // number of MCMC iters to be returned for test mean
     SEXP _inkeeptreedraws, // number of MCMC iters to be returned for tree draws
-    SEXP _inprintevery, // print progress every printevery iterations
- //   SEXP _treesaslists,
-    SEXP _Xinfo // cutpoints, now specified
- )
- {
+    SEXP _inprintevery,    // print progress every printevery iterations
+                           //   SEXP _treesaslists,
+    SEXP _Xinfo            // cutpoints, now specified
+)
+{
     printf("FIRST HEADER RAN\n");
     //--------------------------------------------------
-    //process args
-    size_t n = Rcpp::as<int>(_in);
-    size_t p = Rcpp::as<int>(_ip);
-    size_t np = Rcpp::as<int>(_inp);
-    Rcpp::NumericVector  xv(_ix);
+    // process args
+    size_t n = Rcpp::as<int>(_in);   // number of training data points
+    size_t p = Rcpp::as<int>(_ip);   // number of predictors
+    size_t np = Rcpp::as<int>(_inp); // number of test data points
+
+    // Rcpp::Rcout << "_ix: " << *_ix << "\n";
+
+    Rcpp::NumericVector xv(_ix); // TODO: why is this a vector and not a matrix?
+
+    Rcpp::Rcout << "xv: " << xv << "\n";
+
     double *ix = &xv[0];
-    Rcpp::NumericVector  yv(_iy); 
+    Rcpp::NumericVector yv(_iy);
     double *iy = &yv[0];
-    //Rcpp::NumericVector  xpv(_ixp);
-    //double *ixp = &xpv[0];
-    Rcpp::NumericMatrix xpv(_ixp);
+    // Rcpp::NumericVector  xpv(_ixp);
+    // double *ixp = &xpv[0];
+    Rcpp::NumericMatrix xpv(_ixp); // test data
     double *ixp = nullptr;
-    if(np>0) ixp = &xpv[0];
-    size_t m = Rcpp::as<int>(_im);
-    Rcpp::IntegerVector _nc(_inc);
+    if (np > 0)
+        ixp = &xpv[0];
+    size_t m = Rcpp::as<int>(_im); // number of trees
+    Rcpp::IntegerVector _nc(_inc); // number of cut points
     int *numcut = &_nc[0];
-    //size_t nc = Rcpp::as<int>(_inc);
+    // size_t nc = Rcpp::as<int>(_inc);
     size_t nd = Rcpp::as<int>(_ind);
     size_t burn = Rcpp::as<int>(_iburn);
     double mybeta = Rcpp::as<double>(_ipower);
@@ -91,18 +96,22 @@
     double tau = Rcpp::as<double>(_itau);
     double nu = Rcpp::as<double>(_inu);
     double lambda = Rcpp::as<double>(_ilambda);
-    double sigma=Rcpp::as<double>(_isigest);
-    Rcpp::NumericVector  wv(_iw); 
+    double sigma = Rcpp::as<double>(_isigest);
+    Rcpp::NumericVector wv(_iw);
     double *iw = &wv[0];
     bool dart;
-    if(Rcpp::as<int>(_idart)==1) dart=true;
-    else dart=false;
+    if (Rcpp::as<int>(_idart) == 1)
+        dart = true;
+    else
+        dart = false;
     double a = Rcpp::as<double>(_ia);
     double b = Rcpp::as<double>(_ib);
     double rho = Rcpp::as<double>(_irho);
     bool aug;
-    if(Rcpp::as<int>(_iaug)==1) aug=true;
-    else aug=false;
+    if (Rcpp::as<int>(_iaug) == 1)
+        aug = true;
+    else
+        aug = false;
     double theta = Rcpp::as<double>(_itheta);
     double omega = Rcpp::as<double>(_iomega);
     // Rcpp::IntegerVector _grp(_igrp); // I removed this, was causing warning because unused
@@ -112,300 +121,288 @@
     size_t nkeeptestme = Rcpp::as<int>(_inkeeptestme);
     size_t nkeeptreedraws = Rcpp::as<int>(_inkeeptreedraws);
     size_t printevery = Rcpp::as<int>(_inprintevery);
- //   int treesaslists = Rcpp::as<int>(_treesaslists);
+    //   int treesaslists = Rcpp::as<int>(_treesaslists);
     Rcpp::NumericMatrix Xinfo(_Xinfo);
- //   Rcpp::IntegerMatrix varcount(nkeeptreedraws, p);
- 
-    //return data structures (using Rcpp)
-    Rcpp::NumericVector trmean(n); //train
+    //   Rcpp::IntegerMatrix varcount(nkeeptreedraws, p);
+
+    // return data structures (using Rcpp)
+    Rcpp::NumericVector trmean(n); // train
     Rcpp::NumericVector temean(np);
-    Rcpp::NumericVector sdraw(nd+burn);
-    Rcpp::NumericMatrix trdraw(nkeeptrain,n);
-    Rcpp::NumericMatrix tedraw(nkeeptest,np);
- //   Rcpp::List list_of_lists(nkeeptreedraws*treesaslists);
-    Rcpp::NumericMatrix varprb(nkeeptreedraws,p);
-    Rcpp::IntegerMatrix varcnt(nkeeptreedraws,p);
- 
-    //random number generation
-    arn gen;
- 
-    heterbart bm(m);
- 
-    if(Xinfo.size()>0) {
-      xinfo _xi;
-      _xi.resize(p);
-      for(size_t i=0;i<p;i++) {
-        _xi[i].resize(numcut[i]);
-        //Rcpp::IntegerVector cutpts(Xinfo[i]);
-        for(size_t j=0;j<(size_t)numcut[i];j++) _xi[i][j]=Xinfo(i, j);
-      }
-      bm.setxinfo(_xi);
+    Rcpp::NumericVector sdraw(nd + burn);
+    Rcpp::NumericMatrix trdraw(nkeeptrain, n);
+    Rcpp::NumericMatrix tedraw(nkeeptest, np);
+    //   Rcpp::List list_of_lists(nkeeptreedraws*treesaslists);
+    Rcpp::NumericMatrix varprb(nkeeptreedraws, p);
+    Rcpp::IntegerMatrix varcnt(nkeeptreedraws, p);
+
+    // random number generation
+    arn gen; // TODO
+
+    heterbart bm(m); // Initializes a heterbart object with m trees
+
+    //-----------------------------------------------------------
+    // This section really just transforms the x cut points, makes it part of the bm object
+    if (Xinfo.size() > 0)
+    {
+        // typedef std::vector<vec_d> xinfo; //vector of vectors, will be split rules
+        xinfo _xi;
+        _xi.resize(p); // Makes outside vector p long
+        for (size_t i = 0; i < p; i++)
+        {
+            _xi[i].resize(numcut[i]); // resizes each internal vector to correct number of cut points
+            // Rcpp::IntegerVector cutpts(Xinfo[i]);
+            for (size_t j = 0; j < (size_t)numcut[i]; j++)
+                _xi[i][j] = Xinfo(i, j); // Sets values to the cut points
+        }
+        bm.setxinfo(_xi);
     }
- #else
- 
- #define TRDRAW(a, b) trdraw[a][b]
- #define TEDRAW(a, b) tedraw[a][b]
- 
- void cmebart(
-    size_t n,            //number of observations in training data
-    size_t p,		//dimension of x
-    size_t np,		//number of observations in test data
-    double* ix,		//x, train,  pxn (transposed so rows are contiguous in memory)
-    double* iy,		//y, train,  nx1
-    double* ixp,		//x, test, pxnp (transposed so rows are contiguous in memory)
-    size_t m,		//number of trees
-    int* numcut,		//number of cut points
-    size_t nd,		//number of kept draws (except for thinnning ..)
-    size_t burn,		//number of burn-in draws skipped
-    double mybeta,
-    double alpha,
-    double tau,
-    double nu,
-    double lambda,
-    double sigma,
-    double* iw,
-    bool dart,
-    double theta,
-    double omega,
-    int *grp,
-    double a,
-    double b,
-    double rho,
-    bool aug,
-    size_t nkeeptrain,
-    size_t nkeeptest,
-    size_t nkeeptestme,
-    size_t nkeeptreedraws,
-    size_t printevery,
- //   int treesaslists,
-    unsigned int n1, // additional parameters needed to call from C++
-    unsigned int n2,
-    double* trmean,
-    double* temean,
-    double* sdraw,
-    double* _trdraw,
-    double* _tedraw
- )
- {
- 
-    printf("SECOND HEADER RAN\n");
- 
-    //return data structures (using C++)
-    std::vector<double*> trdraw(nkeeptrain);
-    std::vector<double*> tedraw(nkeeptest);
- 
-    for(size_t i=0; i<nkeeptrain; ++i) trdraw[i]=&_trdraw[i*n];
-    for(size_t i=0; i<nkeeptest; ++i) tedraw[i]=&_tedraw[i*np];
- 
-    std::vector< std::vector<size_t> > varcnt;
-    std::vector< std::vector<double> > varprb;
- 
-    //random number generation
-    arn gen(n1, n2); 
- 
-    heterbart bm(m);
- #endif
- 
-    for(size_t i=0;i<n;i++) trmean[i]=0.0;
-    for(size_t i=0;i<np;i++) temean[i]=0.0;
- 
+    //-----------------------------------------------------------
+    // initializes the vectors to zero
+
+    for (size_t i = 0; i < n; i++)
+        trmean[i] = 0.0;
+    for (size_t i = 0; i < np; i++)
+        temean[i] = 0.0;
+
     printf("*****Into main of wbart --- KEVINS CODE :)\n");
     //-----------------------------------------------------------
- 
-    size_t skiptr,skipte,skipteme,skiptreedraws;
-    if(nkeeptrain) {skiptr=nd/nkeeptrain;}
-    else skiptr = nd+1;
-    if(nkeeptest) {skipte=nd/nkeeptest;}
-    else skipte=nd+1;
-    if(nkeeptestme) {skipteme=nd/nkeeptestme;}
-    else skipteme=nd+1;
-    if(nkeeptreedraws) {skiptreedraws = nd/nkeeptreedraws;}
-    else skiptreedraws=nd+1;
- 
+    // Calculates the skip values for the MCMC iterations
+    size_t skiptr, skipte, skipteme, skiptreedraws;
+    if (nkeeptrain)
+    {
+        skiptr = nd / nkeeptrain; // How many iters to skip during training data
+    }
+    else
+        skiptr = nd + 1;
+    if (nkeeptest)
+    {
+        skipte = nd / nkeeptest;
+    }
+    else
+        skipte = nd + 1; // How many iters to skip during test data
+    if (nkeeptestme)
+    {
+        skipteme = nd / nkeeptestme; // How many iters to skip during test data for posterior mean
+    }
+    else
+        skipteme = nd + 1;
+    if (nkeeptreedraws)
+    {
+        skiptreedraws = nd / nkeeptreedraws;
+    }
+    else
+        skiptreedraws = nd + 1;
+
     //--------------------------------------------------
-    //print args
+    // print args
     printf("*****Data:\n");
-    printf("data:n,p,np: %zu, %zu, %zu\n",n,p,np);
-    printf("y1,yn: %lf, %lf\n",iy[0],iy[n-1]);
-    printf("x1,x[n*p]: %lf, %lf\n",ix[0],ix[n*p-1]);
-    if(np) printf("xp1,xp[np*p]: %lf, %lf\n",ixp[0],ixp[np*p-1]);
-    printf("*****Number of Trees: %zu\n",m);
-    printf("*****Number of Cut Points: %d ... %d\n", numcut[0], numcut[p-1]);
-    printf("*****burn and ndpost: %zu, %zu\n",burn,nd);
+    printf("data:n,p,np: %zu, %zu, %zu\n", n, p, np);
+    printf("y1,yn: %lf, %lf\n", iy[0], iy[n - 1]);
+    printf("x1,x[n*p]: %lf, %lf\n", ix[0], ix[n * p - 1]);
+    if (np)
+        printf("xp1,xp[np*p]: %lf, %lf\n", ixp[0], ixp[np * p - 1]);
+    printf("*****Number of Trees: %zu\n", m);
+    printf("*****Number of Cut Points: %d ... %d\n", numcut[0], numcut[p - 1]);
+    printf("*****burn and ndpost: %zu, %zu\n", burn, nd);
     printf("*****Prior:beta,alpha,tau,nu,lambda: %lf,%lf,%lf,%lf,%lf\n",
-                    mybeta,alpha,tau,nu,lambda);
-    printf("*****sigma: %lf\n",sigma);
-    printf("*****w (weights): %lf ... %lf\n",iw[0],iw[n-1]);
-    cout << "*****Dirichlet:sparse,theta,omega,a,b,rho,augment: " 
-    << dart << ',' << theta << ',' << omega << ',' << a << ',' 
-    << b << ',' << rho << ',' << aug << endl;
+           mybeta, alpha, tau, nu, lambda);
+    printf("*****sigma: %lf\n", sigma);
+    printf("*****w (weights): %lf ... %lf\n", iw[0], iw[n - 1]);
+    cout << "*****Dirichlet:sparse,theta,omega,a,b,rho,augment: "
+         << dart << ',' << theta << ',' << omega << ',' << a << ','
+         << b << ',' << rho << ',' << aug << endl;
     printf("*****nkeeptrain,nkeeptest,nkeeptestme,nkeeptreedraws: %zu,%zu,%zu,%zu\n",
-                nkeeptrain,nkeeptest,nkeeptestme,nkeeptreedraws);
-    printf("*****printevery: %zu\n",printevery);
-    printf("*****skiptr,skipte,skipteme,skiptreedraws: %zu,%zu,%zu,%zu\n",skiptr,skipte,skipteme,skiptreedraws);
- 
+           nkeeptrain, nkeeptest, nkeeptestme, nkeeptreedraws);
+    printf("*****printevery: %zu\n", printevery);
+    printf("*****skiptr,skipte,skipteme,skiptreedraws: %zu,%zu,%zu,%zu\n", skiptr, skipte, skipteme, skiptreedraws);
+
     //--------------------------------------------------
-    //heterbart bm(m);
-    bm.setprior(alpha,mybeta,tau);
-    bm.setdata(p,n,ix,iy,numcut);
-    bm.setdart(a,b,rho,aug,dart,theta,omega);
- 
+    // heterbart bm(m);
+    bm.setprior(alpha, mybeta, tau);
+    bm.setdata(p, n, ix, iy, numcut); // TODO: makes data part of the bm object
+    bm.setdart(a, b, rho, aug, dart, theta, omega);
+
     //--------------------------------------------------
-    //sigma
-    //gen.set_df(n+nu);
+    // sigma = sigest, adjusts prior of mu
+    // gen.set_df(n+nu);
     double *svec = new double[n];
-    for(size_t i=0;i<n;i++) svec[i]=iw[i]*sigma;
- 
+    for (size_t i = 0; i < n; i++)
+        svec[i] = iw[i] * sigma; // incorporate weights into sigma hat estimate
+
     //--------------------------------------------------
- 
-    std::stringstream treess;  //string stream to write trees to  
+
+    std::stringstream treess; // string stream to write trees to
     treess.precision(10);
-    treess << nkeeptreedraws << " " << m << " " << p << endl;
+    treess << "nkeeptreedraws: " << nkeeptreedraws << ", number of trees: " << m << ", number of features:  " << p << endl;
     // dart iterations
-    std::vector<double> ivarprb (p,0.);
-    std::vector<size_t> ivarcnt (p,0);
- 
+    std::vector<double> ivarprb(p, 0.);
+    std::vector<size_t> ivarcnt(p, 0);
+
     //--------------------------------------------------
-    //temporary storage
-    //out of sample fit
-    double* fhattest=0; //posterior mean for prediction
-    if(np) { fhattest = new double[np]; }
-    double restemp=0.0,rss=0.0;
- 
- 
+    // temporary storage
+    // out of sample fit
+    double *fhattest = 0; // posterior mean for prediction
+    if (np)
+    {
+        fhattest = new double[np];
+    }
+    double restemp = 0.0, rss = 0.0;
+
     //--------------------------------------------------
-    //mcmc
+    // mcmc
     printf("\nMCMC  -------- KEVINS CODE :)\n");
-    //size_t index;
-    size_t trcnt=0; //count kept train draws
-    size_t tecnt=0; //count kept test draws
-    size_t temecnt=0; //count test draws into posterior mean
-    size_t treedrawscnt=0; //count kept bart draws
-    bool keeptest,keeptestme,keeptreedraw;
- 
+    // size_t index;
+    size_t trcnt = 0;        // count kept train draws
+    size_t tecnt = 0;        // count kept test draws
+    size_t temecnt = 0;      // count test draws into posterior mean
+    size_t treedrawscnt = 0; // count kept bart draws
+    bool keeptest, keeptestme, keeptreedraw;
+
     time_t tp;
-    int time1 = time(&tp);
-    xinfo& xi = bm.getxinfo();
-    size_t total=nd+burn;
-    for(size_t i=0;i<total;i++) {
-       if(i%printevery==0) printf("done %zu (out of %zu)\n",i,total);
-       if(i==(burn/2)&&dart) bm.startdart();
-       //draw bart
-       bm.draw(svec,gen);
-       //draw sigma
-       rss=0.0;
-       for(size_t k=0;k<n;k++) {restemp=(iy[k]-bm.f(k))/(iw[k]); rss += restemp*restemp;}
-       sigma = sqrt((nu*lambda + rss)/gen.chi_square(n+nu));
-       for(size_t k=0;k<n;k++) svec[k]=iw[k]*sigma;
-       sdraw[i]=sigma;
- 
-       // Add in X_true draw
- 
-       if(i>=burn) {
-          for(size_t k=0;k<n;k++) trmean[k]+=bm.f(k);
-          if(nkeeptrain && (((i-burn+1) % skiptr) ==0)) {
-             //index = trcnt*n;;
-             //for(size_t k=0;k<n;k++) trdraw[index+k]=bm.f(k);
-             for(size_t k=0;k<n;k++) TRDRAW(trcnt,k)=bm.f(k);
-             trcnt+=1;
-          }
-          keeptest = nkeeptest && (((i-burn+1) % skipte) ==0) && np;
-          keeptestme = nkeeptestme && (((i-burn+1) % skipteme) ==0) && np;
-          if(keeptest || keeptestme) bm.predict(p,np,ixp,fhattest);
-          if(keeptest) {
-             //index=tecnt*np;
-             //for(size_t k=0;k<np;k++) tedraw[index+k]=fhattest[k];
-             for(size_t k=0;k<np;k++) TEDRAW(tecnt,k)=fhattest[k];
-             tecnt+=1;
-          }
-          if(keeptestme) {
-             for(size_t k=0;k<np;k++) temean[k]+=fhattest[k];
-             temecnt+=1;
-          }
-          keeptreedraw = nkeeptreedraws && (((i-burn+1) % skiptreedraws) ==0);
-          if(keeptreedraw) {
- //	   #ifndef NoRcpp
- //	   Rcpp::List lists(m*treesaslists);
- //	   #endif
- 
-             for(size_t j=0;j<m;j++) {
-          treess << bm.gettree(j);
- /*      
-          #ifndef NoRcpp
-          varcount.row(treedrawscnt)=varcount.row(treedrawscnt)+bm.gettree(j).tree2count(p);
-          if(treesaslists) lists(j)=bm.gettree(j).tree2list(xi, 0., 1.);
-          #endif
- */
+    int time1 = time(&tp); // start time
+    xinfo &xi = bm.getxinfo(); // get cutpoints back
+    size_t total = nd + burn; // total number of MCMC iterations
+    for (size_t i = 0; i < total; i++) // main MCMC loop
+    {
+        if (i % printevery == 0)
+            printf("done %zu (out of %zu)\n", i, total);
+        if (i == (burn / 2) && dart)
+            bm.startdart();
+        // draw bart
+        bm.draw(svec, gen);
+
+
+        // Calculate the residual sum of squares
+        rss = 0.0;
+        for (size_t k = 0; k < n; k++)
+        {
+            restemp = (iy[k] - bm.f(k)) / (iw[k]); // residual = (y - f(x)) / w
+            rss += restemp * restemp;
         }
-             #ifndef NoRcpp
- //	    if(treesaslists) list_of_lists(treedrawscnt)=lists;
-        ivarcnt=bm.getnv();
-        ivarprb=bm.getpv();
-        size_t k=(i-burn)/skiptreedraws;
-        for(size_t j=0;j<p;j++){
-          varcnt(k,j)=ivarcnt[j];
-          //varcnt(i-burn,j)=ivarcnt[j];
-          varprb(k,j)=ivarprb[j];
-          //varprb(i-burn,j)=ivarprb[j];
+        // Calculate sigma / draw sigma
+        sigma = sqrt((nu * lambda + rss) / gen.chi_square(n + nu));
+        // Recalculate svec
+        for (size_t k = 0; k < n; k++)
+            svec[k] = iw[k] * sigma;
+        // Save sigma to sdraw
+        sdraw[i] = sigma;
+
+        // Add in X_true draw
+
+        if (i >= burn)
+        {
+            for (size_t k = 0; k < n; k++)
+                trmean[k] += bm.f(k);
+            if (nkeeptrain && (((i - burn + 1) % skiptr) == 0))
+            {
+                // index = trcnt*n;;
+                // for(size_t k=0;k<n;k++) trdraw[index+k]=bm.f(k);
+                for (size_t k = 0; k < n; k++)
+                    TRDRAW(trcnt, k) = bm.f(k);
+                trcnt += 1;
+            }
+            keeptest = nkeeptest && (((i - burn + 1) % skipte) == 0) && np;
+            keeptestme = nkeeptestme && (((i - burn + 1) % skipteme) == 0) && np;
+            if (keeptest || keeptestme)
+                bm.predict(p, np, ixp, fhattest);
+            if (keeptest)
+            {
+                // index=tecnt*np;
+                // for(size_t k=0;k<np;k++) tedraw[index+k]=fhattest[k];
+                for (size_t k = 0; k < np; k++)
+                    TEDRAW(tecnt, k) = fhattest[k];
+                tecnt += 1;
+            }
+            if (keeptestme)
+            {
+                for (size_t k = 0; k < np; k++)
+                    temean[k] += fhattest[k];
+                temecnt += 1;
+            }
+            keeptreedraw = nkeeptreedraws && (((i - burn + 1) % skiptreedraws) == 0);
+            if (keeptreedraw)
+            {
+                //	   #ifndef NoRcpp
+                //	   Rcpp::List lists(m*treesaslists);
+                //	   #endif
+
+                for (size_t j = 0; j < m; j++)
+                {
+                    treess << bm.gettree(j);
+                    /*
+                             #ifndef NoRcpp
+                             varcount.row(treedrawscnt)=varcount.row(treedrawscnt)+bm.gettree(j).tree2count(p);
+                             if(treesaslists) lists(j)=bm.gettree(j).tree2list(xi, 0., 1.);
+                             #endif
+                    */
+                }
+
+                //	    if(treesaslists) list_of_lists(treedrawscnt)=lists;
+                ivarcnt = bm.getnv();
+                ivarprb = bm.getpv();
+                size_t k = (i - burn) / skiptreedraws;
+                for (size_t j = 0; j < p; j++)
+                {
+                    varcnt(k, j) = ivarcnt[j];
+                    // varcnt(i-burn,j)=ivarcnt[j];
+                    varprb(k, j) = ivarprb[j];
+                    // varprb(i-burn,j)=ivarprb[j];
+                }
+
+                treedrawscnt += 1;
+            }
         }
-             #else
-        varcnt.push_back(bm.getnv());
-        varprb.push_back(bm.getpv());
-        #endif
- 
-             treedrawscnt +=1;
-          }
-       }
     }
     int time2 = time(&tp);
-    printf("time: %ds\n",time2-time1);
-    for(size_t k=0;k<n;k++) trmean[k]/=nd;
-    for(size_t k=0;k<np;k++) temean[k]/=temecnt;
+    printf("time: %ds\n", time2 - time1);
+    for (size_t k = 0; k < n; k++)
+        trmean[k] /= nd;
+    for (size_t k = 0; k < np; k++)
+        temean[k] /= temecnt;
     printf("check counts\n");
-    printf("trcnt,tecnt,temecnt,treedrawscnt: %zu,%zu,%zu,%zu\n",trcnt,tecnt,temecnt,treedrawscnt);
+    printf("trcnt,tecnt,temecnt,treedrawscnt: %zu,%zu,%zu,%zu\n", trcnt, tecnt, temecnt, treedrawscnt);
     //--------------------------------------------------
-    //PutRNGstate();
- 
-    if(fhattest) delete[] fhattest;
-    if(svec) delete [] svec;
- 
+    // PutRNGstate();
+
+    if (fhattest)
+        delete[] fhattest;
+    if (svec)
+        delete[] svec;
+
     //--------------------------------------------------
-    //return
- #ifndef NoRcpp
+    // return
+
     Rcpp::List ret;
-    ret["sigma"]=sdraw;
-    ret["yhat.train.mean"]=trmean;
-    ret["yhat.train"]=trdraw;
-    ret["yhat.test.mean"]=temean;
-    ret["yhat.test"]=tedraw;
-    //ret["varcount"]=varcount;
-    ret["varcount"]=varcnt;
-    ret["varprob"]=varprb;
- 
-    //for(size_t i=0;i<m;i++) {
-     //  bm.gettree(i).pr();
+    ret["sigma"] = sdraw;
+    ret["yhat.train.mean"] = trmean;
+    ret["yhat.train"] = trdraw;
+    ret["yhat.test.mean"] = temean;
+    ret["yhat.test"] = tedraw;
+    // ret["varcount"]=varcount;
+    ret["varcount"] = varcnt;
+    ret["varprob"] = varprb;
+
+    // for(size_t i=0;i<m;i++) {
+    //   bm.gettree(i).pr();
     //}
- 
+
     Rcpp::List xiret(xi.size());
-    for(size_t i=0;i<xi.size();i++) {
-       Rcpp::NumericVector vtemp(xi[i].size());
-       std::copy(xi[i].begin(),xi[i].end(),vtemp.begin());
-       xiret[i] = Rcpp::NumericVector(vtemp);
+    for (size_t i = 0; i < xi.size(); i++)
+    {
+        Rcpp::NumericVector vtemp(xi[i].size());
+        std::copy(xi[i].begin(), xi[i].end(), vtemp.begin());
+        xiret[i] = Rcpp::NumericVector(vtemp);
     }
- 
+
     Rcpp::List treesL;
-    //treesL["nkeeptreedraws"] = Rcpp::wrap<int>(nkeeptreedraws); //in trees
-    //treesL["ntree"] = Rcpp::wrap<int>(m); //in trees
-    //treesL["numx"] = Rcpp::wrap<int>(p); //in cutpoints
+    // treesL["nkeeptreedraws"] = Rcpp::wrap<int>(nkeeptreedraws); //in trees
+    // treesL["ntree"] = Rcpp::wrap<int>(m); //in trees
+    // treesL["numx"] = Rcpp::wrap<int>(p); //in cutpoints
     treesL["cutpoints"] = xiret;
-    treesL["trees"]=Rcpp::CharacterVector(treess.str());
- //   if(treesaslists) treesL["lists"]=list_of_lists;
+    treesL["trees"] = Rcpp::CharacterVector(treess.str());
+    //   if(treesaslists) treesL["lists"]=list_of_lists;
     ret["treedraws"] = treesL;
- 
+
     return ret;
- #else
- 
- #endif
- 
- }
- 
+
+}
