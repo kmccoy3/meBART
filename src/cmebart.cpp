@@ -244,7 +244,7 @@ RcppExport SEXP cmebart(
     //--------------------------------------------------
     // mcmc
     printf("\nMCMC  -------- KEVINS CODE :)\n");
-
+    
     size_t trcnt = 0;        // count kept train draws
     size_t tecnt = 0;        // count kept test draws
     size_t temecnt = 0;      // count test draws into posterior mean
@@ -255,6 +255,12 @@ RcppExport SEXP cmebart(
     int time1 = time(&tp);             // start time
     xinfo &xi = bm.getxinfo();         // get cutpoints back
     size_t total = nd + burn;          // total number of MCMC iterations
+    
+    // Define x_draws object to store all draws of x
+    typedef std::vector<Rcpp::NumericVector> x_draws;
+    x_draws x_draws_(total);
+    
+    
     for (size_t i = 0; i < total; i++) // main MCMC loop
     {
         if (i % printevery == 0)
@@ -281,6 +287,16 @@ RcppExport SEXP cmebart(
 
         // ----------------------------------------------
         // Add in X_true draw
+
+
+        // draw from standard normal
+        double kevin = gen.normal();
+        printf("kevin: %f\n", kevin);
+
+        // Update x storage
+        x_draws_[i] = xv + kevin;
+
+        // 
 
         // potentially just call bm.setdata(p, n, ix, iy, numcut) with new x data
 
@@ -381,6 +397,8 @@ RcppExport SEXP cmebart(
     treesL["cutpoints"] = xiret;
     treesL["trees"] = Rcpp::CharacterVector(treess.str());
     ret["treedraws"] = treesL;
+    
+    ret["x_draws"] = x_draws_;
 
     return ret;
 }
