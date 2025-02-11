@@ -57,10 +57,10 @@ void grm(tree& tr, xinfo& xi, std::ostream& os)
 //fit tree at matrix of x, matrix is stacked columns x[i,j] is *(x+p*i+j)
 void fit(tree& t, xinfo& xi, size_t p, size_t n, double *x,  double* fv)
 {
-   tree::tree_p bn;
-   for(size_t i=0;i<n;i++) {
-      bn = t.bn(x+i*p,xi);
-      fv[i] = bn->gettheta();
+   tree::tree_p bn; //bottom node pointer
+   for(size_t i=0;i<n;i++) { // loop over observations
+      bn = t.bn(x+i*p,xi); //find bottom node for this observation, inputs pointer to First element of ith row
+      fv[i] = bn->gettheta(); //predict
    }
 }
 //--------------------------------------------------
