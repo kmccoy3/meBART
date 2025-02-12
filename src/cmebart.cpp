@@ -24,6 +24,7 @@
 #include "bd.h"
 #include "bart.h"
 #include "heterbart.h"
+#include "kevin.h"
 
 #define TRDRAW(a, b) trdraw(a, b) // pre-processor directive to replace former with latter
 #define TEDRAW(a, b) tedraw(a, b) // same as above
@@ -291,10 +292,17 @@ RcppExport SEXP cmebart(
 
         // draw from standard normal
         double kevin = gen.normal();
-        printf("kevin: %f\n", kevin);
+        // printf("kevin: %f\n", kevin);
+
+
+        double a = 5.0;
+        double b = 0.1;
+        double kevin2 = kevin_func(a, b);
+
+        printf("kevin2: %f\n", kevin2);
 
         // Update x storage
-        x_draws_[i] = xv + kevin;
+        x_draws_[i] = xv + kevin; // turning into vector for some reason
 
         // 
 
