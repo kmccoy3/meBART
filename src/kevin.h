@@ -5,6 +5,6 @@
 
 double kevin_func(double mu, double sigma);
 
-
+void MH_ratio(double x);
 
 #endif
