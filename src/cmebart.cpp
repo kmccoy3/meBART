@@ -61,7 +61,8 @@ RcppExport SEXP cmebart(
     SEXP _inkeeptreedraws, // number of MCMC iters to be returned for tree draws
     SEXP _inprintevery,    // print progress every printevery iterations
                            //   SEXP _treesaslists,
-    SEXP _Xinfo            // cutpoints, now specified
+    SEXP _Xinfo,            // cutpoints, now specified
+    SEXP _kevins_var       // kevins variable
 )
 {
     printf("FIRST HEADER RAN\n");
@@ -130,6 +131,9 @@ RcppExport SEXP cmebart(
     Rcpp::NumericMatrix tedraw(nkeeptest, np);
     Rcpp::NumericMatrix varprb(nkeeptreedraws, p);
     Rcpp::IntegerMatrix varcnt(nkeeptreedraws, p);
+
+    double kevins_var = Rcpp::as<double>(_kevins_var);
+
 
     // random number generation
     arn gen; // TODO
@@ -297,7 +301,7 @@ RcppExport SEXP cmebart(
 
         double a = 5.0;
         double b = 0.1;
-        double kevin2 = kevin_func(a, b);
+        double kevin2 = kevin_func(kevins_var, b);
 
         printf("kevin2: %f\n", kevin2);
 
