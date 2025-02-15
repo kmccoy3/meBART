@@ -26,3 +26,14 @@ void MH_ratio(double x)
     printf("log(e^x): %f\n", tmp);
     return;
 }
+
+void dnorm(double x, double mu, double sigma)
+{
+    // TODO: check if this is how the package normally does this
+    double tmp = (x - mu) / sigma;
+    tmp = -0.5 * tmp * tmp;
+    tmp = exp(tmp);
+    tmp = tmp / (sigma * RTPI);
+    printf("dnorm: %f\n", tmp);
+    return;
+}

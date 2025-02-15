@@ -7,4 +7,6 @@ double kevin_func(double mu, double sigma);
 
 void MH_ratio(double x);
 
+void dnorm(double x, double mu, double sigma);
+
 #endif
