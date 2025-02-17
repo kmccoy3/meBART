@@ -61,7 +61,7 @@ RcppExport SEXP cmebart(
     SEXP _inkeeptreedraws, // number of MCMC iters to be returned for tree draws
     SEXP _inprintevery,    // print progress every printevery iterations
                            //   SEXP _treesaslists,
-    SEXP _Xinfo,            // cutpoints, now specified
+    SEXP _Xinfo,           // cutpoints, now specified
     SEXP _kevins_var       // kevins variable
 )
 {
@@ -133,7 +133,6 @@ RcppExport SEXP cmebart(
     Rcpp::IntegerMatrix varcnt(nkeeptreedraws, p);
 
     double kevins_var = Rcpp::as<double>(_kevins_var);
-
 
     // random number generation
     arn gen; // TODO
@@ -249,7 +248,7 @@ RcppExport SEXP cmebart(
     //--------------------------------------------------
     // mcmc
     printf("\nMCMC  -------- KEVINS CODE :)\n");
-    
+
     size_t trcnt = 0;        // count kept train draws
     size_t tecnt = 0;        // count kept test draws
     size_t temecnt = 0;      // count test draws into posterior mean
@@ -257,15 +256,14 @@ RcppExport SEXP cmebart(
     bool keeptest, keeptestme, keeptreedraw;
 
     time_t tp;
-    int time1 = time(&tp);             // start time
-    xinfo &xi = bm.getxinfo();         // get cutpoints back
-    size_t total = nd + burn;          // total number of MCMC iterations
-    
+    int time1 = time(&tp);     // start time
+    xinfo &xi = bm.getxinfo(); // get cutpoints back
+    size_t total = nd + burn;  // total number of MCMC iterations
+
     // Define x_draws object to store all draws of x
     typedef std::vector<Rcpp::NumericVector> x_draws;
     x_draws x_draws_(total);
-    
-    
+
     for (size_t i = 0; i < total; i++) // main MCMC loop
     {
         if (i % printevery == 0)
@@ -417,7 +415,7 @@ RcppExport SEXP cmebart(
     treesL["cutpoints"] = xiret;
     treesL["trees"] = Rcpp::CharacterVector(treess.str());
     ret["treedraws"] = treesL;
-    
+
     ret["x_draws"] = x_draws_;
 
     return ret;
