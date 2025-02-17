@@ -11,20 +11,10 @@
 
 arn gen;
 
-double kevin_func(double mu, double sigma)
+
+double rnorm(double mu, double sigma)
 {
     return mu + sigma * gen.normal();
-}
-
-
-void MH_ratio(double x)
-{
-    printf("x: %f\n", x);
-    double tmp = exp(x);
-    printf("e^x: %f\n", tmp);
-    tmp = log(tmp);
-    printf("log(e^x): %f\n", tmp);
-    return;
 }
 
 void dnorm(double x, double mu, double sigma)
@@ -41,4 +31,20 @@ void dnorm(double x, double mu, double sigma)
 double min(double a, double b)
 {
     return a < b ? a : b;
+}
+
+
+
+
+
+
+
+void MH_ratio(double x)
+{
+    printf("x: %f\n", x);
+    double tmp = exp(x);
+    printf("e^x: %f\n", tmp);
+    tmp = log(tmp);
+    printf("log(e^x): %f\n", tmp);
+    return;
 }
