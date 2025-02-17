@@ -288,33 +288,62 @@ RcppExport SEXP cmebart(
         // Save sigma to sdraw
         sdraw[i] = sigma;
 
-        // ----------------------------------------------
-        // Add in X_true draw
+        // =========================================================================================
+        // Measurement Error Step in Gibbs Sampler
 
+        // Initialize alpha
+        double alpha = 0;
+
+        // Proposed values
+        alpha += 1; // y likelihood
+        alpha += 1; // x likelihood
+        alpha += 1; // x prior
+
+        // Old values
+        alpha -= 1; // y likelihood
+        alpha -= 1; // x likelihood
+        alpha -= 1; // x prior
+
+        alpha = exp(alpha); // Convert back from log scale
+
+        // Calculate Metropolis-Hastings acceptance ratio
+        double acceptance_ratio = min(1, alpha);
+
+        // Accept or reject the draw
+        bool accept = gen.uniform() < acceptance_ratio;
+
+        // Update draw of X
+        if (accept)
+        {
+            x_draws_[i] = xv;
+        }
+        else
+        {
+            ;
+            // x_draws_[i] = x_draws_[i-1]; // FIXME: this will error if i=0 (first iteration)
+        }
 
         // draw from standard normal
-        double kevin = gen.normal();
+        // double kevin = gen.normal();
         // printf("kevin: %f\n", kevin);
 
-
-        double a = 5.0;
-        double b = 0.1;
-        double kevin2 = kevin_func(kevins_var, b);
+        // double a = 1;
+        // double b = 0.1;
+        // double kevin2 = kevin_func(kevins_var, b);
 
         // printf("kevin2: %f\n", kevin2);
 
         // MH_ratio(kevins_var);
 
         // dnorm(kevins_var, 0.0, 1.0);
-        if (i == total -1){
-        printf("min(1, 0.1): %f\n", min(1, 0.1));
-        printf("min(1, 1.5): %f\n", min(1, 1.5));
-    }
+        // if (i == total -1){
+        //     printf("min(1, 0.1): %f\n", min(1, 0.1));
+        //     printf("min(1, 1.5): %f\n", min(1, 1.5));
+        // }
 
+        // x_draws_[i] = xv + kevin; // turning into vector for some reason
 
-        x_draws_[i] = xv + kevin; // turning into vector for some reason
-
-        // 
+        //
 
         // potentially just call bm.setdata(p, n, ix, iy, numcut) with new x data
 
