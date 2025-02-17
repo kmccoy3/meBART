@@ -307,9 +307,13 @@ RcppExport SEXP cmebart(
 
         // MH_ratio(kevins_var);
 
-        dnorm(kevins_var, 0.0, 1.0);
+        // dnorm(kevins_var, 0.0, 1.0);
+        if (i == total -1){
+        printf("min(1, 0.1): %f\n", min(1, 0.1));
+        printf("min(1, 1.5): %f\n", min(1, 1.5));
+    }
 
-        // Update x storage
+
         x_draws_[i] = xv + kevin; // turning into vector for some reason
 
         // 

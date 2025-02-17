@@ -37,3 +37,8 @@ void dnorm(double x, double mu, double sigma)
     printf("dnorm: %f\n", tmp);
     return;
 }
+
+double min(double a, double b)
+{
+    return a < b ? a : b;
+}
