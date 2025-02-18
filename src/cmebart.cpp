@@ -262,7 +262,7 @@ RcppExport SEXP cmebart(
 
     // Define x_draws object to store all draws of x
     typedef std::vector<Rcpp::NumericVector> x_draws;
-    x_draws x_draws_(total);
+    x_draws x_draws_(total+1);
 
     for (size_t i = 0; i < total; i++) // main MCMC loop
     {
@@ -291,63 +291,63 @@ RcppExport SEXP cmebart(
         // =========================================================================================
         // Measurement Error Step in Gibbs Sampler
 
-        // Initialize alpha
-        double alpha = 0;
+        x_draws_[0] = xv; // Initialize first entry of x_draws with the observed x values
 
-        // Proposed values
-        alpha += 1; // y likelihood
-        alpha += 1; // x likelihood
-        alpha += 1; // x prior
-
-        // Old values
-        alpha -= 1; // y likelihood
-        alpha -= 1; // x likelihood
-        alpha -= 1; // x prior
-
-        alpha = exp(alpha); // Convert back from log scale
-
-        // Calculate Metropolis-Hastings acceptance ratio
-        double acceptance_ratio = min(1, alpha);
-
-        // Accept or reject the draw
-        bool accept = gen.uniform() < acceptance_ratio;
-
-        // Update draw of X
-        if (accept)
+        // Loop through each observation
+        for (size_t k = 0; k < n; k++)
         {
-            x_draws_[i] = xv;
+
+            // Get x value
+            double x_meas = xv[k]; // observed value of x
+            double x_true = x_draws_[i][k]; // old value of x_true
+            double x_true_prime = rnorm(x_true, 0.1); // TODO: Fix hardcoding of 0.1
+
+            // Hyperparameters
+            double mu_x = 0.0; // Prior mean
+            double sigma_x = 1.0; // Prior standard deviation
+            double sigma_e = 1.0; // Measurement error standard deviation
+
+            // if (i==0 && k==0) printf("x_obs: %f\n", x_obs);
+
+            // Initialize alpha
+            double alpha = 0.0;
+            double y_true = yv[k];
+            double y_pred = bm.f(k); // FIXME: we need to calculate y_pred for the new x_true_prime
+
+            // Proposed values
+            alpha += log(dnorm(y_true, y_pred, sigma)); // y likelihood
+            alpha += log(dnorm(x_meas, x_true, sigma_e)); // x likelihood
+            alpha += log(dnorm(x_true, mu_x, sigma_x)); // x prior
+
+            // Old values
+            alpha -= log(dnorm(y_true_prime, y_pred, sigma)); // y likelihood
+            alpha -= log(dnorm(x_meas, x_true_prime, sigma_e)); // x likelihood
+            alpha -= log(dnorm(x_true_prime, mu_x, sigma_x)); // x prior
+
+            alpha = exp(alpha); // Convert back from log scale
+
+            // Calculate Metropolis-Hastings acceptance ratio
+            double acceptance_ratio = min(1, alpha);
+
+            // Accept or reject the draw
+            bool accept = gen.uniform() < acceptance_ratio;
+
+            // Update draw of X
+            if (accept)
+            {
+                x_draws_[i+1].push_back(xv[k]);
+                // x_true = x_true_prime;
+                // potentially just call bm.setdata(p, n, ix, iy, numcut) with new x data
+            }
+            else
+            {
+                x_draws_[i+1].push_back(x_true);
+
+            }
         }
-        else
-        {
-            ;
-            // x_draws_[i] = x_draws_[i-1]; // FIXME: this will error if i=0 (first iteration)
-        }
 
-        // draw from standard normal
-        // double kevin = gen.normal();
-        // printf("kevin: %f\n", kevin);
 
-        // double a = 1;
-        // double b = 0.1;
-        // double kevin2 = kevin_func(kevins_var, b);
-
-        // printf("kevin2: %f\n", kevin2);
-
-        // MH_ratio(kevins_var);
-
-        // dnorm(kevins_var, 0.0, 1.0);
-        // if (i == total -1){
-        //     printf("min(1, 0.1): %f\n", min(1, 0.1));
-        //     printf("min(1, 1.5): %f\n", min(1, 1.5));
-        // }
-
-        // x_draws_[i] = xv + kevin; // turning into vector for some reason
-
-        //
-
-        // potentially just call bm.setdata(p, n, ix, iy, numcut) with new x data
-
-        // ----------------------------------------------
+        // =========================================================================================
 
         if (i >= burn)
         {
