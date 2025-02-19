@@ -291,7 +291,8 @@ RcppExport SEXP cmebart(
         // =========================================================================================
         // Measurement Error Step in Gibbs Sampler
 
-        x_draws_[0] = xv; // Initialize first entry of x_draws with the observed x values
+        // Initialize first entry of x_draws with the observed x values
+        x_draws_[0] = xv; // TODO: For some reason this is a matrix in R
 
         // Loop through each observation
         for (size_t k = 0; k < n; k++)
@@ -338,6 +339,8 @@ RcppExport SEXP cmebart(
                 x_draws_[i+1].push_back(xv[k]);
                 // x_true = x_true_prime;
                 // potentially just call bm.setdata(p, n, ix, iy, numcut) with new x data
+
+                // TODO: Set up collection of acceptances
             }
             else
             {
