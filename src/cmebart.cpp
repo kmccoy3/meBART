@@ -313,7 +313,8 @@ RcppExport SEXP cmebart(
             // Initialize alpha
             double alpha = 0.0;
             double y_true = yv[k];
-            double y_pred = bm.f(k); // FIXME: we need to calculate y_pred for the new x_true_prime
+            double y_pred = bm.f(k); 
+            double y_pred_prime = y_pred; // FIXME: we need to calculate y_pred for the new x_true_prime
 
             // Proposed values
             alpha += log(dnorm(y_true, y_pred, sigma)); // y likelihood
@@ -321,7 +322,7 @@ RcppExport SEXP cmebart(
             alpha += log(dnorm(x_true, mu_x, sigma_x)); // x prior
 
             // Old values
-            alpha -= log(dnorm(y_true_prime, y_pred, sigma)); // y likelihood
+            alpha -= log(dnorm(y_true, y_pred_prime, sigma)); // y likelihood
             alpha -= log(dnorm(x_meas, x_true_prime, sigma_e)); // x likelihood
             alpha -= log(dnorm(x_true_prime, mu_x, sigma_x)); // x prior
 
@@ -336,7 +337,7 @@ RcppExport SEXP cmebart(
             // Update draw of X
             if (accept)
             {
-                x_draws_[i+1].push_back(xv[k]);
+                x_draws_[i+1].push_back(x_true_prime);
                 // x_true = x_true_prime;
                 // potentially just call bm.setdata(p, n, ix, iy, numcut) with new x data
 
