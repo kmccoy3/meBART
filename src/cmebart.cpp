@@ -321,6 +321,17 @@ RcppExport SEXP cmebart(
             double y_pred = bm.f(k); 
             double y_pred_prime = y_pred; // FIXME: we need to calculate y_pred for the new x_true_prime
 
+            // TODO: Check that this is right, probably isnt
+            heterbart bm_prime = bm;
+            Rcpp::NumericVector last_xv(n); // = x_draws_[i];
+            for (size_t j = 0; j < n; j++)
+            {
+                last_xv[j] = x_draws_[i][j];
+            }
+            double *ix = &last_xv[0];
+            bm_prime.setdata(p, n, ix, iy, numcut);
+            y_pred_prime = bm_prime.f(k);
+
             // Proposed values
             alpha += log(dnorm(y_true, y_pred, sigma)); // y likelihood
             alpha += log(dnorm(x_meas, x_true, sigma_e)); // x likelihood
