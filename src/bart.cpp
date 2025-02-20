@@ -102,7 +102,7 @@ void bart::setxinfo(xinfo &_xi)
 void bart::setdata(size_t p, size_t n, double *x, double *y, size_t numcut)
 // dimension p, size n, pointer to x VECTOR, pointer to y vector, number of cutpoints
 {
-    printf("In bart::setdata!!!!!!!!!\n");
+    // printf("In bart::setdata!!!!!!!!!\n");
     int *nc = new int[p]; // number of cutpoints for each variable, p-length vector
     for (size_t i = 0; i < p; ++i)
         nc[i] = numcut; // loop over each variable, set number of cutpoints to numcut
