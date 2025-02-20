@@ -309,9 +309,9 @@ RcppExport SEXP cmebart(
             double x_true_prime = rnorm(x_true, 0.1); // TODO: Fix hardcoding of 0.1
 
             // Hyperparameters
-            double mu_x = 0.0; // Prior mean
-            double sigma_x = 1.0; // Prior standard deviation
-            double sigma_e = 1.0; // Measurement error standard deviation
+            double mu_x = 0.5; // Prior mean
+            double sigma_x = 0.25; // Prior standard deviation
+            double sigma_e = 0.1; // Measurement error standard deviation
 
             // if (i==0 && k==0) printf("x_obs: %f\n", x_obs);
 
