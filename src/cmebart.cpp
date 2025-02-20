@@ -305,7 +305,7 @@ RcppExport SEXP cmebart(
             // Get x value
             double x_meas = xv[k];                    // observed value of x
             double x_true = x_draws_[i][k];           // old value of x_true
-            double x_true_prime = rnorm(x_meas, 0.1); // TODO: Fix hardcoding of 0.1
+            double x_true_prime = rnorm(x_true, 0.1); // TODO: Fix hardcoding of 0.1
 
             // Hyperparameters
             double mu_x = 0.5;     // Prior mean
@@ -321,6 +321,7 @@ RcppExport SEXP cmebart(
             double y_pred_prime = y_pred; // FIXME: we need to calculate y_pred for the new x_true_prime
 
             // TODO: Check that this is right, probably isnt
+            // This can go outside loop
             heterbart bm_prime = bm;
             Rcpp::NumericVector last_xv(n); // = x_draws_[i];
             for (size_t j = 0; j < n; j++)
@@ -355,6 +356,8 @@ RcppExport SEXP cmebart(
                 x_draws_[i + 1].push_back(x_true_prime);
                 // x_true = x_true_prime;
                 // potentially just call bm.setdata(p, n, ix, iy, numcut) with new x data
+
+                // bm = bm_prime;
 
                 // TODO: Set up collection of acceptances
                 acceptances(i, k) = 1;
