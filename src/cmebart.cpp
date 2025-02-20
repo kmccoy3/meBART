@@ -264,6 +264,13 @@ RcppExport SEXP cmebart(
     typedef std::vector<Rcpp::NumericVector> x_draws;
     x_draws x_draws_(total+1);
 
+    // Initialize first entry of x_draws with the observed x values
+    x_draws_[0] = xv; // TODO: For some reason this is a matrix in R
+
+    Rcpp::NumericMatrix acceptances(total, n);
+
+    // Rcpp::NumericMatrix test(3, 3, 3);
+
     for (size_t i = 0; i < total; i++) // main MCMC loop
     {
         if (i % printevery == 0)
@@ -291,8 +298,6 @@ RcppExport SEXP cmebart(
         // =========================================================================================
         // Measurement Error Step in Gibbs Sampler
 
-        // Initialize first entry of x_draws with the observed x values
-        x_draws_[0] = xv; // TODO: For some reason this is a matrix in R
 
         // Loop through each observation
         for (size_t k = 0; k < n; k++)
