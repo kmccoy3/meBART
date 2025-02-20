@@ -306,7 +306,7 @@ RcppExport SEXP cmebart(
             // Get x value
             double x_meas = xv[k]; // observed value of x
             double x_true = x_draws_[i][k]; // old value of x_true
-            double x_true_prime = rnorm(x_true, 0.1); // TODO: Fix hardcoding of 0.1
+            double x_true_prime = rnorm(x_meas, 0.1); // TODO: Fix hardcoding of 0.1
 
             // Hyperparameters
             double mu_x = 0.5; // Prior mean
@@ -358,10 +358,13 @@ RcppExport SEXP cmebart(
                 // potentially just call bm.setdata(p, n, ix, iy, numcut) with new x data
 
                 // TODO: Set up collection of acceptances
+                acceptances(i, k) = 1;
             }
             else
             {
                 x_draws_[i+1].push_back(x_true);
+
+                acceptances(i, k) = 0;
 
             }
         }
@@ -466,6 +469,7 @@ RcppExport SEXP cmebart(
     ret["treedraws"] = treesL;
 
     ret["x_draws"] = x_draws_;
+    ret["acceptances"] = acceptances;
 
     return ret;
 }
