@@ -262,7 +262,7 @@ RcppExport SEXP cmebart(
 
     // Define x_draws object to store all draws of x
     typedef std::vector<Rcpp::NumericVector> x_draws;
-    x_draws x_draws_(total+1);
+    x_draws x_draws_(total + 1);
 
     // Initialize first entry of x_draws with the observed x values
     x_draws_[0] = xv; // TODO: For some reason this is a matrix in R
@@ -298,27 +298,26 @@ RcppExport SEXP cmebart(
         // =========================================================================================
         // Measurement Error Step in Gibbs Sampler
 
-
         // Loop through each observation
         for (size_t k = 0; k < n; k++)
         {
 
             // Get x value
-            double x_meas = xv[k]; // observed value of x
-            double x_true = x_draws_[i][k]; // old value of x_true
+            double x_meas = xv[k];                    // observed value of x
+            double x_true = x_draws_[i][k];           // old value of x_true
             double x_true_prime = rnorm(x_meas, 0.1); // TODO: Fix hardcoding of 0.1
 
             // Hyperparameters
-            double mu_x = 0.5; // Prior mean
+            double mu_x = 0.5;     // Prior mean
             double sigma_x = 0.25; // Prior standard deviation
-            double sigma_e = 0.1; // Measurement error standard deviation
+            double sigma_e = 0.1;  // Measurement error standard deviation
 
             // if (i==0 && k==0) printf("x_obs: %f\n", x_obs);
 
             // Initialize alpha
             double alpha = 0.0;
             double y_true = yv[k];
-            double y_pred = bm.f(k); 
+            double y_pred = bm.f(k);
             double y_pred_prime = y_pred; // FIXME: we need to calculate y_pred for the new x_true_prime
 
             // TODO: Check that this is right, probably isnt
@@ -333,14 +332,14 @@ RcppExport SEXP cmebart(
             y_pred_prime = bm_prime.f(k);
 
             // Proposed values
-            alpha += log(dnorm(y_true, y_pred, sigma)); // y likelihood
+            alpha += log(dnorm(y_true, y_pred, sigma));   // y likelihood
             alpha += log(dnorm(x_meas, x_true, sigma_e)); // x likelihood
-            alpha += log(dnorm(x_true, mu_x, sigma_x)); // x prior
+            alpha += log(dnorm(x_true, mu_x, sigma_x));   // x prior
 
             // Old values
-            alpha -= log(dnorm(y_true, y_pred_prime, sigma)); // y likelihood
+            alpha -= log(dnorm(y_true, y_pred_prime, sigma));   // y likelihood
             alpha -= log(dnorm(x_meas, x_true_prime, sigma_e)); // x likelihood
-            alpha -= log(dnorm(x_true_prime, mu_x, sigma_x)); // x prior
+            alpha -= log(dnorm(x_true_prime, mu_x, sigma_x));   // x prior
 
             alpha = exp(alpha); // Convert back from log scale
 
@@ -353,7 +352,7 @@ RcppExport SEXP cmebart(
             // Update draw of X
             if (accept)
             {
-                x_draws_[i+1].push_back(x_true_prime);
+                x_draws_[i + 1].push_back(x_true_prime);
                 // x_true = x_true_prime;
                 // potentially just call bm.setdata(p, n, ix, iy, numcut) with new x data
 
@@ -362,13 +361,11 @@ RcppExport SEXP cmebart(
             }
             else
             {
-                x_draws_[i+1].push_back(x_true);
+                x_draws_[i + 1].push_back(x_true);
 
                 acceptances(i, k) = 0;
-
             }
         }
-
 
         // =========================================================================================
 

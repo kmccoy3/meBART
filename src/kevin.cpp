@@ -11,7 +11,6 @@
 
 arn gen;
 
-
 double rnorm(double mu, double sigma)
 {
     return mu + sigma * gen.normal();
@@ -33,12 +32,6 @@ double min(double a, double b)
 {
     return a < b ? a : b;
 }
-
-
-
-
-
-
 
 void MH_ratio(double x)
 {

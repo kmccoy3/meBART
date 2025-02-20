@@ -18,30 +18,30 @@
  */
 
 // Define a header guard to prevent multiple inclusions of this file
-#ifndef GUARD_heterbart_h  // Check if the macro GUARD_heterbart_h is not defined
-#define GUARD_heterbart_h  // Define GUARD_heterbart_h to prevent future inclusions
+#ifndef GUARD_heterbart_h // Check if the macro GUARD_heterbart_h is not defined
+#define GUARD_heterbart_h // Define GUARD_heterbart_h to prevent future inclusions
 
 // Include necessary headers for this file
 #include "bart.h"          // Include the header file "bart.h"
-#include "heterbartfuns.h"  // Include the header file "heterbartfuns.h"
-#include "heterbd.h"        // Include the header file "heterbd.h"
+#include "heterbartfuns.h" // Include the header file "heterbartfuns.h"
+#include "heterbd.h"       // Include the header file "heterbd.h"
 
 // Define the class "heterbart" which inherits from "bart"
 class heterbart : public bart
 {
 public:
     // Default constructor for heterbart, which calls the default constructor of the base class 'bart'
-    heterbart(): bart() {}
+    heterbart() : bart() {}
 
     // Constructor that takes a size_t m and passes it to the 'bart' constructor
-    heterbart(size_t m): bart(m) {}
+    heterbart(size_t m) : bart(m) {}
 
     // Member function to print or display something related to 'heterbart'
     void pr();
 
     // Member function to draw something, probably a graphical representation
     // It takes a pointer to a double array (sigma) and a reference to a random number generator (gen)
-    void draw(double *sigma, rn& gen);
+    void draw(double *sigma, rn &gen);
 };
 
 // End of header guard

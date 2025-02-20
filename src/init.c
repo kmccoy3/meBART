@@ -22,24 +22,23 @@ extern SEXP cdpmwbart(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP
 extern SEXP cdpgbart(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);*/
 
 static const R_CallMethodDef CallEntries[] = {
-    {"cpbart",  (DL_FUNC) &cpbart,  27},
-    {"clbart",  (DL_FUNC) &clbart,  24},
-/*  {"cmbart",  (DL_FUNC) &cmbart,  29},*/
-    {"cpwbart", (DL_FUNC) &cpwbart,  3},
-    {"cwbart",  (DL_FUNC) &cwbart,  31},
-    {"cgbart",  (DL_FUNC) &cgbart,  30},
-/*  {"cgbmm",   (DL_FUNC) &cgbmm,   34}, */
-    {"cabart",  (DL_FUNC) &cabart,  31},
-/*  {"cspbart",  (DL_FUNC) &cspbart,  30}, */
-    {"mc_cores_openmp",(DL_FUNC) &mc_cores_openmp,0},
-    {"crtnorm", (DL_FUNC) &crtnorm,  4},
-    {"crtgamma",(DL_FUNC) &crtgamma, 4},
-    {"cdraw_lambda_i", (DL_FUNC) &cdraw_lambda_i, 4},
-/*  {"cdpgbart",(DL_FUNC) &cdpgbart,35},
-    {"cdpmbart",(DL_FUNC) &cdpmbart,25},
-    {"cdpmwbart",(DL_FUNC) &cdpmwbart,27}, */
-    {NULL, NULL, 0}
-};
+    {"cpbart", (DL_FUNC)&cpbart, 27},
+    {"clbart", (DL_FUNC)&clbart, 24},
+    /*  {"cmbart",  (DL_FUNC) &cmbart,  29},*/
+    {"cpwbart", (DL_FUNC)&cpwbart, 3},
+    {"cwbart", (DL_FUNC)&cwbart, 31},
+    {"cgbart", (DL_FUNC)&cgbart, 30},
+    /*  {"cgbmm",   (DL_FUNC) &cgbmm,   34}, */
+    {"cabart", (DL_FUNC)&cabart, 31},
+    /*  {"cspbart",  (DL_FUNC) &cspbart,  30}, */
+    {"mc_cores_openmp", (DL_FUNC)&mc_cores_openmp, 0},
+    {"crtnorm", (DL_FUNC)&crtnorm, 4},
+    {"crtgamma", (DL_FUNC)&crtgamma, 4},
+    {"cdraw_lambda_i", (DL_FUNC)&cdraw_lambda_i, 4},
+    /*  {"cdpgbart",(DL_FUNC) &cdpgbart,35},
+        {"cdpmbart",(DL_FUNC) &cdpmbart,25},
+        {"cdpmwbart",(DL_FUNC) &cdpmwbart,27}, */
+    {NULL, NULL, 0}};
 
 void R_init_BART(DllInfo *dll)
 {

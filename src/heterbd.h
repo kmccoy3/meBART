@@ -26,7 +26,7 @@
 #include "bartfuns.h"
 #include "heterbartfuns.h"
 
-bool heterbd(tree& x, xinfo& xi, dinfo& di, pinfo& pi, double *sigma, 
-	     std::vector<size_t>& nv, std::vector<double>& pv, bool aug, rn& gen);
+bool heterbd(tree &x, xinfo &xi, dinfo &di, pinfo &pi, double *sigma,
+             std::vector<size_t> &nv, std::vector<double> &pv, bool aug, rn &gen);
 
 #endif

@@ -117,7 +117,7 @@ void bart::setdata(size_t p, size_t n, double *x, double *y, int *nc)
     this->n = n;
     this->x = x;
 
-    printf("Address of x is: %p\n", x); 
+    printf("Address of x is: %p\n", x);
     printf("The value of x is: %f\n", *x);
 
     this->y = y; // sets inputs as member variables
@@ -128,7 +128,7 @@ void bart::setdata(size_t p, size_t n, double *x, double *y, int *nc)
     if (allfit)
         delete[] allfit;
     allfit = new double[n];
-    predict(p, n, x, allfit); 
+    predict(p, n, x, allfit);
 
     if (r)
         delete[] r;
@@ -155,14 +155,13 @@ void bart::predict(size_t p, size_t n, double *x, double *fp)
     double *fptemp = new double[n];
 
     for (size_t j = 0; j < n; j++) // loop over observations
-        fp[j] = 0.0; // this is the allfit object, n-vector or now floats
-
+        fp[j] = 0.0;               // this is the allfit object, n-vector or now floats
 
     for (size_t j = 0; j < m; j++) // loop over trees
     {
         fit(t[j], xi, p, n, x, fptemp); // fit the tree to the data
-        for (size_t k = 0; k < n; k++) // loop over observations
-            fp[k] += fptemp[k]; // add the tree's prediction to the overall prediction
+        for (size_t k = 0; k < n; k++)  // loop over observations
+            fp[k] += fptemp[k];         // add the tree's prediction to the overall prediction
     }
 
     delete[] fptemp;

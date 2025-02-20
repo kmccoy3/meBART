@@ -22,7 +22,7 @@
 
 #include "common.h"
 
-double rtgamma(double shape, double rate, double a, rn& gen);
+double rtgamma(double shape, double rate, double a, rn &gen);
 
 #ifndef NoRcpp
 
