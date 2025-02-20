@@ -112,13 +112,13 @@ void bart::setdata(size_t p, size_t n, double *x, double *y, size_t numcut)
 
 void bart::setdata(size_t p, size_t n, double *x, double *y, int *nc)
 {
-    printf("In bart::setdata v2!!!!!!!!!\n");
+    // printf("In bart::setdata v2!!!!!!!!!\n");
     this->p = p;
     this->n = n;
     this->x = x;
 
-    printf("Address of x is: %p\n", x);
-    printf("The value of x is: %f\n", *x);
+    // printf("Address of x is: %p\n", x);
+    // printf("The value of x is: %f\n", *x);
 
     this->y = y; // sets inputs as member variables
 
