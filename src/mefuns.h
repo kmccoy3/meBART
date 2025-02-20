@@ -1,6 +1,6 @@
 
-#ifndef GUARD_kevin_h
-#define GUARD_kevin_h
+#ifndef GUARD_mefuns_h
+#define GUARD_mefuns_h
 
 double rnorm(double mu, double sigma);
 
