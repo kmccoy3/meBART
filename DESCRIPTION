@@ -7,7 +7,8 @@ Description: Bayesian Additive Regression Trees (BART) sum-of-trees model expand
 License: GPL (>= 2)
 Depends: R (>= 3.6), nlme, survival
 Imports: Rcpp (>= 0.12.3), parallel, tools
-LinkingTo: Rcpp
+LinkingTo: Rcpp,
+    RcppArmadillo
 Suggests: 
     MASS,
     knitr,
