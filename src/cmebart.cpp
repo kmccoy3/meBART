@@ -249,6 +249,21 @@ RcppExport SEXP cmebart(
     // mcmc
     printf("\nMCMC  -------- KEVINS CODE :)\n");
 
+    printf("Generate a Multivariate Normal Distribution\n");
+    arma::vec A = {0.0, 0.0};
+    arma::mat B = arma::eye<arma::mat>(2, 2);
+    arma::mat samples = rmvnorm(5, A, B);
+
+    printf("Sample: %f, %f\n", samples(0, 0), samples(0, 1));
+    printf("Sample: %f, %f\n", samples(1, 0), samples(1, 1));
+    printf("Sample: %f, %f\n", samples(2, 0), samples(2, 1));
+    printf("Sample: %f, %f\n", samples(3, 0), samples(3, 1));
+    printf("Sample: %f, %f\n", samples(4, 0), samples(4, 1));
+
+    double C = dmvnorm(A, A, B);
+
+    printf("Density: %f\n", C);
+
     size_t trcnt = 0;        // count kept train draws
     size_t tecnt = 0;        // count kept test draws
     size_t temecnt = 0;      // count test draws into posterior mean
