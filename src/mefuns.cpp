@@ -8,6 +8,8 @@
 #include "bart.h"
 #include "heterbart.h"
 #include "mefuns.h"
+#include <RcppArmadillo.h>
+
 
 arn gen;
 
@@ -26,7 +28,6 @@ double dnorm(double x, double mu, double sigma)
     return tmp;
 }
 
-// TODO: Add multivariate versions of the functions above
 
 double min(double a, double b)
 {
@@ -41,4 +42,22 @@ void MH_ratio(double x)
     tmp = log(tmp);
     printf("log(e^x): %f\n", tmp);
     return;
+}
+
+arma::mat rmvnorm(int n, arma::vec mu, arma::mat sigma) {
+    int ncols = sigma.n_cols;
+    arma::mat Y = arma::randn(n, ncols);
+    return arma::repmat(mu, 1, n).t() + Y * arma::chol(sigma);
+}
+
+double dmvnorm(arma::vec x, arma::vec mu, arma::mat sigma) {
+    
+    int dim = x.n_elem;
+    double tmp = 1.0;
+
+    tmp /=  pow(RTPI, dim);
+    tmp /= sqrt(arma::det(sigma));
+    tmp *= exp(-0.5 * arma::as_scalar((x - mu).t() * arma::inv_sympd(sigma) * (x - mu)));
+
+    return tmp;
 }
