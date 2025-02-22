@@ -48,7 +48,9 @@ using std::cout;
 
 #else // YesRcpp
 
-#include <Rcpp.h>
+// #include <Rcpp.h>
+
+#include <RcppArmadillo.h>
 
 #define printf Rprintf
 #define cout Rcpp::Rcout
