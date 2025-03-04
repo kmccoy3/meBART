@@ -298,4 +298,8 @@ tree1 = getBARTTree(bartFit, k = 1, labelVar = FALSE, ntree)
 tree1
 
 
+### My additions
+
+bartFit_1tree = wbart(x, y, ntree = 1, ndpost = 100)
+
 
