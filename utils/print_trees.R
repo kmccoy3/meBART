@@ -315,6 +315,58 @@ tree1
 
 ### My additions
 
-bartFit_1tree = wbart(x, y, ntree = 1, ndpost = 100)
+ntree = 1
+ndpost = 100
 
+bartFit_1tree = wbart(x, y, ntree = ntree, ndpost = ndpost)
+tree_df = getBARTTree(bartFit_1tree, k = 1, labelVar = FALSE, ndpost*ntree)
+
+
+
+library(igraph)
+g <- graph.tree(n=15,children=2)
+valid_nodes <- as.numeric(rownames(tree_df))
+nodes2remove <- setdiff(1:max(valid_nodes), valid_nodes)
+g = delete_vertices(g, nodes2remove)
+co <- layout.reingold.tilford(g, params=list(root=1))
+plot(g, layout=co)
+
+
+
+# let's print it using a tree-specific layout
+# (N.B. you must specify the root node)
+co <- layout.reingold.tilford(g, params=list(root=1))
+plot(g, layout=co)
+
+tree_data = tree_df
+
+branch_df <- tree_df[!tree_df$is_leaf,]
+
+edges <- c()
+
+for (i in 1:nrow(branch_df)){
+    node_id <- as.numeric(rownames(branch_df)[i])
+    edges <- c(edges, node_id, branch_df$left.daughter[i], node_id, branch_df$right.daughter[i])
+}
+
+
+# Create an igraph object from the edge list
+g <- graph(edges = edges, directed = TRUE)
+g = delete_vertices(g, nodes2remove)
+
+# Set node labels (showing split variable and split point for non-leaf nodes, prediction for leaves)
+node_labels <- ifelse(tree_data$is_leaf, 
+                      paste0(round(tree_data$prediction, 2)), 
+                      paste0("X", tree_data$split.var, "<", round(tree_data$split.point, 2)))
+
+# Plot the tree
+plot(g, 
+     layout = layout.reingold.tilford(g, root = 1),  # Tree layout
+     # vertex.label = valid_nodes, 
+     vertex.label = node_labels,
+     vertex.label.cex = 0.8,
+     vertex.shape = "rectangle", 
+     vertex.size = 30, 
+     vertex.color = ifelse(tree_data$is_leaf, "lightblue", "lightgreen"), 
+     edge.arrow.size = 0.4)
 
