@@ -103,6 +103,21 @@ getBARTTree <- function(bartModel,
         "prediction" = prediction
     )
     
+    
+    ############################## Kevin's additions ###############################################
+    
+    # Add depth of that particular node, based on formula by (Sparapani et al. 2021)
+    tree_df$depth <- floor(log2(1:max_node_id))
+    
+    # Add a column to show if the node is a leaf node or not
+    tree_df$is_leaf <- ifelse(tree_df$left.daughter == 0, TRUE, FALSE)
+    
+    # Remove all empty nodes
+    valid_nodes <- c(1, tree_df$left.daughter, tree_df$right.daughter)
+    tree_df <- subset(tree_df, rownames(tree_df) %in% valid_nodes)
+    
+    ################################################################################################
+    
     # Handle the labelVar option
     if (labelVar && any(tree_df$`split var` != 0)) {
         tree_df$`split var` <- factor(colnames(bartModel$train.data$x)[tree_df$`split var`])
