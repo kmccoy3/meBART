@@ -370,3 +370,39 @@ plot(g,
      vertex.color = ifelse(tree_data$is_leaf, "lightblue", "lightgreen"), 
      edge.arrow.size = 0.4)
 
+
+
+
+
+
+
+
+
+# Get variable usage stats
+var_usage <- function(bartModel, depth=0, tot_trees){
+    
+    
+    res <- data.frame(matrix(ncol = 2, nrow = 10))
+    colnames(res) <- c("variable", "usage")
+    res$usage <- rep(0, 10)
+    res$variable <- 1:10
+    
+    for (tree in 1:tot_trees){
+    
+        df <- getBARTTree(bartFit_1tree, k = tree, labelVar = FALSE, tot_trees)
+        
+        which_var <- df$split.var[df$depth == depth]
+        which_var <- df$split.var[]
+        
+        for (var in which_var){
+            res$usage[var] <- res$usage[var] + 1
+        }
+    
+    }
+    
+    return(res)
+    
+}
+
+
+var_usage(bartFit_1tree, depth=0, tot_trees=ntree*ndpost)
