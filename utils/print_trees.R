@@ -323,6 +323,15 @@ tree_df = getBARTTree(bartFit_1tree, k = 1, labelVar = FALSE, ndpost*ntree)
 
 
 
+
+
+
+
+# TODO: Plot Trees
+# TODO: Get posterior facts about the trees
+
+
+
 library(igraph)
 g <- graph.tree(n=15,children=2)
 valid_nodes <- as.numeric(rownames(tree_df))
@@ -373,31 +382,61 @@ plot(g,
 
 
 
-
-
-
-
-
-# Get variable usage stats
-var_usage <- function(bartModel, depth=0, tot_trees){
+var_usage <- function(){
     
     
-    res <- data.frame(matrix(ncol = 2, nrow = 10))
-    colnames(res) <- c("variable", "usage")
-    res$usage <- rep(0, 10)
-    res$variable <- 1:10
+}
+
+
+ntree = 100
+ndpost = 100
+
+bartFit = wbart(x, y, ntree = ntree, ndpost = ndpost)
+# tree_df = getBARTTree(bartFit, k = 1, labelVar = FALSE, ndpost*ntree)
+
+tc <- textConnection(bartFit$treedraws$tree)
+all_trees_df <- read.table(file = tc, fill = TRUE, row.names = NULL, header = FALSE, col.names = c("node", "var", "cut", "leaf"))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Get variable usage stats at depth=0
+var_usage <- function(bartModel, tot_trees){
     
-    for (tree in 1:tot_trees){
+    num_cutpoints <- length(bartModel$treedraws$cutpoints)
+    num_variables <- length(bartModel$treedraws$cutpoints[[1]])
+
+    res <- list()
+
     
-        df <- getBARTTree(bartFit_1tree, k = tree, labelVar = FALSE, tot_trees)
+    for (k in 1:(tot_trees-1)){
         
-        which_var <- df$split.var[df$depth == depth]
-        which_var <- df$split.var[]
+    
+        df <- getBARTTree(bartModel, k = k, labelVar = FALSE, tot_trees)
         
-        for (var in which_var){
-            res$usage[var] <- res$usage[var] + 1
+        which_var <- df$split.var[1]
+        split_point <- df$split.point[1]
+        
+        res$`var` <- c(res$`var`, split_point)
+        
+        if (k %% 100 == 0){
+            print(paste("Tree: ", k))
         }
-    
+
+        
     }
     
     return(res)
@@ -405,4 +444,14 @@ var_usage <- function(bartModel, depth=0, tot_trees){
 }
 
 
-var_usage(bartFit_1tree, depth=0, tot_trees=ntree*ndpost)
+
+
+tmp <- var_usage(bartFit_1tree, tot_trees=ntree*ndpost)
+
+
+tot_trees=ntree*ndpost
+getBARTTree(bartFit_1tree, k = 0, labelVar = FALSE, tot_trees)
+
+
+
+
