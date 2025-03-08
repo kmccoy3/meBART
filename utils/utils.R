@@ -13,7 +13,7 @@ bartFit = wbart(x, y, ntree = ntree, ndpost = ndpost)
 var_usage <- function(bartModel, depth=0){
 
     # Extract the tree structure
-    tc <- textConnection(bartFit$treedraws$tree)
+    tc <- textConnection(bartModel$treedraws$tree)
     full_df <- read.table(file = tc, fill = TRUE, row.names = NULL, header = FALSE, col.names = c("node_id", "variable", "cutpoint", "prediction"))
     
     # Remove first row with MCMC info
