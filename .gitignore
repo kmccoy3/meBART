@@ -9,3 +9,4 @@ src/*.dll
 scratch/
 inst/doc
 .DS_Store
+*.RData
