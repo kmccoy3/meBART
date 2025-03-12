@@ -265,6 +265,6 @@ mebart <- function(x.train, # explanatory variables for training data, matrix or
     res$varcount.mean <- apply(res$varcount, 2, mean)
     res$varprob.mean <- apply(res$varprob, 2, mean)
     res$rm.const <- rm.const
-    attr(res, 'class') <- 'wbart'
+    attr(res, 'class') <- 'mebart'
     return(res)
 }
