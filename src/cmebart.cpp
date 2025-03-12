@@ -230,7 +230,7 @@ RcppExport SEXP cmebart(
 
     std::stringstream treess; // string stream to write trees to
     treess.precision(10);
-    treess << "nkeeptreedraws: " << nkeeptreedraws << ", number of trees: " << m << ", number of features:  " << p << endl;
+    treess << nkeeptreedraws << " " << m << " " << p << endl;
     // dart iterations
     std::vector<double> ivarprb(p, 0.);
     std::vector<size_t> ivarcnt(p, 0);
