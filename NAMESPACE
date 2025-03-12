@@ -1,7 +1,11 @@
 useDynLib('meBART', .registration=TRUE)
 ##exportPattern("^[[:alpha:]]+")
 
+
+# My additions
 export(mebart) # I added this line
+S3method(predict, mebart)
+
 
 export(wbart, mc.wbart, pwbart, mc.wbart.gse, mc.pwbart)
 export(pbart, mc.pbart)
