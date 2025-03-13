@@ -374,6 +374,8 @@ RcppExport SEXP cmebart(
 
                 // bm = bm_prime;
 
+                // bm.setdata(p, n, ix, iy, numcut);
+
                 // TODO: Set up collection of acceptances
                 acceptances(i, k) = 1;
             }
