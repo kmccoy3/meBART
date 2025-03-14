@@ -370,14 +370,13 @@ RcppExport SEXP cmebart(
             if (accept)
             {
                 x_draws_[i + 1].push_back(x_true_prime);
-                // x_true = x_true_prime;
-                // potentially just call bm.setdata(p, n, ix, iy, numcut) with new x data
+                
+                // Give original BART model new x data
+                bm.resetdata(p, n, ix, iy);
 
                 // bm = bm_prime;
 
-                // bm.setdata(p, n, ix, iy, numcut);
 
-                // TODO: Set up collection of acceptances
                 acceptances(i, k) = 1;
             }
             else
