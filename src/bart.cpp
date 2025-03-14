@@ -148,6 +148,60 @@ void bart::setdata(size_t p, size_t n, double *x, double *y, int *nc)
         pv.push_back(1 / (double)p);
     }
 }
+
+
+void bart::resetdata(size_t p, size_t n, double *x, double *y)
+{
+    printf("In bart::resetdata!!!\n");
+    // this->p = p;
+    // this->n = n;
+
+    // printf("Reassigning x\n");
+    this->x = x;
+
+    // printf("Address of x is: %p\n", x);
+    // printf("The value of x is: %f\n", *x);
+
+    // this->y = y; // sets inputs as member variables
+
+    // if (xi.size() == 0) // if xi (vector of vectors, cutpoints) is empty
+    //     makexinfo(p, n, &x[0], xi, nc);
+
+    // printf("Resetting allfit\n");
+    if (allfit)
+        delete[] allfit;
+    allfit = new double[n];
+    predict(p, n, x, allfit);
+
+
+    // printf("Resetting r\n");
+    // if (r)
+    //     delete[] r;
+    // r = new double[n];
+
+
+    // printf("Resetting ftemp\n");
+    // if (ftemp)
+    //     delete[] ftemp;
+    // ftemp = new double[n];
+
+
+    // printf("Resetting di\n");
+    // di.n = n;
+    // di.p = p;
+    di.x = &x[0];
+    // di.y = r;
+    // for (size_t j = 0; j < p; j++)
+    // {
+    //     nv.push_back(0);
+    //     pv.push_back(1 / (double)p);
+    // }
+}
+
+
+
+
+
 //--------------------------------------------------
 void bart::predict(size_t p, size_t n, double *x, double *fp)
 // uses: m,t,xi
