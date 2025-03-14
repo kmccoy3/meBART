@@ -333,7 +333,7 @@ RcppExport SEXP cmebart(
             double alpha = 0.0;
             double y_true = yv[k];
             double y_pred = bm.f(k);
-            double y_pred_prime = y_pred; // FIXME: we need to calculate y_pred for the new x_true_prime
+            double y_pred_prime; // = y_pred; // FIXME: we need to calculate y_pred for the new x_true_prime
 
             // TODO: Check that this is right, probably isnt
             // This can go outside loop
@@ -348,12 +348,12 @@ RcppExport SEXP cmebart(
             bm_prime.setdata(p, n, ix, iy, numcut);
             y_pred_prime = bm_prime.f(k);
 
-            // Proposed values
+            // Old values
             alpha -= log(dnorm(y_true, y_pred, sigma));   // y likelihood
             alpha -= log(dnorm(x_meas, x_true, sigma_e)); // x likelihood
             // alpha -= log(dnorm(x_true, mu_x, sigma_x));   // x prior
 
-            // Old values
+            // Proposed values
             alpha += log(dnorm(y_true, y_pred_prime, sigma));   // y likelihood
             alpha += log(dnorm(x_meas, x_true_prime, sigma_e)); // x likelihood
             // alpha += log(dnorm(x_true_prime, mu_x, sigma_x));   // x prior
