@@ -337,7 +337,8 @@ RcppExport SEXP cmebart(
 
             // TODO: Check that this is right, probably isnt
             // This can go outside loop
-            heterbart bm_prime = bm;
+            heterbart bm_prime;
+            bm_prime = bm;
             Rcpp::NumericVector last_xv(n); // = x_draws_[i];
             for (size_t j = 0; j < n; j++)
             {
