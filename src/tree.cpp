@@ -23,7 +23,7 @@
 // node id
 size_t tree::nid() const
 {
-    if (!p)
+    if (!p) // p = parent
         return 1; // if you don't have a parent, you are the top
     if (this == p->l)
         return 2 * (p->nid()); // if you are a left child
@@ -31,16 +31,17 @@ size_t tree::nid() const
         return 2 * (p->nid()) + 1; // else you are a right child
 }
 //--------------------
+// Get the pointer to the node with nid
 tree::tree_p tree::getptr(size_t nid)
 {
     if (this->nid() == nid)
         return this; // found it
     if (l == 0)
         return 0; // no children, did not find it
-    tree_p lp = l->getptr(nid);
+    tree_p lp = l->getptr(nid); // pointer to left child
     if (lp)
         return lp; // found on left
-    tree_p rp = r->getptr(nid);
+    tree_p rp = r->getptr(nid); // pointer to right child
     if (rp)
         return rp; // found on right
     return 0;      // never found it
@@ -49,7 +50,7 @@ tree::tree_p tree::getptr(size_t nid)
 // add children to  bot node nid
 bool tree::birth(size_t nid, size_t v, size_t c, double thetal, double thetar)
 {
-    tree_p np = getptr(nid);
+    tree_p np = getptr(nid); // node pointer
     if (np == 0)
     {
         cout << "error in birth: bottom node not found\n";
@@ -91,7 +92,7 @@ size_t tree::treesize()
     if (l == 0)
         return 1; // if bottom node, tree size is 1
     else
-        return (1 + l->treesize() + r->treesize());
+        return (1 + l->treesize() + r->treesize()); // 1 plus size of both children
 }
 //--------------------
 // node type
@@ -183,7 +184,7 @@ bool tree::isnog()
     return isnog;
 }
 //--------------------
-size_t tree::nnogs()
+size_t tree::nnogs() // number of nog nodes
 {
     if (!l)
         return 0; // bottom node
@@ -262,7 +263,7 @@ void tree::getnodes(cnpv &v) const
     }
 }
 //--------------------
-tree::tree_p tree::bn(double *x, xinfo &xi)
+tree::tree_p tree::bn(double *x, xinfo &xi) // get pointer to buttom node for x (particular observation)
 {
     if (l == 0)
         return this; // no children
@@ -285,14 +286,14 @@ void tree::rg(size_t v, int *L, int *U)
     }
     if ((this->p)->v == v)
     { // does my parent use v?
-        if (this == p->l)
-        { // am I left or right child
+        if (this == p->l) // am I left or right child
+        { // I am left child
             if ((int)(p->c) <= (*U))
                 *U = (p->c) - 1;
             p->rg(v, L, U);
         }
         else
-        {
+        { // I am right child
             if ((int)(p->c) >= *L)
                 *L = (p->c) + 1;
             p->rg(v, L, U);
@@ -312,7 +313,7 @@ void tree::tonull()
     while (ts > 1)
     { // if false ts=1
         npv nv;
-        getnogs(nv);
+        getnogs(nv); // saves all nog nodes to nv
         for (size_t i = 0; i < nv.size(); i++)
         {
             delete nv[i]->l;
@@ -441,7 +442,8 @@ std::istream &operator>>(std::istream &is, tree &t)
 }
 //--------------------
 // add children to bot node *np
-void tree::birthp(tree_p np, size_t v, size_t c, double thetal, double thetar)
+// similar to other birth function but used pointer instead of node id
+void tree::birthp(tree_p np, size_t v, size_t c, double thetal, double thetar) 
 {
     tree_p l = new tree;
     l->theta = thetal;
@@ -456,6 +458,7 @@ void tree::birthp(tree_p np, size_t v, size_t c, double thetal, double thetar)
 }
 //--------------------
 // kill children of  nog node *nb
+// same as above but used node pointer instead of node id
 void tree::deathp(tree_p nb, double theta)
 {
     delete nb->l;
@@ -469,14 +472,14 @@ void tree::deathp(tree_p nb, double theta)
 
 size_t tree::getbadcut(size_t v)
 {
-    tree_p par = this->getp();
-    if (par->getv() == v)
-        return par->getc();
+    tree_p par = this->getp(); // pointer to parent
+    if (par->getv() == v) // if parent uses this variable
+        return par->getc(); // return cutpoint used by parent
     else
         return par->getbadcut(v);
 }
 
-#ifndef NoRcpp
+#ifndef NoRcpp // if yes Rcpp
 // instead of returning y.test, let's return trees
 // this conveniently avoids the need for x.test
 // loosely based on pr()

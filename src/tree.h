@@ -44,13 +44,13 @@ struct node_info
 class tree
 {
 public:
-    // friends--------------------
+    // friends-------------------- // can access private / protected members
     friend std::istream &operator>>(std::istream &, tree &);
     // typedefs--------------------
-    typedef tree *tree_p;
-    typedef const tree *tree_cp;
-    typedef std::vector<tree_p> npv;
-    typedef std::vector<tree_cp> cnpv;
+    typedef tree *tree_p; // tree pointer
+    typedef const tree *tree_cp; // const tree pointer
+    typedef std::vector<tree_p> npv; // vector of tree pointers
+    typedef std::vector<tree_cp> cnpv; // vector of const tree pointers
     // contructors,destructors--------------------
     tree() : theta(0.0), v(0), c(0), p(0), l(0), r(0) {}
     tree(const tree &n) : theta(0.0), v(0), c(0), p(0), l(0), r(0) { cp(this, &n); }
@@ -93,7 +93,7 @@ public:
     char ntype();       // node type t:top, b:bot, n:no grandchildren i:interior (t can be b)
     bool isnog();
     size_t getbadcut(size_t v);
-#ifndef NoRcpp
+#ifndef NoRcpp // we leave these in
     Rcpp::List tree2list(xinfo &xi, double center = 0., double scale = 1.); // create an efficient list from a single tree
     // tree list2tree(Rcpp::List&, xinfo& xi); // create a tree from a list and an xinfo
     Rcpp::IntegerVector tree2count(size_t nvar); // for one tree, count the number of branches for each variable
