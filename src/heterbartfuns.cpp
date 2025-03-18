@@ -108,15 +108,15 @@ void heterallsuff(tree &x, xinfo &xi, dinfo &di, tree::npv &bnv, std::vector<dou
     size_t ni;         // the  index into vector of the current bottom node
     double *xx;        // current x
 
-    bnv.clear();
-    x.getbots(bnv);
+    bnv.clear(); // clears vector of pointers to bottom nodes
+    x.getbots(bnv); // get all bottom nodes of this tree
 
     typedef tree::npv::size_type bvsz;
     bvsz nb = bnv.size();
-    bv.resize(nb);
+    bv.resize(nb); // resize to number of bottom nodes
     Mv.resize(nb);
 
-    std::map<tree::tree_cp, size_t> bnmap;
+    std::map<tree::tree_cp, size_t> bnmap; // maps bottom node pointer to index in vectors
     for (bvsz i = 0; i != bnv.size(); i++)
     {
         bnmap[bnv[i]] = i;
@@ -125,12 +125,12 @@ void heterallsuff(tree &x, xinfo &xi, dinfo &di, tree::npv &bnv, std::vector<dou
     }
 
     double w;
-    for (size_t i = 0; i < di.n; i++)
+    for (size_t i = 0; i < di.n; i++) // loop through all observations
     {
-        w = 1.0 / (sigma[i] * sigma[i]);
-        xx = di.x + i * di.p;
-        tbn = x.bn(xx, xi);
-        ni = bnmap[tbn];
+        w = 1.0 / (sigma[i] * sigma[i]); // weight for this observation
+        xx = di.x + i * di.p; // get pointer to current observation
+        tbn = x.bn(xx, xi); // gets pointer of bottom node for this observation
+        ni = bnmap[tbn]; // maps that pointer to an index in the vectors
 
         bv[ni] += w;
         Mv[ni] += w * di.y[i];
@@ -140,10 +140,10 @@ void heterallsuff(tree &x, xinfo &xi, dinfo &di, tree::npv &bnv, std::vector<dou
 // heter version of drmu, need b and M instead of n and sy
 void heterdrmu(tree &t, xinfo &xi, dinfo &di, pinfo &pi, double *sigma, rn &gen)
 {
-    tree::npv bnv;
+    tree::npv bnv; // bottom nodes, vector of pointers to bottom nodes
     std::vector<double> bv;
     std::vector<double> Mv;
     heterallsuff(t, xi, di, bnv, bv, Mv, sigma);
-    for (tree::npv::size_type i = 0; i != bnv.size(); i++)
+    for (tree::npv::size_type i = 0; i != bnv.size(); i++) // loop through all bottom nodes
         bnv[i]->settheta(heterdrawnodemu(bv[i], Mv[i], pi.tau, gen));
 }

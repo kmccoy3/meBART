@@ -23,7 +23,7 @@ bool bd(tree &x, xinfo &xi, dinfo &di, pinfo &pi, double sigma,
         std::vector<size_t> &nv, std::vector<double> &pv, bool aug, rn &gen)
 {
     tree::npv goodbots;                      // nodes we could birth at (split on)
-    double PBx = getpb(x, xi, pi, goodbots); // prob of a birth at x
+    double PBx = getpb(x, xi, pi, goodbots); // prob of a birth at x, also updates goodbots
 
     if (gen.uniform() < PBx)
     { // do birth or death

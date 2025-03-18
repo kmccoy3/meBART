@@ -64,9 +64,9 @@ void makexinfo(size_t p, size_t n, double *x, xinfo &xi, int *nc)
 double getpb(tree &t, xinfo &xi, pinfo &pi, tree::npv &goodbots)
 {
     double pb;     // prob of birth to be returned
-    tree::npv bnv; // all the bottom nodes
+    tree::npv bnv; // all the bottom nodes, vector of pointers to trees
     t.getbots(bnv);
-    for (size_t i = 0; i != bnv.size(); i++)
+    for (size_t i = 0; i != bnv.size(); i++) // loop through all bottom nodes
         if (cansplit(bnv[i], xi))
             goodbots.push_back(bnv[i]);
     if (goodbots.size() == 0)

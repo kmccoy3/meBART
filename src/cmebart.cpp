@@ -330,7 +330,7 @@ RcppExport SEXP cmebart(
             // if (i==0 && k==0) printf("x_obs: %f\n", x_obs);
 
             // Initialize alpha
-            double alpha = 0.0;
+            double alpha = 0.0; // FIXME: did I mess this up?
             double y_true = yv[k];
             double y_pred = bm.f(k);
             double y_pred_prime; // = y_pred; // FIXME: we need to calculate y_pred for the new x_true_prime
