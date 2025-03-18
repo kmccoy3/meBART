@@ -94,12 +94,26 @@ void hetergetsuff(tree &x, tree::tree_p l, tree::tree_p r, xinfo &xi, dinfo &di,
 }
 //--------------------------------------------------
 // draw one mu from post
+// double heterdrawnodemu(double b, double M, double tau, rn &gen)
+// {
+//     double muhat = M / b; // BUG: b might be zero here
+//     double a = 1.0 / (tau * tau);
+//     return (b * muhat) / (a + b) + gen.normal() / sqrt(a + b);
+// }
+
 double heterdrawnodemu(double b, double M, double tau, rn &gen)
 {
-    double muhat = M / b;
+    if (b == 0){
+        printf("b is zero\n");
+        return gen.normal() / tau;
+    }
+    
+    double muhat = M / b; // BUG: b might be zero here
     double a = 1.0 / (tau * tau);
     return (b * muhat) / (a + b) + gen.normal() / sqrt(a + b);
 }
+
+
 //--------------------------------------------------
 // get sufficients stats for all bottom nodes, this way just loop through all the data once.
 void heterallsuff(tree &x, xinfo &xi, dinfo &di, tree::npv &bnv, std::vector<double> &bv, std::vector<double> &Mv, double *sigma)
