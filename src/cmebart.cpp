@@ -280,7 +280,10 @@ RcppExport SEXP cmebart(
     x_draws x_draws_(total + 1);
 
     // Initialize first entry of x_draws with the observed x values
-    x_draws_[0] = xv; // TODO: For some reason this is a matrix in R
+    for (size_t i = 0; i < n; i++)
+    {
+        x_draws_[0].push_back(xv[i]);
+    } // probably inefficient but only run once
 
     Rcpp::NumericMatrix acceptances(total, n);
 
