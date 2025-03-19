@@ -13,4 +13,6 @@ double dnorm(double x, double mu, double sigma);
 
 double min(double a, double b);
 
+size_t discrete_uniform(const size_t n);
+
 #endif

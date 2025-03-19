@@ -9,6 +9,7 @@
 #include "heterbart.h"
 #include "mefuns.h"
 #include <RcppArmadillo.h>
+#include <random>
 
 
 arn gen;
@@ -60,4 +61,17 @@ double dmvnorm(arma::vec x, arma::vec mu, arma::mat sigma) {
     tmp *= exp(-0.5 * arma::as_scalar((x - mu).t() * arma::inv_sympd(sigma) * (x - mu)));
 
     return tmp;
+}
+
+
+size_t discrete_uniform(const size_t n)
+{
+
+    std::random_device rand_dev;
+    std::mt19937 generator(rand_dev());
+    std::uniform_int_distribution<size_t> distr(0, n);
+
+    size_t result = distr(generator);
+
+    return result;
 }
