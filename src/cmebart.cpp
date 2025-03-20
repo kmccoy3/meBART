@@ -65,7 +65,7 @@ RcppExport SEXP cmebart(
     SEXP _proposal_sd       // kevins variable
 )
 {
-    printf("FIRST HEADER RAN\n");
+    // printf("FIRST HEADER RAN\n");
     //--------------------------------------------------
     // process args
     size_t n = Rcpp::as<int>(_in);   // number of training data points
@@ -76,7 +76,7 @@ RcppExport SEXP cmebart(
 
     Rcpp::NumericVector xv(_ix); // TODO: why is this a vector and not a matrix?
 
-    Rcpp::Rcout << "xv: " << xv << "\n";
+    // Rcpp::Rcout << "xv: " << xv << "\n";
 
     double *ix = &xv[0];
     Rcpp::NumericVector yv(_iy);
@@ -316,6 +316,10 @@ RcppExport SEXP cmebart(
         // =========================================================================================
         // Measurement Error Step in Gibbs Sampler
 
+        size_t observation_to_pick = discrete_uniform(n-1); // Pick an observation to update
+
+        // printf("Observation to pick: %zu\n", observation_to_pick);
+
         // Loop through each observation
         for (size_t k = 0; k < n; k++)
         {
@@ -370,7 +374,7 @@ RcppExport SEXP cmebart(
             bool accept = gen.uniform() < acceptance_ratio;
 
             // Update draw of X
-            if (accept)
+            if (accept && (k == observation_to_pick))
             {
                 x_draws_[i + 1].push_back(x_true_prime);
                 
