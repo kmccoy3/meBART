@@ -295,23 +295,28 @@ RcppExport SEXP cmebart(
             printf("done %zu (out of %zu)\n", i, total);
         if (i == (burn / 2) && dart)
             bm.startdart();
-        // draw bart
-        bm.draw(svec, gen);
 
-        // Calculate the residual sum of squares
-        rss = 0.0;
-        for (size_t k = 0; k < n; k++)
+        if (i < 500)
         {
-            restemp = (iy[k] - bm.f(k)) / (iw[k]); // residual = (y - f(x)) / w
-            rss += restemp * restemp;
+
+            // draw bart
+            bm.draw(svec, gen);
+
+            // Calculate the residual sum of squares
+            rss = 0.0;
+            for (size_t k = 0; k < n; k++)
+            {
+                restemp = (iy[k] - bm.f(k)) / (iw[k]); // residual = (y - f(x)) / w
+                rss += restemp * restemp;
+            }
+            // Calculate sigma / draw sigma
+            sigma = sqrt((nu * lambda + rss) / gen.chi_square(n + nu));
+            // Recalculate svec
+            for (size_t k = 0; k < n; k++)
+                svec[k] = iw[k] * sigma;
+            // Save sigma to sdraw
+            sdraw[i] = sigma;
         }
-        // Calculate sigma / draw sigma
-        sigma = sqrt((nu * lambda + rss) / gen.chi_square(n + nu));
-        // Recalculate svec
-        for (size_t k = 0; k < n; k++)
-            svec[k] = iw[k] * sigma;
-        // Save sigma to sdraw
-        sdraw[i] = sigma;
 
         // =========================================================================================
         // Measurement Error Step in Gibbs Sampler
@@ -328,7 +333,7 @@ RcppExport SEXP cmebart(
             // Hyperparameters
             // double mu_x = 0.5;     // Prior mean
             // double sigma_x = 0.25; // Prior standard deviation
-            double sigma_e = 0.1;  // Measurement error standard deviation
+            double sigma_e = 0.1; // Measurement error standard deviation
 
             // if (i==0 && k==0) printf("x_obs: %f\n", x_obs);
 
@@ -370,15 +375,14 @@ RcppExport SEXP cmebart(
             bool accept = gen.uniform() < acceptance_ratio;
 
             // Update draw of X
-            if (accept)
+            if (accept && i >= 500)
             {
                 x_draws_[i + 1].push_back(x_true_prime);
-                
+
                 // Give original BART model new x data
                 bm.resetdata(p, n, ix, iy);
 
                 // bm = bm_prime;
-
 
                 acceptances(i, k) = 1;
             }
