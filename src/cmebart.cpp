@@ -323,7 +323,7 @@ RcppExport SEXP cmebart(
             // Get x value
             double x_meas = xv[k];                    // observed value of x
             double x_true = x_draws_[i][k];           // old value of x_true
-            double x_true_prime = rnorm(x_true, 0.1); // TODO: Fix hardcoding of 0.1
+            double x_true_prime = rnorm(x_true, 0.05); // TODO: Fix hardcoding of 0.1
 
             // Hyperparameters
             // double mu_x = 0.5;     // Prior mean
