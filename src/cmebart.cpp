@@ -62,7 +62,7 @@ RcppExport SEXP cmebart(
     SEXP _inprintevery,    // print progress every printevery iterations
                            //   SEXP _treesaslists,
     SEXP _Xinfo,           // cutpoints, now specified
-    SEXP _kevins_var       // kevins variable
+    SEXP _proposal_sd       // kevins variable
 )
 {
     printf("FIRST HEADER RAN\n");
@@ -132,7 +132,7 @@ RcppExport SEXP cmebart(
     Rcpp::NumericMatrix varprb(nkeeptreedraws, p);
     Rcpp::IntegerMatrix varcnt(nkeeptreedraws, p);
 
-    double kevins_var = Rcpp::as<double>(_kevins_var);
+    double proposal_sd = Rcpp::as<double>(_proposal_sd);
 
     // random number generation
     arn gen; // TODO
@@ -323,7 +323,7 @@ RcppExport SEXP cmebart(
             // Get x value
             double x_meas = xv[k];                    // observed value of x
             double x_true = x_draws_[i][k];           // old value of x_true
-            double x_true_prime = rnorm(x_true, 0.05); // TODO: Fix hardcoding of 0.1
+            double x_true_prime = rnorm(x_true, proposal_sd); // // TODO: Fix hardcoding of 0.1
 
             // Hyperparameters
             // double mu_x = 0.5;     // Prior mean

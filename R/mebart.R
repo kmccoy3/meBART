@@ -119,7 +119,7 @@ mebart <- function(x.train, # explanatory variables for training data, matrix or
                  nkeeptreedraws = ndpost, # number of MCMC iters to be returned for tree draws
                  printevery = 100L, # print progress every printevery iterations
                  transposed = FALSE,
-                 kevins_var = 1.0) # used if called by mc.wbart
+                 proposal_sd = 1.0) # used if called by mc.wbart
 {
     #--------------------------------------------------
     #data
@@ -243,7 +243,7 @@ mebart <- function(x.train, # explanatory variables for training data, matrix or
         nkeeptreedraws, # number of MCMC iters to be returned for tree draws
         printevery, # print progress every printevery iterations
         xinfo, # cutpoints, now specified
-        kevins_var # extra variable
+        proposal_sd # extra variable
     )
     
     res$proc.time <- proc.time() - ptm # how much time C++ code has taken
