@@ -323,7 +323,7 @@ RcppExport SEXP cmebart(
             // Get x value
             double x_meas = xv[k];                    // observed value of x
             double x_true = x_draws_[i][k];           // old value of x_true
-            double x_true_prime = rnorm(x_true, proposal_sd); // // TODO: Fix hardcoding of 0.1
+            double x_true_prime = rnorm(x_meas, proposal_sd); // // TODO: Fix hardcoding of 0.1
 
             // Hyperparameters
             // double mu_x = 0.5;     // Prior mean
@@ -360,6 +360,13 @@ RcppExport SEXP cmebart(
             alpha += log(dnorm(y_true, y_pred_prime, sigma));   // y likelihood
             alpha += log(dnorm(x_meas, x_true_prime, sigma_e)); // x likelihood
             // alpha += log(dnorm(x_true_prime, mu_x, sigma_x));   // x prior
+
+            // Proposal ratio
+            alpha -= dnorm(x_true_prime, x_meas, proposal_sd); // g(x'|x) = g(x')
+            alpha += dnorm(x_true, x_meas, proposal_sd); // g(x|x') = g(x)
+
+
+
 
             alpha = exp(alpha); // Convert back from log scale
 
