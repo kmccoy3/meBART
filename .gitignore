@@ -10,3 +10,4 @@ scratch/
 inst/doc
 .DS_Store
 *.RData
+.vscode
