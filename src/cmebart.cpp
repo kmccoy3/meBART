@@ -374,6 +374,29 @@ RcppExport SEXP cmebart(
             // Accept or reject the draw
             bool accept = gen.uniform() < acceptance_ratio;
 
+            if (i == 505 && k == 8){   
+                printf("**************************\n");
+
+                printf("x_true: %f\n", x_true);
+                printf("x_true_prime: %f\n", x_true_prime);
+                printf("x_meas: %f\n", x_meas);
+                printf("y_true: %f\n", y_true);
+                printf("y_pred: %f\n", y_pred);
+                printf("y_pred_prime: %f\n", y_pred_prime);
+                printf("alpha: %f\n", alpha);
+                printf("acceptance_ratio: %f\n", acceptance_ratio);
+                printf("accept: %d\n", accept);
+                printf("Calc 1: %f\n", log(dnorm(y_true, y_pred, sigma)));
+                printf("Calc 2: %f\n", log(dnorm(x_meas, x_true, sigma_e)));
+                printf("Calc 3: %f\n", log(dnorm(y_true, y_pred_prime, sigma)));
+                printf("Calc 4: %f\n", log(dnorm(x_meas, x_true_prime, sigma_e)));
+
+                printf("**************************\n");
+            }
+
+
+
+
             // Update draw of X
             if (accept && i >= 500)
             {
