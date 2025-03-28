@@ -351,6 +351,7 @@ RcppExport SEXP cmebart(
             {
                 last_xv[j] = x_draws_[i][j];
             }
+            last_xv[k] = x_true_prime; // Set the new x_true_prime value
             double *ix = &last_xv[0];
             bm_prime.setdata(p, n, ix, iy, numcut);
             y_pred_prime = bm_prime.f(k);
