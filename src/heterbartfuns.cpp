@@ -105,7 +105,8 @@ double heterdrawnodemu(double b, double M, double tau, rn &gen)
 {
     if (b == 0){
         printf("b is zero\n");
-        return gen.normal() / tau;
+        // return gen.normal() / tau;
+        return 0;
     }
     
     double muhat = M / b; // BUG: b might be zero here
