@@ -313,6 +313,17 @@ RcppExport SEXP cmebart(
         // Save sigma to sdraw
         sdraw[i] = sigma;
 
+
+        // Debugging print outs
+        // if (i == 407){
+        //     Rcpp::Rcout << "sigma: " << sigma << "\n";
+        //     for (size_t k = 0; k < n; k++)
+        //     {
+        //         Rcpp::Rcout << bm.f(k) << " ";
+        //     }
+        //     Rcpp::Rcout << "rss: " << rss << "\n";
+        // }
+
         // =========================================================================================
         // Measurement Error Step in Gibbs Sampler
 
