@@ -15,4 +15,8 @@ double min(double a, double b);
 
 size_t discrete_uniform(const size_t n);
 
+RcppExport SEXP cmin(SEXP a, SEXP b);
+
+RcppExport SEXP cdnorm(SEXP x, SEXP mu, SEXP sigma);
+
 #endif

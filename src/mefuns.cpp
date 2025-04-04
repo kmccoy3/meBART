@@ -75,3 +75,21 @@ size_t discrete_uniform(const size_t n)
 
     return result;
 }
+
+
+////////////////
+
+
+RcppExport SEXP cmin(SEXP a, SEXP b)
+{
+    return Rcpp::wrap(min(Rcpp::as<double>(a),
+                            Rcpp::as<double>(b)));
+
+}
+
+RcppExport SEXP cdnorm(SEXP x, SEXP mu, SEXP sigma)
+{
+    return Rcpp::wrap(dnorm(Rcpp::as<double>(x),
+                            Rcpp::as<double>(mu),
+                            Rcpp::as<double>(sigma)));
+}
