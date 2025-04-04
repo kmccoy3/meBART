@@ -376,7 +376,7 @@ RcppExport SEXP cmebart(
             alpha = exp(alpha); // Convert back from log scale
 
             // Calculate Metropolis-Hastings acceptance ratio
-            double acceptance_ratio = min(1, alpha);
+            double acceptance_ratio = std::min<double>(1, alpha);
 
             // Accept or reject the draw
             bool accept = gen.uniform() < acceptance_ratio;

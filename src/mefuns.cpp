@@ -19,6 +19,7 @@ double rnorm(double mu, double sigma)
     return mu + sigma * gen.normal();
 }
 
+
 double dnorm(double x, double mu, double sigma)
 {
     // TODO: check if this is how the package normally does this
@@ -30,26 +31,13 @@ double dnorm(double x, double mu, double sigma)
 }
 
 
-double min(double a, double b)
-{
-    return a < b ? a : b;
-}
-
-void MH_ratio(double x)
-{
-    printf("x: %f\n", x);
-    double tmp = exp(x);
-    printf("e^x: %f\n", tmp);
-    tmp = log(tmp);
-    printf("log(e^x): %f\n", tmp);
-    return;
-}
 
 arma::mat rmvnorm(int n, arma::vec mu, arma::mat sigma) {
     int ncols = sigma.n_cols;
     arma::mat Y = arma::randn(n, ncols);
     return arma::repmat(mu, 1, n).t() + Y * arma::chol(sigma);
 }
+
 
 double dmvnorm(arma::vec x, arma::vec mu, arma::mat sigma) {
     
@@ -64,28 +52,7 @@ double dmvnorm(arma::vec x, arma::vec mu, arma::mat sigma) {
 }
 
 
-size_t discrete_uniform(const size_t n)
-{
-
-    std::random_device rand_dev;
-    std::mt19937 generator(rand_dev());
-    std::uniform_int_distribution<size_t> distr(0, n);
-
-    size_t result = distr(generator);
-
-    return result;
-}
-
-
-////////////////
-
-
-RcppExport SEXP cmin(SEXP a, SEXP b)
-{
-    return Rcpp::wrap(min(Rcpp::as<double>(a),
-                            Rcpp::as<double>(b)));
-
-}
+//=============================================================================
 
 RcppExport SEXP cdnorm(SEXP x, SEXP mu, SEXP sigma)
 {

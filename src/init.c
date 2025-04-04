@@ -18,7 +18,6 @@ extern SEXP mc_cores_openmp(void);
 extern SEXP crtnorm(SEXP, SEXP, SEXP, SEXP);
 extern SEXP crtgamma(SEXP, SEXP, SEXP, SEXP);
 extern SEXP cdraw_lambda_i(SEXP, SEXP, SEXP, SEXP);
-extern SEXP cmin(SEXP, SEXP);
 extern SEXP cdnorm(SEXP, SEXP, SEXP);
 
 
@@ -37,7 +36,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"crtnorm", (DL_FUNC)&crtnorm, 4},
     {"crtgamma", (DL_FUNC)&crtgamma, 4},
     {"cdraw_lambda_i", (DL_FUNC)&cdraw_lambda_i, 4},
-    {"cmin", (DL_FUNC)&cmin, 2},
     {"cdnorm", (DL_FUNC)&cdnorm, 3},
     {NULL, NULL, 0}};
 
