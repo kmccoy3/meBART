@@ -9,6 +9,7 @@ extern SEXP clbart(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, S
 /* extern SEXP cmbart(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP); */
 extern SEXP cpwbart(SEXP, SEXP, SEXP);
 extern SEXP cwbart(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
+extern SEXP cmebart(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 extern SEXP cgbart(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 /*extern SEXP cgbmm(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);*/
 extern SEXP cabart(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
@@ -30,7 +31,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"cgbart", (DL_FUNC)&cgbart, 30},
     /*  {"cgbmm",   (DL_FUNC) &cgbmm,   34}, */
     {"cabart", (DL_FUNC)&cabart, 31},
-    /*  {"cspbart",  (DL_FUNC) &cspbart,  30}, */
+    {"cmebart", (DL_FUNC)&cmebart, 32},
     {"mc_cores_openmp", (DL_FUNC)&mc_cores_openmp, 0},
     {"crtnorm", (DL_FUNC)&crtnorm, 4},
     {"crtgamma", (DL_FUNC)&crtgamma, 4},
@@ -40,7 +41,7 @@ static const R_CallMethodDef CallEntries[] = {
         {"cdpmwbart",(DL_FUNC) &cdpmwbart,27}, */
     {NULL, NULL, 0}};
 
-void R_init_BART(DllInfo *dll)
+void R_init_meBART(DllInfo *dll)
 {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
