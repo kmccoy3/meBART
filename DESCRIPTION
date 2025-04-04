@@ -18,13 +18,13 @@ VignetteBuilder: knitr
 NeedsCompilation: yes
 Config/testthat/edition: 3
 Authors@R: c(
-    person("Kevin", "McCoy", "kmm12@rice.edu", role = c("aut", "cre")),
-    person("Christine", "Peterson", role = "aut"),
-    person("Zachary", "Wooten", role = "aut")
+    person(given="Kevin", family="McCoy", email="kmm12@rice.edu", role = c("aut", "cre")),
+    person(given="Zachary", family="Wooten", role = "aut"),
+    person(given="Christine", family="Peterson", role = "aut")
   )
 Author: Kevin McCoy [aut, cre],
-    Christine Peterson [aut],
-    Zachary Wooten [aut]
+    Zachary Wooten [aut],
+    Christine Peterson [aut]
 Maintainer: Kevin McCoy <kmm12@rice.edu>
 RoxygenNote: 7.3.2
 Encoding: UTF-8
