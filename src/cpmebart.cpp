@@ -29,7 +29,7 @@ void local_getpred(size_t nd, size_t p, size_t m, size_t np, xinfo &xi, std::vec
 
 void getpred(int beg, int end, size_t p, size_t m, size_t np, xinfo &xi, std::vector<vtree> &tmat, double *px, Rcpp::NumericMatrix &yhat);
 
-RcppExport SEXP cpwbart(
+RcppExport SEXP cpmebart(
     SEXP _itrees, // treedraws list from fbart
     SEXP _ix,     // x matrix to predict at
     SEXP _itc     // thread count

@@ -17,7 +17,7 @@
 ## along with this program; if not, a copy is available at
 ## https://www.R-project.org/Licenses/GPL-2
 
-mc.pwbart = function(
+mc.pmebart = function(
    x.test,		#x matrix to predict at
    treedraws,		#$treedraws from wbart
    mu=0,		#mean to add on
@@ -50,7 +50,7 @@ mc.pwbart = function(
         else h <- j-k
         ##print(c(i=i, h=h, j=j))
         parallel::mcparallel({psnice(value=nice);
-            pwbart(matrix(x.test[ , h:j], nrow=p, ncol=j-h+1), treedraws, mu, 1, TRUE)},
+            pmebart(matrix(x.test[ , h:j], nrow=p, ncol=j-h+1), treedraws, mu, 1, TRUE)},
             silent=(i!=1))
         j <- h-1
     }
