@@ -11,14 +11,12 @@
 #include <RcppArmadillo.h>
 #include <random>
 
-
 arn gen;
 
 double rnorm(double mu, double sigma)
 {
     return mu + sigma * gen.normal();
 }
-
 
 double dnorm(double x, double mu, double sigma)
 {
@@ -30,27 +28,25 @@ double dnorm(double x, double mu, double sigma)
     return tmp;
 }
 
-
-
-arma::mat rmvnorm(int n, arma::vec mu, arma::mat sigma) {
+arma::mat rmvnorm(int n, arma::vec mu, arma::mat sigma)
+{
     int ncols = sigma.n_cols;
     arma::mat Y = arma::randn(n, ncols);
     return arma::repmat(mu, 1, n).t() + Y * arma::chol(sigma);
 }
 
+double dmvnorm(arma::vec x, arma::vec mu, arma::mat sigma)
+{
 
-double dmvnorm(arma::vec x, arma::vec mu, arma::mat sigma) {
-    
     int dim = x.n_elem;
     double tmp = 1.0;
 
-    tmp /=  pow(RTPI, dim);
+    tmp /= pow(RTPI, dim);
     tmp /= sqrt(arma::det(sigma));
     tmp *= exp(-0.5 * arma::as_scalar((x - mu).t() * arma::inv_sympd(sigma) * (x - mu)));
 
     return tmp;
 }
-
 
 //=============================================================================
 

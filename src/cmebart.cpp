@@ -62,7 +62,7 @@ RcppExport SEXP cmebart(
     SEXP _inprintevery,    // print progress every printevery iterations
                            //   SEXP _treesaslists,
     SEXP _Xinfo,           // cutpoints, now specified
-    SEXP _proposal_sd       // kevins variable
+    SEXP _proposal_sd      // kevins variable
 )
 {
     printf("FIRST HEADER RAN\n");
@@ -313,7 +313,6 @@ RcppExport SEXP cmebart(
         // Save sigma to sdraw
         sdraw[i] = sigma;
 
-
         // Debugging print outs
         // if (i == 407){
         //     Rcpp::Rcout << "sigma: " << sigma << "\n";
@@ -332,14 +331,14 @@ RcppExport SEXP cmebart(
         {
 
             // Get x value
-            double x_meas = xv[k];                    // observed value of x
-            double x_true = x_draws_[i][k];           // old value of x_true
+            double x_meas = xv[k];                            // observed value of x
+            double x_true = x_draws_[i][k];                   // old value of x_true
             double x_true_prime = rnorm(x_true, proposal_sd); // // TODO: Fix hardcoding of 0.1
 
             // Hyperparameters
             // double mu_x = 0.5;     // Prior mean
             // double sigma_x = 0.25; // Prior standard deviation
-            double sigma_e = 0.1;  // Measurement error standard deviation
+            double sigma_e = 0.1; // Measurement error standard deviation
 
             // if (i==0 && k==0) printf("x_obs: %f\n", x_obs);
 
@@ -385,12 +384,11 @@ RcppExport SEXP cmebart(
             if (accept)
             {
                 x_draws_[i + 1].push_back(x_true_prime);
-                
+
                 // Give original BART model new x data
                 bm.resetdata(p, n, ix, iy);
 
                 // bm = bm_prime;
-
 
                 acceptances(i, k) = 1;
             }

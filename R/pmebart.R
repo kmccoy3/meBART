@@ -1,4 +1,3 @@
-
 ## BART: Bayesian Additive Regression Trees
 ## Copyright (C) 2017-2018 Robert McCulloch and Rodney Sparapani
 
@@ -16,28 +15,32 @@
 ## along with this program; if not, a copy is available at
 ## https://www.R-project.org/Licenses/GPL-2
 
-pmebart = function(
-   x.test,		#x matrix to predict at
-   treedraws,		#$treedraws from wbart
-   mu=0,		#mean to add on
-   mc.cores=1L,         #thread count
-   transposed=FALSE,	
-   dodraws=TRUE,
-   nice=19L             #mc.pwbart only	
-)
-{
-if(!transposed) x.test <- t(bartModelMatrix(x.test))
+pmebart <- function(
+    x.test, # x matrix to predict at
+    treedraws, # $treedraws from wbart
+    mu = 0, # mean to add on
+    mc.cores = 1L, # thread count
+    transposed = FALSE,
+    dodraws = TRUE,
+    nice = 19L # mc.pwbart only
+    ) {
+   if (!transposed) x.test <- t(bartModelMatrix(x.test))
 
-p <- length(treedraws$cutpoints)
+   p <- length(treedraws$cutpoints)
 
-if(p!=nrow(x.test))
-    stop(paste0('The number of columns in x.test must be equal to ', p))
+   if (p != nrow(x.test)) {
+      stop(paste0("The number of columns in x.test must be equal to ", p))
+   }
 
-res = .Call("cpmebart",
-   treedraws,	#trees list
-   x.test,      #the test x
-   mc.cores   	#thread count
-)
-if(dodraws) return(res$yhat.test+mu)
-else return(apply(res$yhat.test, 2, mean)+mu)
+   res <- .Call(
+      "cpmebart",
+      treedraws, # trees list
+      x.test, # the test x
+      mc.cores # thread count
+   )
+   if (dodraws) {
+      return(res$yhat.test + mu)
+   } else {
+      return(apply(res$yhat.test, 2, mean) + mu)
+   }
 }

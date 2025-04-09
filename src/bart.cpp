@@ -77,7 +77,7 @@ bart &bart::operator=(const bart &rhs)
 // get,set
 void bart::setm(size_t m)
 {
-    t.resize(m); // resize vector of trees
+    t.resize(m);        // resize vector of trees
     this->m = t.size(); // set m
 
     if (allfit && (xi.size() == p)) // if allfit exists and xi is the same size as p
@@ -149,7 +149,6 @@ void bart::setdata(size_t p, size_t n, double *x, double *y, int *nc)
     }
 }
 
-
 void bart::resetdata(size_t p, size_t n, double *x, double *y)
 {
     // printf("In bart::resetdata!!!\n");
@@ -173,18 +172,15 @@ void bart::resetdata(size_t p, size_t n, double *x, double *y)
     allfit = new double[n];
     predict(p, n, x, allfit);
 
-
     // printf("Resetting r\n");
     // if (r)
     //     delete[] r;
     // r = new double[n];
 
-
     // printf("Resetting ftemp\n");
     // if (ftemp)
     //     delete[] ftemp;
     // ftemp = new double[n];
-
 
     // printf("Resetting di\n");
     // di.n = n;
@@ -197,10 +193,6 @@ void bart::resetdata(size_t p, size_t n, double *x, double *y)
     //     pv.push_back(1 / (double)p);
     // }
 }
-
-
-
-
 
 //--------------------------------------------------
 void bart::predict(size_t p, size_t n, double *x, double *fp)
@@ -231,7 +223,7 @@ void bart::draw(double sigma, rn &gen)
         for (size_t k = 0; k < n; k++)
         {
             allfit[k] = allfit[k] - ftemp[k]; // takes out the current tree's prediction
-            r[k] = y[k] - allfit[k]; // recalculates residuals
+            r[k] = y[k] - allfit[k];          // recalculates residuals
         }
         bd(t[j], xi, di, pi, sigma, nv, pv, aug, gen);
         drmu(t[j], xi, di, pi, sigma, gen);

@@ -1,4 +1,3 @@
-
 ## BART: Bayesian Additive Regression Trees
 ## Copyright (C) 2017 Robert McCulloch and Rodney Sparapani
 
@@ -16,25 +15,30 @@
 ## along with this program; if not, a copy is available at
 ## https://www.R-project.org/Licenses/GPL-2
 
-predict.mebart <- function(object, newdata, mc.cores=1, openmp=(mc.cores.openmp()>0), ...) {
-
-    ##if(class(newdata) != "matrix") stop("newdata must be a matrix")
+predict.mebart <- function(object, newdata, mc.cores = 1, openmp = (mc.cores.openmp() > 0), ...) {
+    ## if(class(newdata) != "matrix") stop("newdata must be a matrix")
 
     p <- length(object$treedraws$cutpoints)
 
-    if(p!=ncol(newdata))
-        stop(paste0('The number of columns in newdata must be equal to ', p))
+    if (p != ncol(newdata)) {
+        stop(paste0("The number of columns in newdata must be equal to ", p))
+    }
 
-    if(.Platform$OS.type == "unix") mc.cores.detected <- detectCores()
-    else mc.cores.detected <- NA
+    if (.Platform$OS.type == "unix") {
+        mc.cores.detected <- detectCores()
+    } else {
+        mc.cores.detected <- NA
+    }
 
-    if(!is.na(mc.cores.detected) && mc.cores>mc.cores.detected) mc.cores <- mc.cores.detected
+    if (!is.na(mc.cores.detected) && mc.cores > mc.cores.detected) mc.cores <- mc.cores.detected
 
-    if(.Platform$OS.type != "unix" || openmp || mc.cores==1) call <- pmebart
-    else call <- mc.pmebart
+    if (.Platform$OS.type != "unix" || openmp || mc.cores == 1) {
+        call <- pmebart
+    } else {
+        call <- mc.pmebart
+    }
 
-    if(length(object$mu)==0) object$mu=object$offset
+    if (length(object$mu) == 0) object$mu <- object$offset
 
-    return(call(newdata, object$treedraws, mc.cores=mc.cores, mu=object$mu, ...))
+    return(call(newdata, object$treedraws, mc.cores = mc.cores, mu = object$mu, ...))
 }
-

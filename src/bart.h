@@ -52,7 +52,6 @@ public:
     void setdata(size_t p, size_t n, double *x, double *y, int *nc);
     void resetdata(size_t p, size_t n, double *x, double *y);
 
-
     void setpi(pinfo &pi) { this->pi = pi; }
     void setprior(double alpha, double beta, double tau)
     {
@@ -119,7 +118,7 @@ protected:
     xinfo xi;      // cutpoint info
     // working
     double *allfit; // if the data is set, should be f(x)
-    double *r; //
+    double *r;      //
     double *ftemp;
     dinfo di; // data info
     bool dart, dartOn, aug, const_theta;
