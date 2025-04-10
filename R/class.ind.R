@@ -16,12 +16,12 @@
 #
 
 
-#' #' @title Class Indicator Matrix
-#' #' @description This function creates a class indicator matrix from a factor.
+#' @title Class Indicator Matrix
+#' @description This function creates a class indicator matrix from a factor.
 #' 
-#' #' @param cl A factor or vector of class labels.
+#' @param cl A factor or vector of class labels.
 #' 
-#' #' @return A matrix with rows corresponding to observations and columns to classes.
+#' @return A matrix with rows corresponding to observations and columns to classes.
 #' 
 #'
 class.ind <- function(cl)
