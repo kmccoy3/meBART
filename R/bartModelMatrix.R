@@ -15,8 +15,41 @@
 ## along with this program; if not, a copy is available at
 ## https://www.R-project.org/Licenses/GPL-2
 
-bartModelMatrix <- function(X, numcut = 0L, usequants = FALSE, type = 7,
-                            rm.const = FALSE, cont = FALSE, xinfo = NULL) {
+
+#' @title BART Model Matrix
+#' @description This function creates a model matrix for BART.
+#' 
+#' @param X A data frame, matrix, or vector.
+#' @param numcut The number of cut points for each variable.
+#' @param usequants Logical. If TRUE, quantiles are used for cut points.
+#' @param type The type of quantile to use.
+#' @param rm.const Logical. If TRUE, constant variables are removed.
+#' @param cont Logical. If TRUE, continuous variables are treated as such.
+#' @param xinfo A list or matrix of cut points.
+#' @return A list containing the model matrix, number of cut points, removed variables, and cut points information.
+#' 
+#' @export
+#' 
+#' @examples 
+#' #' # Example usage
+#' data(iris)
+#' X <- iris[, -5]
+#' numcut <- 3
+#' usequants <- TRUE
+#' rm.const <- TRUE
+#' cont <- FALSE
+#' xinfo <- NULL
+#' 
+#' #' result <- bartModelMatrix(X, numcut, usequants, rm.const, cont, xinfo)
+#' #' print(result)
+#' 
+bartModelMatrix <- function(X,
+                            numcut = 0L,
+                            usequants = FALSE,
+                            type = 7,
+                            rm.const = FALSE,
+                            cont = FALSE,
+                            xinfo = NULL) {
     X.class <- class(X)[1]
 
     if (X.class == "factor") {
@@ -75,17 +108,7 @@ bartModelMatrix <- function(X, numcut = 0L, usequants = FALSE, type = 7,
                     if (k == 0) xs <- NA
                 } else if (cont) {
                     xs <- seq(xs[1], xs[k], length.out = numcut + 2)[-c(1, numcut + 2)]
-                } ## if(cont) {
-                ##     if(k==1) xs <-
-                ##          seq(xs[1], xs[1]+1, length.out=numcut+2)[-c(1, numcut+2)]
-                ##     else xs <-
-                ##          seq(xs[1], xs[k], length.out=numcut+2)[-c(1, numcut+2)]
-                ## }
-                ## else if(k==1) {
-                ##     rm.vars <- c(rm.vars, -j)
-                ##     nc[j] <- 1
-                ## }
-                else if (k < numcut) {
+                } else if (k < numcut) {
                     xs <- 0.5 * (xs[1:(k - 1)] + xs[2:k])
                     nc[j] <- k - 1
                 } else if (usequants) {
@@ -93,7 +116,6 @@ bartModelMatrix <- function(X, numcut = 0L, usequants = FALSE, type = 7,
                         type = type,
                         probs = (0:(numcut + 1)) / (numcut + 1)
                     )[-c(1, numcut + 2)]
-                    ## xs <- quantile(X[ , j], type=type, probs=(1:numcut)/(numcut+1))
                     names(xs) <- NULL
                 } else {
                     xs <-
@@ -103,7 +125,6 @@ bartModelMatrix <- function(X, numcut = 0L, usequants = FALSE, type = 7,
                 stop(paste0("Variables of type ", X.class, " are not supported"))
             }
 
-            ## nc[j] <- length(xs)
             xinfo.[j, 1:nc[j]] <- xs
         }
     }
@@ -131,7 +152,6 @@ bartModelMatrix <- function(X, numcut = 0L, usequants = FALSE, type = 7,
     } else if (length(rm.vars) == 0) rm.vars <- 1:p
 
     dimnames(xinfo) <- list(dimnames(X)[[2]], NULL)
-    ## dimnames(xinfo)[[1]] <- dimnames(X)[[2]]
 
     if (numcut == 0) {
         return(X)

@@ -39,7 +39,8 @@ mebart(
   nkeeptestmean = ndpost,
   nkeeptreedraws = ndpost,
   printevery = 100L,
-  transposed = FALSE
+  transposed = FALSE,
+  proposal_sd = 1
 )
 }
 \arguments{
@@ -128,7 +129,7 @@ A list with the following elements:
 \item{rm.const}{A vector specifying which columns were removed from `x.train`.}
 }
 \description{
-This function fits a Bayesian Additive Regression Tree model for continuous data using a set of explanatory variables. 
+This function fits a Bayesian Additive Regression Tree model for continuous data using a set of explanatory variables.
 It provides options for handling test data, priors, and other model parameters, including options for variable selection and sparsity control.
 }
 \examples{

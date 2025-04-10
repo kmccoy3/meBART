@@ -16,6 +16,27 @@
 ## along with this program; if not, a copy is available at
 ## https://www.R-project.org/Licenses/GPL-2
 
+
+
+
+#' @title Multicore BART Predictions
+#' 
+#' @description This function performs multicore predictions using BART.
+#' 
+#' @param x.test A matrix of test data.
+#' @param treedraws A list containing the tree draws.
+#' @param mu A numeric value to add to the predictions.
+#' @param mc.cores Number of cores to use for parallel processing.
+#' @param transposed 
+#' @param dodraws Logical. If TRUE, draws are returned.
+#' @param nice Nice level for the process.
+#' 
+#' @return A matrix of predictions.
+#' 
+#' @export
+#' @importFrom parallel detectCores
+#' @importFrom tools psnice
+#' 
 mc.pmebart <- function(
     x.test, # x matrix to predict at
     treedraws, # $treedraws from wbart

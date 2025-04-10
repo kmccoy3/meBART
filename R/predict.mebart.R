@@ -15,7 +15,40 @@
 ## along with this program; if not, a copy is available at
 ## https://www.R-project.org/Licenses/GPL-2
 
-predict.mebart <- function(object, newdata, mc.cores = 1, openmp = (mc.cores.openmp() > 0), ...) {
+
+#' @title Predictions for meBART
+#' 
+#' @description This function makes predictions using a meBART model.
+#' 
+#' @param object A meBART object.
+#' @param newdata A matrix of new data for prediction.
+#' @param mc.cores Number of cores to use for parallel processing.
+#' @param openmp Logical. If TRUE, OpenMP is used for parallel processing.
+#' @param ... Additional arguments.
+#' 
+#' @return A matrix of predictions.
+#' 
+#' @export
+#' @importFrom parallel detectCores
+#' 
+#' @examples
+#' # Example usage
+#' # Load the meBART package
+#' # library(meBART)
+#' #' # Create a meBART object
+#' #' # model <- mebart(x.train, y.train, ...)
+#' #' # Create new data for prediction
+#' #' # newdata <- matrix(...)
+#' #' # Make predictions
+#' #' #' predictions <- predict(model, newdata)
+#' #' # Print predictions
+#' #' #' print(predictions)
+#' 
+predict.mebart <- function(object, 
+    newdata, 
+    mc.cores = 1, 
+    openmp = (mc.cores.openmp() > 0), 
+    ...) {
     ## if(class(newdata) != "matrix") stop("newdata must be a matrix")
 
     p <- length(object$treedraws$cutpoints)

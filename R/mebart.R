@@ -116,8 +116,8 @@ mebart <- function(x.train, # explanatory variables for training data, matrix or
                    nkeeptestmean = ndpost, # number of MCMC iters to be returned for test mean
                    nkeeptreedraws = ndpost, # number of MCMC iters to be returned for tree draws
                    printevery = 100L, # print progress every printevery iterations
-                   transposed = FALSE,
-                   proposal_sd = 1.0) # used if called by mc.wbart
+                   transposed = FALSE, # used if called by mc.wbart
+                   proposal_sd = 1.0) 
 {
     #--------------------------------------------------
     # data

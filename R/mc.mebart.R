@@ -15,23 +15,89 @@
 ## along with this program; if not, a copy is available at
 ## https://www.R-project.org/Licenses/GPL-2
 
+
+#' @title Multicore BART
+#' 
+#' @description This function performs Bayesian Additive Regression Trees (BART) using multiple cores.
+#' 
+#' @param x.train Training data matrix.
+#' @param y.train Response variable for training data.
+#' @param x.test Test data matrix (optional).
+#' @param sparse Logical. If TRUE, sparse matrix is used.
+#' @param theta Parameter for the model.
+#' @param omega Parameter for the model.
+#' @param a Parameter for the model.
+#' @param b Parameter for the model.
+#' @param augment Logical. If TRUE, augmentation is used.
+#' @param rho Parameter for the model.
+#' @param xinfo Information about the model matrix.
+#' @param usequants Logical. If TRUE, quantiles are used for cut points.
+#' @param cont Logical. If TRUE, continuous variables are treated as such.
+#' @param rm.const Logical. If TRUE, constant variables are removed.
+#' @param sigest Initial estimate of the error variance.
+#' @param sigdf Degrees of freedom for the error variance.
+#' @param sigquant Quantile for the error variance.
+#' @param k Parameter for the model.
+#' @param power Parameter for the model.
+#' @param base Parameter for the model.
+#' @param sigmaf Parameter for the model.
+#' @param lambda Parameter for the model.
+#' @param fmean Mean of the response variable.
+#' @param w Weights for the response variable.
+#' @param ntree Number of trees to grow.
+#' @param numcut Number of cut points for each variable.
+#' @param ndpost Number of posterior samples to draw.
+#' @param nskip Number of samples to skip.
+#' @param keepevery Keep every nth sample.
+#' @param printevery Print progress every nth sample.
+#' @param keeptrainfits Logical. If TRUE, training fits are kept.
+#' @param transposed Logical. If TRUE, the data is transposed.
+#' @param mc.cores Number of cores to use for parallel processing.
+#' @param nice Nice level for the process.
+#' @param seed Random seed for reproducibility.
+#' 
+#' @return A list containing the posterior samples, predictions, and other information.
+#' 
+#' @export
+#' 
+#' @importFrom parallel detectCores
+#' @importFrom tools psnice
+#' 
 mc.wbart <- function(
-    x.train, y.train, x.test = matrix(0.0, 0, 0),
-    sparse = FALSE, theta = 0, omega = 1,
-    a = 0.5, b = 1, augment = FALSE, rho = NULL,
-    xinfo = matrix(0.0, 0, 0), usequants = FALSE,
-    cont = FALSE, rm.const = TRUE,
-    sigest = NA, sigdf = 3, sigquant = 0.90,
-    k = 2.0, power = 2.0, base = .95,
-    sigmaf = NA, lambda = NA,
+    x.train, 
+    y.train, 
+    x.test = matrix(0.0, 0, 0),
+    sparse = FALSE, 
+    theta = 0, 
+    omega = 1,
+    a = 0.5, 
+    b = 1, 
+    augment = FALSE, 
+    rho = NULL,
+    xinfo = matrix(0.0, 0, 0), 
+    usequants = FALSE,
+    cont = FALSE, 
+    rm.const = TRUE,
+    sigest = NA, 
+    sigdf = 3, 
+    sigquant = 0.90,
+    k = 2.0, 
+    power = 2.0, 
+    base = .95,
+    sigmaf = NA, 
+    lambda = NA,
     fmean = mean(y.train),
     w = rep(1, length(y.train)),
-    ntree = 200L, numcut = 100L,
-    ndpost = 1000L, nskip = 100L,
-    keepevery = 1L, printevery = 100L,
-    keeptrainfits = TRUE, transposed = FALSE,
-    ## treesaslists=FALSE,
-    mc.cores = 2L, nice = 19L,
+    ntree = 200L, 
+    numcut = 100L,
+    ndpost = 1000L, 
+    nskip = 100L,
+    keepevery = 1L, 
+    printevery = 100L,
+    keeptrainfits = TRUE, 
+    transposed = FALSE,
+    mc.cores = 2L, 
+    nice = 19L,
     seed = 99L) {
     if (.Platform$OS.type != "unix") {
         stop("parallel::mcparallel/mccollect do not exist on windows")
@@ -62,9 +128,6 @@ mc.wbart <- function(
     mc.cores.detected <- detectCores()
 
     if (mc.cores > mc.cores.detected) mc.cores <- mc.cores.detected
-    ## warning(paste0('The number of cores requested, mc.cores=', mc.cores,
-    ##                ',\n exceeds the number of cores detected via detectCores() ',
-    ##                'which yields ', mc.cores.detected, ' .'))
 
     mc.ndpost <- ceiling(ndpost / mc.cores)
 
@@ -96,11 +159,7 @@ mc.wbart <- function(
 
     post <- post.list[[1]]
 
-    ## sigma.len <- length(post$sigma)
-    ## if(sigma.len>mc.ndpost) {
-    ##     sigma.beg <- 1+sigma.len-mc.ndpost
-    ##     post$sigma <- post$sigma[sigma.beg:sigma.len]
-    ## }
+
 
     if (mc.cores == 1 | attr(post, "class") != "wbart") {
         return(post)
@@ -108,10 +167,7 @@ mc.wbart <- function(
         if (class(rm.const)[1] != "logical") post$rm.const <- rm.const
         post$ndpost <- mc.cores * mc.ndpost
         p <- nrow(x.train[post$rm.const, ])
-        ## p <- nrow(x.train[ , post$rm.const])
 
-        ## if(length(rm.const)==0) rm.const <- 1:p
-        ## post$rm.const <- rm.const
 
         old.text <- paste0(
             as.character(mc.ndpost), " ", as.character(ntree),
@@ -142,8 +198,6 @@ mc.wbart <- function(
                 )
             }
 
-            ## if(sigma.len>0)
-            ##     post$sigma <- c(post$sigma, post.list[[i]]$sigma[sigma.beg:sigma.len])
 
             post$sigma <- cbind(post$sigma, post.list[[i]]$sigma)
 
@@ -154,9 +208,6 @@ mc.wbart <- function(
                     nchar(post.list[[i]]$treedraws$trees)
                 )
             )
-
-            ## if(treesaslists) post$treedraws$lists <-
-            ##                      c(post$treedraws$lists, post.list[[i]]$treedraws$lists)
 
             if (length(post$varcount) > 0) {
                 post$varcount <- rbind(post$varcount, post.list[[i]]$varcount)
