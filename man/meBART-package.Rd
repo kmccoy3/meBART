@@ -2,7 +2,6 @@
 % Please edit documentation in R/meBART-package.R
 \docType{package}
 \name{meBART-package}
-\alias{meBART}
 \alias{meBART-package}
 \title{meBART: Bayesian Additive Regression Trees with Measurement Error}
 \description{

@@ -2,14 +2,16 @@
 % Please edit documentation in R/class.ind.R
 \name{class.ind}
 \alias{class.ind}
-\title{#' @title Class Indicator Matrix
-#' @description This function creates a class indicator matrix from a factor.}
+\title{Class Indicator Matrix}
 \usage{
 class.ind(cl)
 }
-\description{
-#' @param cl A factor or vector of class labels.
+\arguments{
+\item{cl}{A factor or vector of class labels.}
 }
-\details{
-#' @return A matrix with rows corresponding to observations and columns to classes.
+\value{
+A matrix with rows corresponding to observations and columns to classes.
+}
+\description{
+This function creates a class indicator matrix from a factor.
 }
