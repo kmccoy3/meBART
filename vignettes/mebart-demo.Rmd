@@ -1,0 +1,82 @@
+---
+title: "mebart-demo"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{mebart-demo}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(meBART)
+library(tidyverse)
+library(latex2exp)
+library(ggridges)
+```
+
+# Toy Example
+
+$$f(x) = 1_{[0.5, \infty)}(x)$$
+
+# Generate Synthetic Data
+
+```{r}
+
+# Fix random seed to make the results reproducible
+set.seed(0)
+
+# number of observations
+n <- 100
+
+# variance of measurement error and output, respectively
+sigma_meas <- 0.1
+sigma_y <- 0.1
+
+# Generate x values uniformly and add measurement error
+x_true <- runif(n, 0, 1)
+x_meas <- x_true + rnorm(n, 0, sigma_meas)
+y_true <- 1 * (x_true >= 0.5)
+y_obs <- y_true + rnorm(n, 0, sigma_y)
+
+# Convert to df
+df_me <- data.frame(X=x_meas, y=y_obs)
+df_no_me <- data.frame(X=x_true, y=y_obs)
+```
+
+
+# Plot 2 Different Datasets
+
+```{r}
+
+combined_df <- rbind(df_no_me, df_me)
+combined_df <- cbind(combined_df, me = c(rep("No Measurement Error", n), rep("Measurement Error", n)))
+
+combined_df$me <- factor(combined_df$me, levels = c("No Measurement Error", "Measurement Error"))
+
+
+data_plot <- ggplot(combined_df) + 
+    geom_point(aes(x = X, y = y), color="#619CFF") +
+    facet_grid(cols = vars(me)) +
+    labs(title = "Synthetic Data", x = "X", y = "Y") +
+    scale_x_continuous(breaks = seq(-0.2, 1.2, 0.2)) +
+    scale_y_continuous(breaks = seq(-0.2, 1.2, 0.2)) +
+    annotate("segment", x = 0, xend = 0.5, y = 0, yend = 0, linetype = "solid") +
+    annotate("segment", x = 0.5, xend = 1, y = 1, yend = 1, linetype = "solid") +
+    annotate("point", x = 0.5, y = 0, size = 3, shape = 1) +
+    annotate("point", x = 0.5, y = 1, size = 3, shape = 16) +
+    
+    coord_fixed(ratio=1)
+
+data_plot
+
+
+# ggsave("./figures/data_plot.png")
+
+```
