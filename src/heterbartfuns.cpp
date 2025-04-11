@@ -104,7 +104,9 @@ void hetergetsuff(tree &x, tree::tree_p l, tree::tree_p r, xinfo &xi, dinfo &di,
 double heterdrawnodemu(double b, double M, double tau, rn &gen)
 {
     if (b == 0){
+#ifdef DEBUG
         printf("b is zero\n");
+#endif
         // return gen.normal() / tau;
         return 0;
     }
