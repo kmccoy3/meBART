@@ -28,6 +28,4 @@ double rnorm(double mu, double sigma);
 
 double dnorm(double x, double mu, double sigma);
 
-RcppExport SEXP cdnorm(SEXP x, SEXP mu, SEXP sigma);
-
 #endif

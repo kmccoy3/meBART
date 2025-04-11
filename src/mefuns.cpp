@@ -64,12 +64,3 @@ double dmvnorm(arma::vec x, arma::vec mu, arma::mat sigma)
 
     return tmp;
 }
-
-//=============================================================================
-
-RcppExport SEXP cdnorm(SEXP x, SEXP mu, SEXP sigma)
-{
-    return Rcpp::wrap(dnorm(Rcpp::as<double>(x),
-                            Rcpp::as<double>(mu),
-                            Rcpp::as<double>(sigma)));
-}
