@@ -47,36 +47,100 @@ y_obs <- y_true + rnorm(n, 0, sigma_y)
 
 # Convert to df
 df_me <- data.frame(X=x_meas, y=y_obs)
-df_no_me <- data.frame(X=x_true, y=y_obs)
 ```
 
 
-# Plot 2 Different Datasets
 
 ```{r}
 
-combined_df <- rbind(df_no_me, df_me)
-combined_df <- cbind(combined_df, me = c(rep("No Measurement Error", n), rep("Measurement Error", n)))
+# Parameters
+ndpost <- 1000 # (Default: 1000L)
+nskip <- 100 # (Default: 100L)
+ntree <- 200 # (Default: 200L)
 
-combined_df$me <- factor(combined_df$me, levels = c("No Measurement Error", "Measurement Error"))
+proposal_sd = 0.10
 
 
-data_plot <- ggplot(combined_df) + 
-    geom_point(aes(x = X, y = y), color="#619CFF") +
-    facet_grid(cols = vars(me)) +
-    labs(title = "Synthetic Data", x = "X", y = "Y") +
+# Vanilla BART
+set.seed(0)
+mdl_BART <- BART::wbart(df_me$X, df_me$y, 
+                         nskip=nskip, ndpost=ndpost, ntree=ntree)
+
+# meBART
+set.seed(0)
+mdl_meBART <- meBART::mebart(df_me$X, df_me$y, 
+                         nskip=nskip, ndpost=ndpost, ntree=ntree, 
+                         proposal_sd=proposal_sd)
+
+
+```
+
+
+
+```{r}
+
+
+values <- mdl_BART$treedraws$cutpoints[[1]]
+output <- predict(mdl_BART, data.frame(values))# [500:1000,]
+means <- colMeans(output)
+
+lower_CI <- c()
+upper_CI <- c()
+
+for (i in 1:ncol(output)) {
+    lower_CI <- c(lower_CI, quantile(output[,i], 0.025))
+    upper_CI <- c(upper_CI, quantile(output[,i], 0.975))
+}
+
+ci_df <- data.frame(X=values, y=means, lower_CI=lower_CI, upper_CI=upper_CI)
+
+ci_df$model <- "Vanilla BART"
+
+
+values <- mdl_meBART$treedraws$cutpoints[[1]]
+output <- predict(mdl_meBART, data.frame(values))# [500:1000,]
+means <- colMeans(output)
+
+lower_CI <- c()
+upper_CI <- c()
+
+for (i in 1:ncol(output)) {
+    lower_CI <- c(lower_CI, quantile(output[,i], 0.025))
+    upper_CI <- c(upper_CI, quantile(output[,i], 0.975))
+}
+
+ci_df2 <- data.frame(X=values, y=means, lower_CI=lower_CI, upper_CI=upper_CI)
+
+ci_df2$model <- "meBART"
+
+ci_df_combined <- rbind(ci_df, ci_df2)
+
+ci_df_combined$model <- factor(ci_df_combined$model, levels = c("Vanilla BART", "meBART"))
+
+
+mse_BART <- mean((mdl_BART$yhat.train.mean - y_true)^2)
+mse_meBART <- mean((mdl_meBART$yhat.train.mean - y_true)^2)
+
+
+ci_plot <- ggplot(ci_df_combined) +
+    facet_grid(cols = vars(model)) +
+    geom_line(aes(x=X, y=y), linetype=3) +
+    geom_ribbon(aes(x=X, ymin=lower_CI, ymax=upper_CI), alpha=0.2) +
+    labs(title = "meBART: Mean Prediction with 95% CI", x = "X", y = "Y") +
+    geom_point(data=df_me, aes(x = X, y = y), color="#619CFF") +
     scale_x_continuous(breaks = seq(-0.2, 1.2, 0.2)) +
-    scale_y_continuous(breaks = seq(-0.2, 1.2, 0.2)) +
+    scale_y_continuous(limits=c(-0.2, 1.2), breaks = seq(-0.2, 1.2, 0.2)) +
     annotate("segment", x = 0, xend = 0.5, y = 0, yend = 0, linetype = "solid") +
     annotate("segment", x = 0.5, xend = 1, y = 1, yend = 1, linetype = "solid") +
     annotate("point", x = 0.5, y = 0, size = 3, shape = 1) +
     annotate("point", x = 0.5, y = 1, size = 3, shape = 16) +
-    
+    scale_x_continuous(limits = c(-0.2, 1.2), breaks = seq(-0.2, 1.2, 0.2)) +
+    scale_y_continuous(limits = c(-0.25, 1.25), breaks = seq(-0.2, 1.2, 0.2))
     coord_fixed(ratio=1)
 
-data_plot
 
 
-# ggsave("./figures/data_plot.png")
+ci_plot
 
 ```
+
