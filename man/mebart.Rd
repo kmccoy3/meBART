@@ -121,9 +121,12 @@ A list with the following elements:
 \item{yhat.train}{The posterior predictions for the training data, centered.}
 \item{yhat.test.mean}{The mean of the posterior predictions for the test data.}
 \item{yhat.test}{The posterior predictions for the test data, centered.}
-\item{treedraws}{A list of posterior tree draws (if `nkeeptreedraws > 0`).}
 \item{varcount}{A matrix of variable counts in the model.}
 \item{varprob}{A matrix of variable probabilities in the model.}
+\item{treedraws}{A list of posterior tree draws (if `nkeeptreedraws > 0`).}
+\item{x_draws}
+\item{acceptances}
+\item{proc.time}{The time taken for the C++ code to run.}
 \item{varcount.mean}{The mean of the variable counts.}
 \item{varprob.mean}{The mean of the variable probabilities.}
 \item{rm.const}{A vector specifying which columns were removed from `x.train`.}

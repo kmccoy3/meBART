@@ -76,7 +76,7 @@ RcppExport SEXP cmebart(
 
     Rcpp::NumericVector xv(_ix); // TODO: why is this a vector and not a matrix?
 
-    Rcpp::Rcout << "xv: " << xv << "\n";
+    // Rcpp::Rcout << "xv: " << xv << "\n";
 
     double *ix = &xv[0];
     Rcpp::NumericVector yv(_iy);
