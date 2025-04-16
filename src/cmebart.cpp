@@ -76,6 +76,19 @@ RcppExport SEXP cmebart(
 
     Rcpp::NumericVector xv(_ix); // TODO: why is this a vector and not a matrix?
 
+
+
+    // Rcpp::NumericVector indices = {0, 1};
+    // Rcpp::NumericVector first_obs = xv[indices];
+
+    // Rcpp::Rcout << "first_obs: " << first_obs << "\n";
+
+    // Rcpp::NumericVector third_obs = xv[indices + (3-1)*2];
+
+    // Rcpp::Rcout << "third_obs: " << third_obs << "\n";
+
+
+
     // Rcpp::Rcout << "xv: " << xv << "\n";
 
     double *ix = &xv[0];
@@ -260,9 +273,15 @@ RcppExport SEXP cmebart(
     // printf("Sample: %f, %f\n", samples(3, 0), samples(3, 1));
     // printf("Sample: %f, %f\n", samples(4, 0), samples(4, 1));
 
+    // Rcpp::Rcout << samples.row(0) << "\n";
+
     // double C = dmvnorm(A, A, B);
 
     // printf("Density: %f\n", C);
+
+    // double D = dmvnorm(third_obs, A, B);
+
+    // printf("Density of D using Rcpp vector: %f\n", D);
 
     size_t trcnt = 0;        // count kept train draws
     size_t tecnt = 0;        // count kept test draws
