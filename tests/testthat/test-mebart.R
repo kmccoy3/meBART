@@ -35,13 +35,13 @@ ndpost <- 500 # (Default: 1000L)
 nskip <- 100 # (Default: 100L)
 ntree <- 100 # (Default: 200L)
 
-proposal_sd = 0.10
+meas_error_sd = 0.10
 
 # Data WITH Measurement Error
 set.seed(0)
 me_mdl <- meBART::mebart(df_me$X, df_me$y, 
                          nskip=nskip, ndpost=ndpost, ntree=ntree, 
-                         proposal_sd=proposal_sd)
+                         meas_error_sd=meas_error_sd)
 
 old_mdl <- readRDS("me_mdl.rds")
 

@@ -62,7 +62,8 @@ RcppExport SEXP cmebart(
     SEXP _inprintevery,    // print progress every printevery iterations
                            //   SEXP _treesaslists,
     SEXP _Xinfo,           // cutpoints, now specified
-    SEXP _proposal_sd      // kevins variable
+    SEXP _proposal_sd,      // standard deviation of proposal distribution for new MH step
+    SEXP _meas_error_sd    // standard deviation of measurement error
 )
 {
     printf("FIRST HEADER RAN\n");
@@ -133,6 +134,7 @@ RcppExport SEXP cmebart(
     Rcpp::IntegerMatrix varcnt(nkeeptreedraws, p);
 
     double proposal_sd = Rcpp::as<double>(_proposal_sd);
+    double sigma_e = Rcpp::as<double>(_meas_error_sd);
 
     // random number generation
     arn gen; // TODO
@@ -338,7 +340,7 @@ RcppExport SEXP cmebart(
             // Hyperparameters
             // double mu_x = 0.5;     // Prior mean
             // double sigma_x = 0.25; // Prior standard deviation
-            double sigma_e = 0.1; // Measurement error standard deviation
+            // double sigma_e = 0.1; // Measurement error standard deviation
 
             // if (i==0 && k==0) printf("x_obs: %f\n", x_obs);
 
