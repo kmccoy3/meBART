@@ -77,6 +77,19 @@ RcppExport SEXP cmebart(
 
     Rcpp::NumericVector xv(_ix); // TODO: why is this a vector and not a matrix?
 
+
+
+    // Rcpp::NumericVector indices = {0, 1};
+    // Rcpp::NumericVector first_obs = xv[indices];
+
+    // Rcpp::Rcout << "first_obs: " << first_obs << "\n";
+
+    // Rcpp::NumericVector third_obs = xv[indices + (3-1)*2];
+
+    // Rcpp::Rcout << "third_obs: " << third_obs << "\n";
+
+
+
     // Rcpp::Rcout << "xv: " << xv << "\n";
 
     double *ix = &xv[0];
@@ -262,9 +275,15 @@ RcppExport SEXP cmebart(
     // printf("Sample: %f, %f\n", samples(3, 0), samples(3, 1));
     // printf("Sample: %f, %f\n", samples(4, 0), samples(4, 1));
 
+    // Rcpp::Rcout << samples.row(0) << "\n";
+
     // double C = dmvnorm(A, A, B);
 
     // printf("Density: %f\n", C);
+
+    // double D = dmvnorm(third_obs, A, B);
+
+    // printf("Density of D using Rcpp vector: %f\n", D);
 
     size_t trcnt = 0;        // count kept train draws
     size_t tecnt = 0;        // count kept test draws
@@ -329,78 +348,78 @@ RcppExport SEXP cmebart(
         // Measurement Error Step in Gibbs Sampler
 
         // Loop through each observation
-        for (size_t k = 0; k < n; k++)
-        {
+        // for (size_t k = 0; k < n; k++)
+        // {
 
-            // Get x value
-            double x_meas = xv[k];                            // observed value of x
-            double x_true = x_draws_[i][k];                   // old value of x_true
-            double x_true_prime = rnorm(x_true, proposal_sd); // // TODO: Fix hardcoding of 0.1
+        //     // Get x value
+        //     double x_meas = xv[k];                            // observed value of x
+        //     double x_true = x_draws_[i][k];                   // old value of x_true
+        //     double x_true_prime = rnorm(x_true, proposal_sd); // // TODO: Fix hardcoding of 0.1
 
-            // Hyperparameters
-            // double mu_x = 0.5;     // Prior mean
-            // double sigma_x = 0.25; // Prior standard deviation
-            // double sigma_e = 0.1; // Measurement error standard deviation
+        //     // Hyperparameters
+        //     // double mu_x = 0.5;     // Prior mean
+        //     // double sigma_x = 0.25; // Prior standard deviation
+        //     double sigma_e = 0.1; // Measurement error standard deviation
 
-            // if (i==0 && k==0) printf("x_obs: %f\n", x_obs);
+        //     // if (i==0 && k==0) printf("x_obs: %f\n", x_obs);
 
-            // Initialize alpha
-            double alpha = 0.0; // FIXME: did I mess this up?
-            double y_true = yv[k];
-            double y_pred = bm.f(k);
-            double y_pred_prime; // = y_pred; // FIXME: we need to calculate y_pred for the new x_true_prime
+        //     // Initialize alpha
+        //     double alpha = 0.0; // FIXME: did I mess this up?
+        //     double y_true = yv[k];
+        //     double y_pred = bm.f(k);
+        //     double y_pred_prime; // = y_pred; // FIXME: we need to calculate y_pred for the new x_true_prime
 
-            // TODO: Check that this is right, probably isnt
-            // This can go outside loop
-            heterbart bm_prime;
-            bm_prime = bm;
-            Rcpp::NumericVector last_xv(n); // = x_draws_[i];
-            for (size_t j = 0; j < n; j++)
-            {
-                last_xv[j] = x_draws_[i][j];
-            }
-            last_xv[k] = x_true_prime; // Set the new x_true_prime value
-            double *ix = &last_xv[0];
-            bm_prime.setdata(p, n, ix, iy, numcut);
-            y_pred_prime = bm_prime.f(k);
+        //     // TODO: Check that this is right, probably isnt
+        //     // This can go outside loop
+        //     heterbart bm_prime;
+        //     bm_prime = bm;
+        //     Rcpp::NumericVector last_xv(n); // = x_draws_[i];
+        //     for (size_t j = 0; j < n; j++)
+        //     {
+        //         last_xv[j] = x_draws_[i][j];
+        //     }
+        //     last_xv[k] = x_true_prime; // Set the new x_true_prime value
+        //     double *ix = &last_xv[0];
+        //     bm_prime.setdata(p, n, ix, iy, numcut);
+        //     y_pred_prime = bm_prime.f(k);
 
-            // Old values
-            alpha -= log(dnorm(y_true, y_pred, sigma));   // y likelihood
-            alpha -= log(dnorm(x_meas, x_true, sigma_e)); // x likelihood
-            // alpha -= log(dnorm(x_true, mu_x, sigma_x));   // x prior
+        //     // Old values
+        //     alpha -= log(dnorm(y_true, y_pred, sigma));   // y likelihood
+        //     alpha -= log(dnorm(x_meas, x_true, sigma_e)); // x likelihood
+        //     // alpha -= log(dnorm(x_true, mu_x, sigma_x));   // x prior
 
-            // Proposed values
-            alpha += log(dnorm(y_true, y_pred_prime, sigma));   // y likelihood
-            alpha += log(dnorm(x_meas, x_true_prime, sigma_e)); // x likelihood
-            // alpha += log(dnorm(x_true_prime, mu_x, sigma_x));   // x prior
+        //     // Proposed values
+        //     alpha += log(dnorm(y_true, y_pred_prime, sigma));   // y likelihood
+        //     alpha += log(dnorm(x_meas, x_true_prime, sigma_e)); // x likelihood
+        //     // alpha += log(dnorm(x_true_prime, mu_x, sigma_x));   // x prior
 
-            alpha = exp(alpha); // Convert back from log scale
+        //     alpha = exp(alpha); // Convert back from log scale
 
-            // Calculate Metropolis-Hastings acceptance ratio
-            double acceptance_ratio = std::min<double>(1, alpha);
+        //     // Calculate Metropolis-Hastings acceptance ratio
+        //     double acceptance_ratio = std::min<double>(1, alpha);
 
-            // Accept or reject the draw
-            bool accept = gen.uniform() < acceptance_ratio;
+        //     // Accept or reject the draw
+        //     bool accept = gen.uniform() < acceptance_ratio;
 
-            // Update draw of X
-            if (accept)
-            {
-                x_draws_[i + 1].push_back(x_true_prime);
+        //     // Update draw of X
+        //     if (accept)
+        //     {
+        //         x_draws_[i + 1].push_back(x_true_prime);
 
-                // Give original BART model new x data
-                bm.resetdata(p, n, ix, iy);
+        //         // Give original BART model new x data
+        //         bm.resetdata(p, n, ix, iy);
 
-                // bm = bm_prime;
+        //         // bm = bm_prime;
 
-                acceptances(i, k) = 1;
-            }
-            else
-            {
-                x_draws_[i + 1].push_back(x_true);
+        //         acceptances(i, k) = 1;
+        //     }
+        //     else
+        //     {
+        //         x_draws_[i + 1].push_back(x_true);
 
-                acceptances(i, k) = 0;
-            }
-        }
+        //         acceptances(i, k) = 0;
+        //     }
+        // }
 
         // =========================================================================================
 
