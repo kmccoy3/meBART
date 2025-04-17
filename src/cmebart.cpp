@@ -66,7 +66,7 @@ RcppExport SEXP cmebart(
     SEXP _meas_error_sigma    // standard deviation of measurement error
 )
 {
-    printf("FIRST HEADER RAN\n");
+    // printf("FIRST HEADER RAN\n");
     //--------------------------------------------------
     // process args
     size_t n = Rcpp::as<int>(_in);   // number of training data points
@@ -77,6 +77,13 @@ RcppExport SEXP cmebart(
 
     Rcpp::NumericVector xv(_ix); // TODO: why is this a vector and not a matrix?
 
+    Rcpp::NumericMatrix x_matrix(_ix);
+
+    // Rcpp::Rcout << "x_matrix: " << x_matrix << "\n";
+
+    // Rcpp::NumericVector second_obs = x_matrix(Rcpp::_, 1);
+
+    // Rcpp::Rcout << "second_obs: " << second_obs << "\n";
 
 
     // Rcpp::NumericVector indices = {0, 1};
@@ -340,27 +347,18 @@ RcppExport SEXP cmebart(
         // Save sigma to sdraw
         sdraw[i] = sigma;
 
-        // Debugging print outs
-        // if (i == 407){
-        //     Rcpp::Rcout << "sigma: " << sigma << "\n";
-        //     for (size_t k = 0; k < n; k++)
-        //     {
-        //         Rcpp::Rcout << bm.f(k) << " ";
-        //     }
-        //     Rcpp::Rcout << "rss: " << rss << "\n";
-        // }
 
         // =========================================================================================
         // Measurement Error Step in Gibbs Sampler
 
-        // Loop through each observation
-        // for (size_t k = 0; k < n; k++)
-        // {
+        Loop through each observation
+        for (size_t k = 0; k < n; k++)
+        {
 
         //     // Get x value
-        //     double x_meas = xv[k];                            // observed value of x
-        //     double x_true = x_draws_[i][k];                   // old value of x_true
-        //     double x_true_prime = rnorm(x_true, proposal_sd); // // TODO: Fix hardcoding of 0.1
+            double x_meas = x_matrix(Rcpp::_, k);                            // observed value of x
+            double x_true = x_draws_[i][k];                   // old value of x_true
+            double x_true_prime = rnorm(x_true, proposal_sd); // // TODO: Fix hardcoding of 0.1
 
         //     // Hyperparameters
         //     // double mu_x = 0.5;     // Prior mean
@@ -370,9 +368,9 @@ RcppExport SEXP cmebart(
         //     // if (i==0 && k==0) printf("x_obs: %f\n", x_obs);
 
         //     // Initialize alpha
-        //     double alpha = 0.0; // FIXME: did I mess this up?
-        //     double y_true = yv[k];
-        //     double y_pred = bm.f(k);
+            double alpha = 0.0; // FIXME: did I mess this up?
+            double y_true = yv[k];
+            double y_pred = bm.f(k);
         //     double y_pred_prime; // = y_pred; // FIXME: we need to calculate y_pred for the new x_true_prime
 
         //     // TODO: Check that this is right, probably isnt
@@ -390,42 +388,40 @@ RcppExport SEXP cmebart(
         //     y_pred_prime = bm_prime.f(k);
 
         //     // Old values
-        //     alpha -= log(dnorm(y_true, y_pred, sigma));   // y likelihood
+            alpha -= log(dnorm(y_true, y_pred, sigma));   // y likelihood
         //     alpha -= log(dnorm(x_meas, x_true, sigma_e)); // x likelihood
         //     // alpha -= log(dnorm(x_true, mu_x, sigma_x));   // x prior
 
         //     // Proposed values
-        //     alpha += log(dnorm(y_true, y_pred_prime, sigma));   // y likelihood
+            alpha += log(dnorm(y_true, y_pred_prime, sigma));   // y likelihood
         //     alpha += log(dnorm(x_meas, x_true_prime, sigma_e)); // x likelihood
         //     // alpha += log(dnorm(x_true_prime, mu_x, sigma_x));   // x prior
 
-        //     alpha = exp(alpha); // Convert back from log scale
+            alpha = exp(alpha); // Convert back from log scale
 
         //     // Calculate Metropolis-Hastings acceptance ratio
-        //     double acceptance_ratio = std::min<double>(1, alpha);
+            double acceptance_ratio = std::min<double>(1, alpha);
 
         //     // Accept or reject the draw
-        //     bool accept = gen.uniform() < acceptance_ratio;
+            bool accept = gen.uniform() < acceptance_ratio;
 
-        //     // Update draw of X
-        //     if (accept)
-        //     {
-        //         x_draws_[i + 1].push_back(x_true_prime);
+            // Update draw of X
+            if (accept)
+            {
+                x_draws_[i + 1].push_back(x_true_prime);
 
-        //         // Give original BART model new x data
-        //         bm.resetdata(p, n, ix, iy);
+                // Give original BART model new x data
+                bm.resetdata(p, n, ix, iy);
 
-        //         // bm = bm_prime;
+                acceptances(i, k) = 1;
+            }
+            else
+            {
+                x_draws_[i + 1].push_back(x_true);
 
-        //         acceptances(i, k) = 1;
-        //     }
-        //     else
-        //     {
-        //         x_draws_[i + 1].push_back(x_true);
-
-        //         acceptances(i, k) = 0;
-        //     }
-        // }
+                acceptances(i, k) = 0;
+            }
+        }
 
         // =========================================================================================
 
