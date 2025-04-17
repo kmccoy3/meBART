@@ -120,8 +120,8 @@ mebart <- function(x.train, # explanatory variables for training data, matrix or
                    nkeeptreedraws = ndpost, # number of MCMC iters to be returned for tree draws
                    printevery = 100L, # print progress every printevery iterations
                    transposed = FALSE, # used if called by mc.wbart
-                   proposal_sd = meas_error_sd, # standard deviation of the proposal distribution
-                   meas_error_sd # standard deviation of the measurement error
+                   proposal_sigma = meas_error_sigma, # standard deviation of the proposal distribution
+                   meas_error_sigma # standard deviation of the measurement error
                    ) {
     #--------------------------------------------------
     # data
@@ -248,8 +248,8 @@ mebart <- function(x.train, # explanatory variables for training data, matrix or
         nkeeptreedraws, # number of MCMC iters to be returned for tree draws
         printevery, # print progress every printevery iterations
         xinfo, # cutpoints, now specified
-        proposal_sd, # standard deviation of the proposal distribution
-        meas_error_sd # standard deviation of the measurement error
+        proposal_sigma, # standard deviation of the proposal distribution
+        meas_error_sigma # standard deviation of the measurement error
     )
 
     res$proc.time <- proc.time() - ptm # how much time C++ code has taken
