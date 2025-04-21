@@ -77,7 +77,9 @@ RcppExport SEXP cmebart(
 
     Rcpp::NumericVector xv(_ix); // TODO: why is this a vector and not a matrix?
 
-    Rcpp::NumericMatrix x_matrix(_ix);
+    // Rcpp::NumericMatrix x_matrix(_ix);
+    printf("Defining x_matrix\n");
+    arma::mat x_matrix = Rcpp::as<arma::mat>(_ix);
 
     // Rcpp::Rcout << "x_matrix: " << x_matrix << "\n";
 
@@ -156,8 +158,12 @@ RcppExport SEXP cmebart(
     // double proposal_sd = Rcpp::as<double>(_proposal_sd);
     // double sigma_e = Rcpp::as<double>(_meas_error_sd);
 
-    Rcpp::NumericMatrix proposal_sigma = Rcpp::as<Rcpp::NumericMatrix>(_proposal_sigma);
-    Rcpp::NumericMatrix meas_error_sigma = Rcpp::as<Rcpp::NumericMatrix>(_meas_error_sigma);
+    printf("Defining proposal_sigma\n");
+    arma::mat proposal_sigma = Rcpp::as<arma::mat>(_proposal_sigma);
+    printf("Defining meas_error_sigma\n");
+    arma::mat meas_error_sigma = Rcpp::as<arma::mat>(_meas_error_sigma);
+
+    //Rcpp::as<arma::mat>
 
     // Rcpp::Rcout << "proposal_sigma: " << proposal_sigma << "\n";
     // Rcpp::Rcout << "meas_error_sigma: " << meas_error_sigma << "\n";
@@ -310,14 +316,16 @@ RcppExport SEXP cmebart(
     size_t total = nd + burn;  // total number of MCMC iterations
 
     // Define x_draws object to store all draws of x
-    typedef std::vector<Rcpp::NumericVector> x_draws;
+    typedef std::vector<arma::mat> x_draws;
     x_draws x_draws_(total + 1);
 
     // Initialize first entry of x_draws with the observed x values
-    for (size_t i = 0; i < n; i++)
-    {
-        x_draws_[0].push_back(xv[i]);
-    } // probably inefficient but only run once
+    // for (size_t i = 0; i < n; i++)
+    // {
+    //     x_draws_[0].push_back(xv[i]);
+    // } // probably inefficient but only run once
+    printf("Defining x_draws\n");
+    x_draws_[0] = x_matrix; // Initialize first entry of x_draws with the observed x values
 
     Rcpp::NumericMatrix acceptances(total, n);
 
@@ -351,17 +359,20 @@ RcppExport SEXP cmebart(
         // =========================================================================================
         // Measurement Error Step in Gibbs Sampler
 
-        Loop through each observation
+        // Loop through each observation
         for (size_t k = 0; k < n; k++)
         {
 
         //     // Get x value
-            double x_meas = x_matrix(Rcpp::_, k);                            // observed value of x
-            double x_true = x_draws_[i][k];                   // old value of x_true
-            double x_true_prime = rnorm(x_true, proposal_sd); // // TODO: Fix hardcoding of 0.1
+        printf("Defining x_meas\n");
+            arma::vec x_meas = x_matrix.col(k);                            // observed value of x
+            printf("Defining x_true\n");
+            arma::vec x_true = x_draws_[i].col(k);                   // old value of x_true
+            printf("Defining x_true_prime\n");
+            arma::vec x_true_prime = rmvnorm(1, x_true, proposal_sigma); // // TODO: Fix hardcoding of 0.1
 
         //     // Hyperparameters
-        //     // double mu_x = 0.5;     // Prior mean
+        //     // double mu_x = 0.5;     // Prior mean 
         //     // double sigma_x = 0.25; // Prior standard deviation
         //     double sigma_e = 0.1; // Measurement error standard deviation
 
@@ -389,12 +400,12 @@ RcppExport SEXP cmebart(
 
         //     // Old values
             alpha -= log(dnorm(y_true, y_pred, sigma));   // y likelihood
-        //     alpha -= log(dnorm(x_meas, x_true, sigma_e)); // x likelihood
+            alpha -= log(dmvnorm(x_meas, x_true, meas_error_sigma)); // x likelihood
         //     // alpha -= log(dnorm(x_true, mu_x, sigma_x));   // x prior
 
         //     // Proposed values
-            alpha += log(dnorm(y_true, y_pred_prime, sigma));   // y likelihood
-        //     alpha += log(dnorm(x_meas, x_true_prime, sigma_e)); // x likelihood
+            // alpha += log(dnorm(y_true, y_pred_prime, sigma));   // y likelihood
+            alpha += log(dmvnorm(x_meas, x_true_prime, meas_error_sigma)); // x likelihood
         //     // alpha += log(dnorm(x_true_prime, mu_x, sigma_x));   // x prior
 
             alpha = exp(alpha); // Convert back from log scale
@@ -408,16 +419,17 @@ RcppExport SEXP cmebart(
             // Update draw of X
             if (accept)
             {
-                x_draws_[i + 1].push_back(x_true_prime);
+                x_draws_[i + 1].col(k) = x_true_prime; // Update the draw of x_true
 
                 // Give original BART model new x data
-                bm.resetdata(p, n, ix, iy);
+                // bm.resetdata(p, n, ix, iy);
 
                 acceptances(i, k) = 1;
             }
             else
             {
-                x_draws_[i + 1].push_back(x_true);
+                // x_draws_[i + 1].push_back(x_true);
+                x_draws_[i + 1].col(k) = x_true; // Keep the old value of x_true
 
                 acceptances(i, k) = 0;
             }
