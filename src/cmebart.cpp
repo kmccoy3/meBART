@@ -62,8 +62,8 @@ RcppExport SEXP cmebart(
     SEXP _inprintevery,    // print progress every printevery iterations
                            //   SEXP _treesaslists,
     SEXP _Xinfo,           // cutpoints, now specified
-    SEXP _proposal_sigma,      // standard deviation of proposal distribution for new MH step
-    SEXP _meas_error_sigma    // standard deviation of measurement error
+    SEXP _proposal_sigma,  // standard deviation of proposal distribution for new MH step
+    SEXP _meas_error_sigma // standard deviation of measurement error
 )
 {
     // printf("FIRST HEADER RAN\n");
@@ -73,33 +73,10 @@ RcppExport SEXP cmebart(
     size_t p = Rcpp::as<int>(_ip);   // number of predictors
     size_t np = Rcpp::as<int>(_inp); // number of test data points
 
-    // Rcpp::Rcout << "_ix: " << *_ix << "\n";
 
-    Rcpp::NumericVector xv(_ix); // TODO: why is this a vector and not a matrix?
-
-    // Rcpp::NumericMatrix x_matrix(_ix);
-    printf("Defining x_matrix\n");
+    Rcpp::NumericVector xv(_ix);
     arma::mat x_matrix = Rcpp::as<arma::mat>(_ix);
 
-    // Rcpp::Rcout << "x_matrix: " << x_matrix << "\n";
-
-    // Rcpp::NumericVector second_obs = x_matrix(Rcpp::_, 1);
-
-    // Rcpp::Rcout << "second_obs: " << second_obs << "\n";
-
-
-    // Rcpp::NumericVector indices = {0, 1};
-    // Rcpp::NumericVector first_obs = xv[indices];
-
-    // Rcpp::Rcout << "first_obs: " << first_obs << "\n";
-
-    // Rcpp::NumericVector third_obs = xv[indices + (3-1)*2];
-
-    // Rcpp::Rcout << "third_obs: " << third_obs << "\n";
-
-
-
-    // Rcpp::Rcout << "xv: " << xv << "\n";
 
     double *ix = &xv[0];
     Rcpp::NumericVector yv(_iy);
@@ -155,18 +132,9 @@ RcppExport SEXP cmebart(
     Rcpp::NumericMatrix varprb(nkeeptreedraws, p);
     Rcpp::IntegerMatrix varcnt(nkeeptreedraws, p);
 
-    // double proposal_sd = Rcpp::as<double>(_proposal_sd);
-    // double sigma_e = Rcpp::as<double>(_meas_error_sd);
-
-    printf("Defining proposal_sigma\n");
+    // Convert R sigma objets to arma matrices
     arma::mat proposal_sigma = Rcpp::as<arma::mat>(_proposal_sigma);
-    printf("Defining meas_error_sigma\n");
     arma::mat meas_error_sigma = Rcpp::as<arma::mat>(_meas_error_sigma);
-
-    //Rcpp::as<arma::mat>
-
-    // Rcpp::Rcout << "proposal_sigma: " << proposal_sigma << "\n";
-    // Rcpp::Rcout << "meas_error_sigma: " << meas_error_sigma << "\n";
 
     // random number generation
     arn gen; // TODO
@@ -283,27 +251,6 @@ RcppExport SEXP cmebart(
     // mcmc
     printf("\nMCMC  -------- KEVINS CODE :)\n");
 
-    // printf("Generate a Multivariate Normal Distribution\n");
-    // arma::vec A = {0.0, 0.0};
-    // arma::mat B = arma::eye<arma::mat>(2, 2);
-    // arma::mat samples = rmvnorm(5, A, B);
-
-    // printf("Sample: %f, %f\n", samples(0, 0), samples(0, 1));
-    // printf("Sample: %f, %f\n", samples(1, 0), samples(1, 1));
-    // printf("Sample: %f, %f\n", samples(2, 0), samples(2, 1));
-    // printf("Sample: %f, %f\n", samples(3, 0), samples(3, 1));
-    // printf("Sample: %f, %f\n", samples(4, 0), samples(4, 1));
-
-    // Rcpp::Rcout << samples.row(0) << "\n";
-
-    // double C = dmvnorm(A, A, B);
-
-    // printf("Density: %f\n", C);
-
-    // double D = dmvnorm(third_obs, A, B);
-
-    // printf("Density of D using Rcpp vector: %f\n", D);
-
     size_t trcnt = 0;        // count kept train draws
     size_t tecnt = 0;        // count kept test draws
     size_t temecnt = 0;      // count test draws into posterior mean
@@ -316,20 +263,11 @@ RcppExport SEXP cmebart(
     size_t total = nd + burn;  // total number of MCMC iterations
 
     // Define x_draws object to store all draws of x
-    typedef std::vector<arma::mat> x_draws;
-    x_draws x_draws_(total + 1);
+    arma::cube x_draws_(p, n, total + 1); // p x n x (total + 1) cube to store all draws of x
+    x_draws_.slice(0) = x_matrix; // Initialize first entry of x_draws with the observed x values
 
-    // Initialize first entry of x_draws with the observed x values
-    // for (size_t i = 0; i < n; i++)
-    // {
-    //     x_draws_[0].push_back(xv[i]);
-    // } // probably inefficient but only run once
-    printf("Defining x_draws\n");
-    x_draws_[0] = x_matrix; // Initialize first entry of x_draws with the observed x values
-
+    // Create storage for acceptances of each x draw
     Rcpp::NumericMatrix acceptances(total, n);
-
-    // Rcpp::NumericMatrix test(3, 3, 3);
 
     for (size_t i = 0; i < total; i++) // main MCMC loop
     {
@@ -355,7 +293,6 @@ RcppExport SEXP cmebart(
         // Save sigma to sdraw
         sdraw[i] = sigma;
 
-
         // =========================================================================================
         // Measurement Error Step in Gibbs Sampler
 
@@ -363,74 +300,70 @@ RcppExport SEXP cmebart(
         for (size_t k = 0; k < n; k++)
         {
 
-        //     // Get x value
-        printf("Defining x_meas\n");
-            arma::vec x_meas = x_matrix.col(k);                            // observed value of x
-            printf("Defining x_true\n");
-            arma::vec x_true = x_draws_[i].col(k);                   // old value of x_true
-            printf("Defining x_true_prime\n");
-            arma::vec x_true_prime = rmvnorm(1, x_true, proposal_sigma); // // TODO: Fix hardcoding of 0.1
+            // Get x values of interest
+            arma::vec x_meas = x_matrix.col(k); // observed value of x
+            arma::vec x_true = x_draws_.slice(i).col(k); // old value of x_true
+            arma::vec x_true_prime = rmvnorm(x_true, proposal_sigma); // // TODO: Fix hardcoding of 0.1
 
-        //     // Hyperparameters
-        //     // double mu_x = 0.5;     // Prior mean 
-        //     // double sigma_x = 0.25; // Prior standard deviation
-        //     double sigma_e = 0.1; // Measurement error standard deviation
 
-        //     // if (i==0 && k==0) printf("x_obs: %f\n", x_obs);
+            //     // Hyperparameters
+            //     // double mu_x = 0.5;     // Prior mean
+            //     // double sigma_x = 0.25; // Prior standard deviation
+            //     double sigma_e = 0.1; // Measurement error standard deviation
 
-        //     // Initialize alpha
-            double alpha = 0.0; // FIXME: did I mess this up?
+            //     // Initialize alpha
+
             double y_true = yv[k];
             double y_pred = bm.f(k);
-        //     double y_pred_prime; // = y_pred; // FIXME: we need to calculate y_pred for the new x_true_prime
+            //     double y_pred_prime; // = y_pred; // FIXME: we need to calculate y_pred for the new x_true_prime
 
-        //     // TODO: Check that this is right, probably isnt
-        //     // This can go outside loop
-        //     heterbart bm_prime;
-        //     bm_prime = bm;
-        //     Rcpp::NumericVector last_xv(n); // = x_draws_[i];
-        //     for (size_t j = 0; j < n; j++)
-        //     {
-        //         last_xv[j] = x_draws_[i][j];
-        //     }
-        //     last_xv[k] = x_true_prime; // Set the new x_true_prime value
-        //     double *ix = &last_xv[0];
-        //     bm_prime.setdata(p, n, ix, iy, numcut);
-        //     y_pred_prime = bm_prime.f(k);
+            //     // TODO: Check that this is right, probably isnt
+            //     // This can go outside loop
+            //     heterbart bm_prime;
+            //     bm_prime = bm;
+            //     Rcpp::NumericVector last_xv(n); // = x_draws_[i];
+            //     for (size_t j = 0; j < n; j++)
+            //     {
+            //         last_xv[j] = x_draws_[i][j];
+            //     }
+            //     last_xv[k] = x_true_prime; // Set the new x_true_prime value
+            //     double *ix = &last_xv[0];
+            //     bm_prime.setdata(p, n, ix, iy, numcut);
+            //     y_pred_prime = bm_prime.f(k);
 
-        //     // Old values
-            alpha -= log(dnorm(y_true, y_pred, sigma));   // y likelihood
+            // Calculate MH ratio
+            double alpha = 0.0;
+
+            // Old values
+            alpha -= log(dnorm(y_true, y_pred, sigma)); // y likelihood
             alpha -= log(dmvnorm(x_meas, x_true, meas_error_sigma)); // x likelihood
-        //     // alpha -= log(dnorm(x_true, mu_x, sigma_x));   // x prior
+            // alpha -= log(dnorm(x_true, mu_x, sigma_x));   // x prior
 
-        //     // Proposed values
+            // Proposed values
             // alpha += log(dnorm(y_true, y_pred_prime, sigma));   // y likelihood
             alpha += log(dmvnorm(x_meas, x_true_prime, meas_error_sigma)); // x likelihood
-        //     // alpha += log(dnorm(x_true_prime, mu_x, sigma_x));   // x prior
+            // alpha += log(dnorm(x_true_prime, mu_x, sigma_x));   // x prior
 
+
+            // Calculate Metropolis-Hastings acceptance ratio
             alpha = exp(alpha); // Convert back from log scale
-
-        //     // Calculate Metropolis-Hastings acceptance ratio
             double acceptance_ratio = std::min<double>(1, alpha);
-
-        //     // Accept or reject the draw
             bool accept = gen.uniform() < acceptance_ratio;
 
             // Update draw of X
             if (accept)
             {
-                x_draws_[i + 1].col(k) = x_true_prime; // Update the draw of x_true
+                x_draws_.slice(i + 1).col(k) = x_true_prime; // Update the draw of x_true
+                // x_draws_[i + 1].col(k) = x_true_prime; // Update the draw of x_true
 
                 // Give original BART model new x data
                 // bm.resetdata(p, n, ix, iy);
-
                 acceptances(i, k) = 1;
             }
             else
             {
                 // x_draws_[i + 1].push_back(x_true);
-                x_draws_[i + 1].col(k) = x_true; // Keep the old value of x_true
-
+                x_draws_.slice(i + 1).col(k) = x_true; // Keep the old value of x_true
                 acceptances(i, k) = 0;
             }
         }
