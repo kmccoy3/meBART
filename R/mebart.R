@@ -167,7 +167,14 @@ mebart <- function(x.train, # explanatory variables for training data, matrix or
         grp <- 1:p
     }
 
-    ## if(p>1 & length(numcut)==1) numcut=rep(numcut, p)
+    # I added these
+    if (nrow(meas_error_sigma) != ncol(meas_error_sigma)) {
+        stop("The meas_error_sigma matrix must be square")
+    }
+    if (p != nrow(meas_error_sigma)){
+        stop("The number of rows/columns in meas_error_sigma must be equal to the number of columns in x.train")
+    }
+
 
     y.train <- y.train - fmean # centers output data
     #------------------------------------------------------------------------------------------------------------
