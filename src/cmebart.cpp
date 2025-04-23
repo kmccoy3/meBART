@@ -296,6 +296,14 @@ RcppExport SEXP cmebart(
         // =========================================================================================
         // Measurement Error Step in Gibbs Sampler
 
+        Rcpp::NumericVector last_xv(n*p);
+        for (size_t j = 0; j < p ; j++){
+            for (size_t l = 0; l < n; l++){
+                last_xv[j + l*p] = x_draws_.slice(i).col(l)[j]; // Copy the current x_draws_ into last_x
+            }
+        }
+
+
         // Loop through each observation
         for (size_t k = 0; k < n; k++)
         {
@@ -317,19 +325,25 @@ RcppExport SEXP cmebart(
             double y_pred = bm.f(k);
             //     double y_pred_prime; // = y_pred; // FIXME: we need to calculate y_pred for the new x_true_prime
 
-            //     // TODO: Check that this is right, probably isnt
-            //     // This can go outside loop
-            //     heterbart bm_prime;
-            //     bm_prime = bm;
-            //     Rcpp::NumericVector last_xv(n); // = x_draws_[i];
-            //     for (size_t j = 0; j < n; j++)
-            //     {
-            //         last_xv[j] = x_draws_[i][j];
-            //     }
-            //     last_xv[k] = x_true_prime; // Set the new x_true_prime value
-            //     double *ix = &last_xv[0];
-            //     bm_prime.setdata(p, n, ix, iy, numcut);
-            //     y_pred_prime = bm_prime.f(k);
+            // TODO: Check that this is right, probably isnt
+            heterbart bm_prime;
+            bm_prime = bm;
+
+
+            Rcpp::NumericVector xv_prime(Rcpp::clone(last_xv));
+            for (size_t j=0; j<p; j++){
+                xv_prime[j + k*p] = x_true_prime[j];
+            }
+
+            // if (i < 5){
+            //     Rcpp::Rcout << "x_meas: " << xv << std::endl;
+            //     Rcpp::Rcout << "last_xv: " << last_xv << std::endl;
+            // }
+
+            double *ix = &xv_prime[0];
+            // double *ix = &last_xv[0];
+            bm_prime.setdata(p, n, ix, iy, numcut);
+            double y_pred_prime = bm_prime.f(k);
 
             // Calculate MH ratio
             double alpha = 0.0;
@@ -340,7 +354,7 @@ RcppExport SEXP cmebart(
             // alpha -= log(dnorm(x_true, mu_x, sigma_x));   // x prior
 
             // Proposed values
-            // alpha += log(dnorm(y_true, y_pred_prime, sigma));   // y likelihood
+            alpha += log(dnorm(y_true, y_pred_prime, sigma));   // y likelihood
             alpha += log(dmvnorm(x_meas, x_true_prime, meas_error_sigma)); // x likelihood
             // alpha += log(dnorm(x_true_prime, mu_x, sigma_x));   // x prior
 
@@ -354,7 +368,6 @@ RcppExport SEXP cmebart(
             if (accept)
             {
                 x_draws_.slice(i + 1).col(k) = x_true_prime; // Update the draw of x_true
-                // x_draws_[i + 1].col(k) = x_true_prime; // Update the draw of x_true
 
                 // Give original BART model new x data
                 // bm.resetdata(p, n, ix, iy);
@@ -362,7 +375,6 @@ RcppExport SEXP cmebart(
             }
             else
             {
-                // x_draws_[i + 1].push_back(x_true);
                 x_draws_.slice(i + 1).col(k) = x_true; // Keep the old value of x_true
                 acceptances(i, k) = 0;
             }
