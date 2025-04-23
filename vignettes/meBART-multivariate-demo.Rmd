@@ -1,0 +1,127 @@
+---
+title: "mebart-demo"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{mebart-demo}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(tidyverse)
+library(MASS)
+```
+
+# Toy Example
+
+$$f(x) = 1_{[0.5, \infty)}(x)$$
+
+# Generate Synthetic Data
+
+```{r}
+
+# Fix random seed to make the results reproducible
+set.seed(0)
+
+# number of observations
+n <- 200
+p <- 2
+
+# variance of measurement error and output, respectively
+sigma_meas <- 0.01 * diag(x=1, nrow=p, ncol=p)
+sigma_y <- 0.1
+
+# Generate x values uniformly and add measurement error
+x_true <- matrix(runif(n*p, 0, 1), nrow=n, ncol=p)
+x_meas <- x_true + MASS::mvrnorm(n=n, mu=rep(0, p), Sigma=sigma_meas)
+y_true <- 1 * (x_true[,1] >= 0.5) + 1 * (x_true[,2] >= 0.5)
+y_obs <- y_true + rnorm(n, 0, sigma_y)
+
+# Convert to df
+df_me <- data.frame(x_meas)
+df_me$y <- y_obs
+
+df_train <- df_me[1:100,]
+df_test <- df_me[101:200,]
+```
+
+
+```{r}
+ggplot(df_me) +
+    geom_point(aes(x = X1, y = X2, color = y)) +
+    scale_color_gradient(low = "blue", high = "red") +
+    labs(title = "Synthetic Data with Measurement Error", x = "X1", y = "X2") +
+    theme_minimal() +
+    theme(legend.position="none")
+```
+
+
+
+
+```{r}
+
+# Parameters
+ndpost <- 1000 # (Default: 1000L)
+nskip <- 100 # (Default: 100L)
+ntree <- 50 # (Default: 200L)
+
+# proposal_sd = 0.10
+
+# Vanilla BART
+set.seed(0)
+mdl_BART <- BART::wbart(df_train[,1:2], df_train$y, x.test=df_test[,1:2],
+                         nskip=nskip, ndpost=ndpost, ntree=ntree)
+
+# meBART
+set.seed(0)
+mdl_meBART <- meBART::mebart(df_train[,1:2], df_train$y, x.test=df_test[,1:2],
+                         nskip=nskip, ndpost=ndpost, ntree=ntree, 
+                         meas_error_sigma=sigma_meas)
+
+
+```
+
+
+
+```{r}
+
+mse_BART <- mean((mdl_BART$yhat.train.mean - y_true[1:100])^2)
+mse_meBART <- mean((mdl_meBART$yhat.train.mean - y_true[1:100])^2)
+
+print(paste("Training MSE BART: ", round(mse_BART, 4)))
+print(paste("Training MSE meBART: ", round(mse_meBART, 4)))
+
+mse_BART_test <- mean((mdl_BART$yhat.test.mean - y_true[101:200])^2)
+mse_meBART_test <- mean((mdl_meBART$yhat.test.mean - y_true[101:200])^2)
+
+print(paste("Test MSE BART: ", round(mse_BART_test, 4)))
+print(paste("Test MSE meBART: ", round(mse_meBART_test, 4)))
+```
+
+```{r}
+
+df <- data.frame(iter_num = seq_along(mdl_BART$sigma), sigma = mdl_BART$sigma, 
+                 Method = rep("BART", length(mdl_BART$sigma)))
+df <- rbind(df, data.frame(iter_num = seq_along(mdl_meBART$sigma), sigma = mdl_meBART$sigma, 
+                 Method = rep("meBART", length(mdl_meBART$sigma))))
+colnames(df) <- c("iter_num", "sigma", "Method")
+
+
+# Create the ggplot line plot
+sigma_plot <- ggplot(df, aes(x = iter_num, y = sigma, color=Method)) +
+    geom_line() +
+    labs(x = "MCMC Iteration", y = TeX("sigma, $\\sigma$"), title = "Posterior Draws of Sigma") +
+    geom_hline(yintercept=sigma_y, color="blue", linetype="dashed")
+
+
+sigma_plot
+
+```
+
