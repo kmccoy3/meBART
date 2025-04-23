@@ -370,7 +370,7 @@ RcppExport SEXP cmebart(
                 x_draws_.slice(i + 1).col(k) = x_true_prime; // Update the draw of x_true
 
                 // Give original BART model new x data
-                // bm.resetdata(p, n, ix, iy);
+                bm.resetdata(p, n, ix, iy);
                 acceptances(i, k) = 1;
             }
             else
