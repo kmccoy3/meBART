@@ -120,8 +120,8 @@ mebart <- function(x.train, # explanatory variables for training data, matrix or
                    nkeeptreedraws = ndpost, # number of MCMC iters to be returned for tree draws
                    printevery = 100L, # print progress every printevery iterations
                    transposed = FALSE, # used if called by mc.wbart
-                   proposal_sd = meas_error_sd, # standard deviation of the proposal distribution
-                   meas_error_sd # standard deviation of the measurement error
+                   proposal_sigma = meas_error_sigma, # standard deviation of the proposal distribution
+                   meas_error_sigma # standard deviation of the measurement error
                    ) {
     #--------------------------------------------------
     # data
@@ -167,7 +167,14 @@ mebart <- function(x.train, # explanatory variables for training data, matrix or
         grp <- 1:p
     }
 
-    ## if(p>1 & length(numcut)==1) numcut=rep(numcut, p)
+    # I added these
+    if (nrow(meas_error_sigma) != ncol(meas_error_sigma)) {
+        stop("The meas_error_sigma matrix must be square")
+    }
+    if (p != nrow(meas_error_sigma)){
+        stop("The number of rows/columns in meas_error_sigma must be equal to the number of columns in x.train")
+    }
+
 
     y.train <- y.train - fmean # centers output data
     #------------------------------------------------------------------------------------------------------------
@@ -248,8 +255,8 @@ mebart <- function(x.train, # explanatory variables for training data, matrix or
         nkeeptreedraws, # number of MCMC iters to be returned for tree draws
         printevery, # print progress every printevery iterations
         xinfo, # cutpoints, now specified
-        proposal_sd, # standard deviation of the proposal distribution
-        meas_error_sd # standard deviation of the measurement error
+        proposal_sigma, # standard deviation of the proposal distribution
+        meas_error_sigma # standard deviation of the measurement error
     )
 
     res$proc.time <- proc.time() - ptm # how much time C++ code has taken

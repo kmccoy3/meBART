@@ -22,6 +22,8 @@
 
 arma::mat rmvnorm(int n, arma::vec mu, arma::mat sigma);
 
+arma::vec rmvnorm(arma::vec mu, arma::mat sigma);
+
 double dmvnorm(arma::vec x, arma::vec mu, arma::mat sigma);
 
 double rnorm(double mu, double sigma);

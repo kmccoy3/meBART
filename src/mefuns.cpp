@@ -52,6 +52,14 @@ arma::mat rmvnorm(int n, arma::vec mu, arma::mat sigma)
     return arma::repmat(mu, 1, n).t() + Y * arma::chol(sigma);
 }
 
+arma::vec rmvnorm(arma::vec mu, arma::mat sigma)
+{
+    int ncols = sigma.n_cols;
+    arma::mat Y = arma::randn(1, ncols);
+    arma::mat tmp = arma::repmat(mu, 1, 1).t() + Y * arma::chol(sigma);
+    return tmp.row(0).t(); // return as a column vector
+}
+
 double dmvnorm(arma::vec x, arma::vec mu, arma::mat sigma)
 {
 

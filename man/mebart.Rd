@@ -40,7 +40,8 @@ mebart(
   nkeeptreedraws = ndpost,
   printevery = 100L,
   transposed = FALSE,
-  proposal_sd = 1
+  proposal_sigma = meas_error_sigma,
+  meas_error_sigma
 )
 }
 \arguments{
