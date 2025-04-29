@@ -59,7 +59,7 @@ nskip <- 100 # (Default: 100L)
 ntree <- 200 # (Default: 200L)
 
 # proposal_sd = 0.10
-meas_error_sd <- 0.1
+meas_error_sd <- 0.01*diag(x=1, nrow=1, ncol=1)
 
 # Vanilla BART
 set.seed(0)
@@ -70,7 +70,7 @@ mdl_BART <- BART::wbart(df_me$X, df_me$y,
 set.seed(0)
 mdl_meBART <- meBART::mebart(df_me$X, df_me$y, 
                          nskip=nskip, ndpost=ndpost, ntree=ntree, 
-                         meas_error_sd=meas_error_sd)
+                         meas_error_sigma=meas_error_sd)
 
 
 ```
