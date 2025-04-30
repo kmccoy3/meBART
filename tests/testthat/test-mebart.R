@@ -1,99 +1,91 @@
 
-########## Initial Test ##########
+
+############################## Initial Test ##############################
+
 
 test_that("test_that framework is working", {
-    expect_identical(2+3, 5)
+    expect_identical(2 + 3, 5)
 })
 
-########## meBART Test ##########
 
-# f = file()
-# sink(file=f)
-# 
-# # Fix random seed to make the results reproducible
-# set.seed(0)
-# 
-# # number of observations
-# n <- 50
-# 
-# # variance of measurement error and output, respectively
-# sigma_meas <- 0.1
-# sigma_y <- 0.1
-# 
-# # Generate x values uniformly and add measurement error
-# x_true <- runif(n, 0, 1)
-# x_meas <- x_true + rnorm(n, 0, sigma_meas)
-# y_true <- 1 * (x_true >= 0.5)
-# y_obs <- y_true + rnorm(n, 0, sigma_y)
-# 
-# # Convert to df
-# df_me <- data.frame(X=x_meas, y=y_obs)
-# # df_no_me <- data.frame(X=x_true, y=y_obs)
-# 
-# # Parameters
-# ndpost <- 500 # (Default: 1000L)
-# nskip <- 100 # (Default: 100L)
-# ntree <- 100 # (Default: 200L)
-# 
-# meas_error_sd = 0.10
-# 
-# # Data WITH Measurement Error
-# set.seed(0)
-# me_mdl <- meBART::mebart(df_me$X, df_me$y, 
-#                          nskip=nskip, ndpost=ndpost, ntree=ntree, 
-#                          meas_error_sd=meas_error_sd)
-# 
-# old_mdl <- readRDS("me_mdl.rds")
-# 
-# sink()
-# 
-# 
-# test_that("meBART objects are identical to previous commits", {
-#     expect_equal(me_mdl$sigma, old_mdl$sigma)
-#     expect_equal(me_mdl$yhat.train.mean, old_mdl$yhat.train.mean)
-#     expect_equal(me_mdl$yhat.train, old_mdl$yhat.train)
-#     expect_equal(me_mdl$varcount, old_mdl$varcount)
-#     expect_equal(me_mdl$varprob, old_mdl$varprob)
-#     # expect_equal(me_mdl$treedraws, old_mdl$treedraws)
-#     expect_equal(me_mdl$x_draws, old_mdl$x_draws)
-#     expect_equal(me_mdl$acceptances, old_mdl$acceptances)
-#     expect_equal(me_mdl$mu, old_mdl$mu)
-#     expect_equal(me_mdl$varcount.mean, old_mdl$varcount.mean)
-#     expect_equal(me_mdl$varprob.mean, old_mdl$varprob.mean)
-#     expect_equal(me_mdl$rm.const, old_mdl$rm.const)
-# })
-
-########## Multivariate meBART Test ##########
-
-f = file()
-sink(file=f)
-
-set.seed(0)
-n <- 20
-data <- data.frame(X1=rnorm(n), X2=rnorm(n), y= rnorm(n))
-
-set.seed(0)
-Sigma <- matrix(c(1, 0, 0, 1), nrow=2)
-me_mdl <- meBART::mebart(data[,1:2], data[,3], meas_error_sigma=Sigma)
-
-closeAllConnections()
-
-old_mdl <- readRDS("me_multivariate_mdl.rds")
+############################## 1-D meBART Test ##############################
 
 
+test_that("1-D meBART objects are identical to previous commits", {
+    
+    # Pass output of functions to sink so they don't clutter the Test console
+    f = file()
+    sink(file = f)
+    
+    # Generate data
+    set.seed(0)
+    n <- 20
+    data <- data.frame(X1 = rnorm(n), y = rnorm(n))
+    
+    # Run meBART model
+    Sigma <- matrix(c(1), nrow = 1)
+    set.seed(0)
+    meBART_mdl_1D <- meBART::mebart(data[, 1], data[, 2], meas_error_sigma = Sigma)
+    
+    # Close sink
+    closeAllConnections()
+    
+    # Load old model
+    old_mdl_1D <- readRDS("meBART_mdl_1D.rds")
+    
+    # Run tests
+    expect_equal(meBART_mdl_1D$sigma, old_mdl_1D$sigma)
+    expect_equal(meBART_mdl_1D$yhat.train.mean, old_mdl_1D$yhat.train.mean)
+    expect_equal(meBART_mdl_1D$yhat.train, old_mdl_1D$yhat.train)
+    expect_equal(meBART_mdl_1D$varcount, old_mdl_1D$varcount)
+    expect_equal(meBART_mdl_1D$varprob, old_mdl_1D$varprob)
+    # expect_equal(meBART_mdl_1D$treedraws, old_mdl_1D$treedraws)
+    expect_equal(meBART_mdl_1D$x_draws, old_mdl_1D$x_draws)
+    expect_equal(meBART_mdl_1D$acceptances, old_mdl_1D$acceptances)
+    expect_equal(meBART_mdl_1D$mu, old_mdl_1D$mu)
+    expect_equal(meBART_mdl_1D$varcount.mean, old_mdl_1D$varcount.mean)
+    expect_equal(meBART_mdl_1D$varprob.mean, old_mdl_1D$varprob.mean)
+    expect_equal(meBART_mdl_1D$rm.const, old_mdl_1D$rm.const)
+})
 
-test_that("meBART objects are identical to previous commits", {
-    expect_equal(me_mdl$sigma, old_mdl$sigma)
-    expect_equal(me_mdl$yhat.train.mean, old_mdl$yhat.train.mean)
-    expect_equal(me_mdl$yhat.train, old_mdl$yhat.train)
-    expect_equal(me_mdl$varcount, old_mdl$varcount)
-    expect_equal(me_mdl$varprob, old_mdl$varprob)
-    # expect_equal(me_mdl$treedraws, old_mdl$treedraws)
-    expect_equal(me_mdl$x_draws, old_mdl$x_draws)
-    expect_equal(me_mdl$acceptances, old_mdl$acceptances)
-    expect_equal(me_mdl$mu, old_mdl$mu)
-    expect_equal(me_mdl$varcount.mean, old_mdl$varcount.mean)
-    expect_equal(me_mdl$varprob.mean, old_mdl$varprob.mean)
-    expect_equal(me_mdl$rm.const, old_mdl$rm.const)
+
+############################## 2-D meBART Test ##############################
+
+
+test_that("2-D meBART objects are identical to previous commits", {
+    
+    # Pass output of functions to sink so they don't clutter the Test console
+    f = file()
+    sink(file = f)
+    
+    # Generate data
+    set.seed(0)
+    n <- 20
+    data <- data.frame(X1 = rnorm(n), X2 = rnorm(n), y = rnorm(n))
+    
+    # Run meBART model
+    Sigma <- matrix(c(1, 0, 0, 1), nrow = 2)
+    set.seed(0)
+    meBART_mdl_2D <- meBART::mebart(data[, 1:2], data[, 3], meas_error_sigma = Sigma)
+    
+    # Close sink
+    closeAllConnections()
+    
+    # Load old model
+    old_mdl_2D <- readRDS("meBART_mdl_2D.rds")
+    
+    # Run tests
+    expect_equal(meBART_mdl_2D$sigma, old_mdl_2D$sigma)
+    expect_equal(meBART_mdl_2D$yhat.train.mean, old_mdl_2D$yhat.train.mean)
+    expect_equal(meBART_mdl_2D$yhat.train, old_mdl_2D$yhat.train)
+    expect_equal(meBART_mdl_2D$varcount, old_mdl_2D$varcount)
+    expect_equal(meBART_mdl_2D$varprob, old_mdl_2D$varprob)
+    # expect_equal(meBART_mdl_2D$treedraws, old_mdl_2D$treedraws)
+    expect_equal(meBART_mdl_2D$x_draws, old_mdl_2D$x_draws)
+    expect_equal(meBART_mdl_2D$acceptances, old_mdl_2D$acceptances)
+    expect_equal(meBART_mdl_2D$mu, old_mdl_2D$mu)
+    expect_equal(meBART_mdl_2D$varcount.mean, old_mdl_2D$varcount.mean)
+    expect_equal(meBART_mdl_2D$varprob.mean, old_mdl_2D$varprob.mean)
+    expect_equal(meBART_mdl_2D$rm.const, old_mdl_2D$rm.const)
 })
 
