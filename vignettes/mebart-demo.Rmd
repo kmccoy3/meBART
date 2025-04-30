@@ -53,8 +53,11 @@ df_me <- data.frame(X=x_meas, y=y_obs)
 
 ```{r}
 
+f = file()
+sink(f)
+
 # Parameters
-ndpost <- 1000 # (Default: 1000L)
+ndpost <- 5000 # (Default: 1000L)
 nskip <- 100 # (Default: 100L)
 ntree <- 200 # (Default: 200L)
 
@@ -66,11 +69,18 @@ set.seed(0)
 mdl_BART <- BART::wbart(df_me$X, df_me$y, 
                          nskip=nskip, ndpost=ndpost, ntree=ntree)
 
+
 # meBART
 set.seed(0)
 mdl_meBART <- meBART::mebart(df_me$X, df_me$y, 
                          nskip=nskip, ndpost=ndpost, ntree=ntree, 
                          meas_error_sigma=meas_error_sd)
+
+
+closeAllConnections()
+
+cat("Time taken for Vanilla BART: ", mdl_BART$proc.time[[3]], "s\n", sep="")
+cat("Time taken for meBART: ", mdl_meBART$proc.time[[3]], "s\n", sep="")
 
 
 ```
@@ -81,7 +91,7 @@ mdl_meBART <- meBART::mebart(df_me$X, df_me$y,
 
 
 values <- mdl_BART$treedraws$cutpoints[[1]]
-output <- predict(mdl_BART, data.frame(values))# [500:1000,]
+output <- predict(mdl_BART, data.frame(values))
 means <- colMeans(output)
 
 lower_CI <- c()
@@ -142,5 +152,35 @@ ci_plot <- ggplot(ci_df_combined) +
 
 ci_plot
 
+```
+
+
+
+
+
+
+```{r}
+
+sigma_df <- data.frame(iter_num = seq_along(mdl_meBART$sigma), sigma = mdl_meBART$sigma, model = "meBART")
+sigma_df2 <- data.frame(iter_num = seq_along(mdl_BART$sigma), sigma = mdl_BART$sigma, model = "Vanilla BART")
+
+sigma_df <- rbind(sigma_df, sigma_df2)
+
+# Create the ggplot line plot
+sigma_plot <- ggplot(sigma_df, aes(x = iter_num, y = sigma, color=model)) +
+    geom_line() +
+    geom_point(size=0.00001) +
+    labs(x = "MCMC Iteration", y = TeX("sigma, $\\sigma$"), title = "Posterior Draws of Sigma") +
+    geom_hline(yintercept=sigma_y, color="black", linetype="dashed") +
+    theme(legend.position = "bottom")
+
+library("ggExtra")
+ggMarginal(sigma_plot, groupColour = TRUE, groupFill = TRUE, margins="y")
+
+ggsave("../scratch/figures/sigma_comparison1.png")
+
+sigma_plot
+
+ggsave("../scratch/figures/sigma_comparison2.png")
 ```
 
