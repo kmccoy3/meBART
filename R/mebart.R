@@ -174,6 +174,9 @@ mebart <- function(x.train, # explanatory variables for training data, matrix or
     if (p != nrow(meas_error_sigma)){
         stop("The number of rows/columns in meas_error_sigma must be equal to the number of columns in x.train")
     }
+    if (any(eigen(meas_error_sigma)$values <= 0) | any(meas_error_sigma != t(meas_error_sigma))) {
+        stop("The meas_error_sigma matrix must be positive definite")
+    }
 
 
     y.train <- y.train - fmean # centers output data
