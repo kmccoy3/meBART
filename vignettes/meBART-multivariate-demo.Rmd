@@ -67,8 +67,12 @@ ggplot(df_me) +
 
 ```{r}
 
+
+f = file()
+sink(f)
+
 # Parameters
-ndpost <- 1000 # (Default: 1000L)
+ndpost <- 5000 # (Default: 1000L)
 nskip <- 100 # (Default: 100L)
 ntree <- 50 # (Default: 200L)
 
@@ -84,6 +88,11 @@ set.seed(0)
 mdl_meBART <- meBART::mebart(df_train[,1:2], df_train$y, x.test=df_test[,1:2],
                          nskip=nskip, ndpost=ndpost, ntree=ntree, 
                          meas_error_sigma=sigma_meas)
+
+closeAllConnections()
+
+cat("Time taken for Vanilla BART: ", mdl_BART$proc.time[[3]], "s\n", sep="")
+cat("Time taken for meBART: ", mdl_meBART$proc.time[[3]], "s\n", sep="")
 
 
 ```
@@ -107,18 +116,20 @@ print(paste("Test MSE meBART: ", round(mse_meBART_test, 4)))
 
 ```{r}
 
-df <- data.frame(iter_num = seq_along(mdl_BART$sigma), sigma = mdl_BART$sigma, 
-                 Method = rep("BART", length(mdl_BART$sigma)))
-df <- rbind(df, data.frame(iter_num = seq_along(mdl_meBART$sigma), sigma = mdl_meBART$sigma, 
+sigma_df <- data.frame(iter_num = seq_along(mdl_BART$sigma), sigma = mdl_BART$sigma, 
+                 Method = rep("Vanilla BART", length(mdl_BART$sigma)))
+sigma_df <- rbind(sigma_df, data.frame(iter_num = seq_along(mdl_meBART$sigma), sigma = mdl_meBART$sigma, 
                  Method = rep("meBART", length(mdl_meBART$sigma))))
-colnames(df) <- c("iter_num", "sigma", "Method")
+colnames(sigma_df) <- c("iter_num", "sigma", "method")
+
+df$method <- factor(sigma_df$method, levels = c("Vanilla BART", "meBART"))
 
 
 # Create the ggplot line plot
-sigma_plot <- ggplot(df, aes(x = iter_num, y = sigma, color=Method)) +
+sigma_plot <- ggplot(sigma_df, aes(x = iter_num, y = sigma, color=method)) +
     geom_line() +
     labs(x = "MCMC Iteration", y = TeX("sigma, $\\sigma$"), title = "Posterior Draws of Sigma") +
-    geom_hline(yintercept=sigma_y, color="blue", linetype="dashed")
+    geom_hline(yintercept=sigma_y, color="black", linetype="dashed")
 
 
 sigma_plot
