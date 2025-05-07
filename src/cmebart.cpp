@@ -63,7 +63,9 @@ RcppExport SEXP cmebart(
                            //   SEXP _treesaslists,
     SEXP _Xinfo,           // cutpoints, now specified
     SEXP _proposal_sigma,  // standard deviation of proposal distribution for new MH step
-    SEXP _meas_error_sigma // standard deviation of measurement error
+    SEXP _meas_error_sigma, // standard deviation of measurement error
+    SEXP _x_mu,
+    SEXP _x_sigma
 )
 {
     // printf("FIRST HEADER RAN\n");
@@ -135,6 +137,8 @@ RcppExport SEXP cmebart(
     // Convert R sigma objets to arma matrices
     arma::mat proposal_sigma = Rcpp::as<arma::mat>(_proposal_sigma);
     arma::mat meas_error_sigma = Rcpp::as<arma::mat>(_meas_error_sigma);
+    arma::vec x_mu = Rcpp::as<arma::vec>(_x_mu);
+    arma::mat x_sigma = Rcpp::as<arma::mat>(_x_sigma);
 
     // random number generation
     arn gen; // TODO
@@ -351,12 +355,12 @@ RcppExport SEXP cmebart(
             // Old values
             alpha -= log(dnorm(y_true, y_pred, sigma)); // y likelihood
             alpha -= log(dmvnorm(x_meas, x_true, meas_error_sigma)); // x likelihood
-            // alpha -= log(dnorm(x_true, mu_x, sigma_x));   // x prior
+            alpha -= log(dmvnorm(x_true, x_mu, x_sigma));   // x prior
 
             // Proposed values
             alpha += log(dnorm(y_true, y_pred_prime, sigma));   // y likelihood
             alpha += log(dmvnorm(x_meas, x_true_prime, meas_error_sigma)); // x likelihood
-            // alpha += log(dnorm(x_true_prime, mu_x, sigma_x));   // x prior
+            alpha += log(dmvnorm(x_true_prime, x_mu, x_sigma));   // x prior
 
 
             // Calculate Metropolis-Hastings acceptance ratio
