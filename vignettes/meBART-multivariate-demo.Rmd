@@ -1,8 +1,8 @@
 ---
-title: "mebart-demo"
+title: "mebart-multivariate-demo"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{mebart-demo}
+  %\VignetteIndexEntry{mebart-multivariate-demo}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
