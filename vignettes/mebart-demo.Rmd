@@ -202,6 +202,42 @@ ggsave("../scratch/figures/sigma_comparison1.png", dpi=600)
 
 sigma_plot
 
-# ggsave("../scratch/figures/sigma_comparison2.png")
+ggsave("../scratch/figures/sigma_comparison2.png", dpi=600)
+```
+
+
+
+```{r}
+# Coverage calculation
+
+BART_coverage <- c()
+
+for (i in 1:nrow(ci_df)){
+    x_val <- 1*(ci_df$X[i] > 0.5)
+    
+    if (ci_df$lower_CI[i] <= x_val && ci_df$upper_CI[i] >= x_val){
+        BART_coverage <- c(BART_coverage, 1)
+    } else {
+        BART_coverage <- c(BART_coverage, 0)
+    }
+}
+
+
+print(paste("Vanilla BART coverage: ", mean(BART_coverage), sep=""))
+
+meBART_coverage <- c()
+for (i in 1:nrow(ci_df2)){
+    x_val <- 1*(ci_df2$X[i] > 0.5)
+    
+    if (ci_df2$lower_CI[i] <= x_val && ci_df2$upper_CI[i] >= x_val){
+        meBART_coverage <- c(meBART_coverage, 1)
+    } else {
+        meBART_coverage <- c(meBART_coverage, 0)
+    }
+}
+
+print(paste("meBART coverage: ", mean(meBART_coverage), sep=""))
+
+
 ```
 
