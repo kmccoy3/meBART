@@ -2,8 +2,8 @@
 
 S3method(predict,mebart)
 export(bartModelMatrix)
+export(mc.mebart)
 export(mc.pmebart)
-export(mc.wbart)
 export(mebart)
 importFrom(Rcpp,evalCpp)
 importFrom(parallel,detectCores)

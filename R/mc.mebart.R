@@ -63,7 +63,7 @@
 #' @importFrom parallel detectCores
 #' @importFrom tools psnice
 #' 
-mc.wbart <- function(
+mc.mebart <- function(
     x.train, 
     y.train, 
     x.test = matrix(0.0, 0, 0),
@@ -98,7 +98,12 @@ mc.wbart <- function(
     transposed = FALSE,
     mc.cores = 2L, 
     nice = 19L,
-    seed = 99L) {
+    seed = 99L,
+    proposal_sigma = meas_error_sigma, # standard deviation of the proposal distribution
+    meas_error_sigma, # standard deviation of the measurement error
+    x_mu,
+    x_sigma
+    ) {
     if (.Platform$OS.type != "unix") {
         stop("parallel::mcparallel/mccollect do not exist on windows")
     }
@@ -135,7 +140,7 @@ mc.wbart <- function(
         parallel::mcparallel(
             {
                 psnice(value = nice)
-                wbart(
+                mebart(
                     x.train = x.train, y.train = y.train, x.test = x.test,
                     sparse = sparse, theta = theta, omega = omega,
                     a = a, b = b, augment = augment, rho = rho,
@@ -145,7 +150,11 @@ mc.wbart <- function(
                     sigmaf = sigmaf, lambda = lambda, fmean = fmean, w = w,
                     ntree = ntree, numcut = numcut,
                     ndpost = mc.ndpost, nskip = nskip, keepevery = keepevery,
-                    printevery = printevery, transposed = TRUE
+                    printevery = printevery, transposed = TRUE, 
+                    proposal_sigma = meas_error_sigma, # standard deviation of the proposal distribution
+                   meas_error_sigma = meas_error_sigma, # standard deviation of the measurement error
+                   x_mu = x_mu,
+                   x_sigma = x_sigma
                 )
             },
             ## treesaslists=treesaslists)},
@@ -161,7 +170,7 @@ mc.wbart <- function(
 
 
 
-    if (mc.cores == 1 | attr(post, "class") != "wbart") {
+    if (mc.cores == 1 | attr(post, "class") != "mebart") {
         return(post)
     } else {
         if (class(rm.const)[1] != "logical") post$rm.const <- rm.const
@@ -238,7 +247,7 @@ mc.wbart <- function(
             post$varprob.mean <- apply(post$varprob, 2, mean)
         }
 
-        attr(post, "class") <- "wbart"
+        attr(post, "class") <- "mebart"
 
         return(post)
     }
