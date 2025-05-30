@@ -12,7 +12,8 @@ setwd("~/Documents/documents-main/research/rice_research/projects/BART/working_r
 
 
 params <- list(
-    notes = "Test Run.",
+    notes = "Test with folders now.",
+    short_desc = "_sigma_prior",
         
         
     # Data generation parameters
@@ -27,6 +28,10 @@ params <- list(
     nskip = 100, # (Default: 100L) 
     ndpost = 1000, # (Default: 1000L)
     ntree = 200, # (Default: 200L)
+    sigdf = 3, # degrees of freedom for sigma prior (Default: 3L)
+    sigquant = .90, # quantile for sigma prior (Default: 0.90)
+    
+    
     meas_error_sd = 0.01*diag(x=1, nrow=1, ncol=1),
     function_type = "sin",
     num_iters = 25,
@@ -116,9 +121,19 @@ get_crps <- function(mdl){
 
 get_file_ext <- function(){
     datetime <- str_replace_all(format(Sys.time()), c(" "="_", ":"="-"))
+    return(paste0(datetime, params$short_desc))
 }
 
 curr_datetime <- get_file_ext()
+
+
+
+dir.create(file.path(paste0("results/", curr_datetime)))
+
+
+
+
+
 
 
 get_coverage <- function(ci_df){
@@ -162,7 +177,7 @@ plot_indicator <- function(ci_df_combined, df_me, MY_SEED){
         # scale_x_continuous(breaks = seq(-1.2, 1.2, 0.2)) +
         # scale_y_continuous(limits = c(-0.25, 1.25), breaks = seq(-0.2, 1.2, 0.2))
     
-    filename <- paste0("./results/", curr_datetime, "_bakeoff_indicator_SEED-", MY_SEED, ".png")
+    filename <- paste0("./results/", curr_datetime, "/SEED-", MY_SEED, "_CIs.png")
     
     suppressMessages(ggsave(filename, ci_plot, width = 6, height = 4, dpi=600))
     
@@ -185,7 +200,7 @@ plot_sine <- function(ci_df_combined, df_me, MY_SEED){
         # scale_x_continuous(breaks = seq(-1, 1, 0.25)) +
         geom_line(data=data.frame(x=values, y=my_func(values)), aes(x = x, y = y), color="#F8766D")
     
-    filename <- paste0("./results/", curr_datetime, "_bakeoff_sine_SEED-", MY_SEED, ".png")
+    filename <- paste0("./results/", curr_datetime, "/SEED-", MY_SEED, "CIs.png")
     
     suppressMessages(ggsave(filename, ci_plot, width = 6, height = 4, dpi=600))
     
@@ -227,7 +242,7 @@ plot_x_draws <- function(mdl, df_me, MY_SEED){
         # scale_x_continuous(limits = c(-1, 1), breaks = seq(-1.2, 1.2, 0.2)) +
         scale_color_discrete(labels = unname(TeX(c("Measured Value, $X_i^*$", "True Value, $X_i$", "Estimated True Value, $\\hat{X_i}$"))))
 
-    filename <- paste0("./results/", curr_datetime, "_bakeoff_x_draws_SEED-", MY_SEED, ".png")
+    filename <- paste0("./results/", curr_datetime, "/SEED-", MY_SEED, "_xdraws.png")
     
     suppressMessages(ggsave(filename, plot, height=6, dpi=300, units="in"))
     
@@ -251,7 +266,7 @@ plot_sigmas <- function(mdl_BART, mdl_meBART, MY_SEED){
         geom_hline(yintercept=params$sigma_y, color="black", linetype="dashed") +
         theme(legend.position = "bottom")
 
-    filename <- paste0("./results/", curr_datetime, "_bakeoff_sigma_SEED-", MY_SEED, ".png")
+    filename <- paste0("./results/", curr_datetime, "/SEED-", MY_SEED, "_sigma_plots.png")
     suppressMessages(ggsave(filename, sigma_plot, height=6, dpi=300, units="in"))
 }
 
@@ -293,13 +308,15 @@ for (MY_SEED in 1:params$num_iters){
     # Vanilla BART
     set.seed(MY_SEED)
     mdl_BART <- BART::wbart(df_train$X, df_train$y, df_test$X,
-                             nskip=params$nskip, ndpost=params$ndpost, ntree=params$ntree)
+                            nskip=params$nskip, ndpost=params$ndpost, ntree=params$ntree, 
+                            sigdf=params$sigdf, sigquant=params$sigquant)
     
     
     # meBART
     set.seed(MY_SEED)
     mdl_meBART <- meBART::mebart(df_train$X, df_train$y,  df_test$X,
-                             nskip=params$nskip, ndpost=params$ndpost, ntree=params$ntree, 
+                             nskip=params$nskip, ndpost=params$ndpost, ntree=params$ntree,
+                             sigdf=params$sigdf, sigquant=params$sigquant,
                              meas_error_sigma=params$meas_error_sd,                         
                              x_mu = params$mu_x,
                              x_sigma = params$sigma_x)
@@ -394,7 +411,7 @@ for (MY_SEED in 1:params$num_iters){
 
 
 
-filename <- paste0("./results/", curr_datetime, "_full_results_indicator.csv")
+filename <- paste0("./results/", curr_datetime, "/full_results_indicator.csv")
 if (!params$testing) write_csv(results_df, filename)
 
 
@@ -433,13 +450,13 @@ results_final <- results_summary %>%
   select(Method, all_of(metric_names))
 
 
-filename <- paste0("./results/", curr_datetime, "_summary_results_indicator.csv")
+filename <- paste0("./results/", curr_datetime, "/summary_results_indicator.csv")
 
 if (!params$testing){
     write_csv(results_final, filename)
 
 
-    filename <- paste0("./results/", curr_datetime, "_params.txt")
+    filename <- paste0("./results/", curr_datetime, "/params.txt")
     sink(filename)
     
     for (param in names(params)) {
