@@ -65,7 +65,7 @@ RcppExport SEXP cmebart(
     SEXP _proposal_sigma,  // standard deviation of proposal distribution for new MH step
     SEXP _meas_error_sigma, // standard deviation of measurement error
     SEXP _x_mu,
-    SEXP _x_sigma
+    SEXP _x_sigma // TODO: Add verbose parameter to control output
 )
 {
     // printf("FIRST HEADER RAN\n");
@@ -482,8 +482,8 @@ RcppExport SEXP cmebart(
     treesL["trees"] = Rcpp::CharacterVector(treess.str());
     ret["treedraws"] = treesL;
 
-    ret["x_draws"] = x_draws_;
-    ret["acceptances"] = acceptances;
+    ret["x_draws"] = x_draws_; // TODO: Don't return burn-in values
+    ret["acceptances"] = acceptances; // TODO: Don't return burn-in values
 
     return ret;
 }
