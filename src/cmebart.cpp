@@ -369,7 +369,7 @@ RcppExport SEXP cmebart(
             bool accept = gen.uniform() < acceptance_ratio;
 
             // Update draw of X
-            if (accept)
+            if (accept && i > burn)
             {
                 x_draws_.slice(i + 1).col(k) = x_true_prime; // Update the draw of x_true
 
