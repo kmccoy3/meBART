@@ -112,11 +112,19 @@ get_crps <- function(mdl){
 }
 
 
+
 get_file_ext <- function(){
     datetime <- str_replace_all(format(Sys.time()), c(" "="_", ":"="-"))
+    return(paste0(datetime, params$short_desc))
 }
 
 curr_datetime <- get_file_ext()
+
+
+
+dir.create(file.path(paste0("results/", curr_datetime)))
+
+
 
 
 get_coverage <- function(ci_df){
@@ -235,11 +243,11 @@ plot_x_draws <- function(mdl, df_me, MY_SEED){
     }
     
     
-    grid.arrange(grobs=my_list, ncol=3, nrow=2)
+    plot <- grid.arrange(grobs=my_list, ncol=3, nrow=2)
     
-    # filename <- paste0("./results/", curr_datetime, "_bakeoff_x_draws_SEED-", MY_SEED, ".png")
+    filename <- paste0("./results/", curr_datetime, "/SEED-", MY_SEED, "_x_draws.png")
     
-    # ggsave(filename, plot, height=6, dpi=300, units="in")
+    ggsave(filename, plot, height=6, dpi=300, units="in")
     
 }
 
@@ -303,7 +311,7 @@ for (MY_SEED in 1:params$num_iters){
     # crps.BART <- get_crps(mdl_BART)
     # crps.meBART <- get_crps(mdl_meBART)
     
-    # plot_x_draws(mdl_meBART, df_train, MY_SEED)
+    plot_x_draws(mdl_meBART, df_me, MY_SEED)
     
     # a <- params$nskip + 2
     # b <- params$nskip + params$ndpost + 1
@@ -363,7 +371,7 @@ closeAllConnections()
 
 
 
-filename <- paste0("./results/", curr_datetime, "_full_results_indicator.csv")
+filename <- paste0("./results/", curr_datetime, "/full_results_indicator.csv")
 write_csv(results_df, filename)
 
 
@@ -403,11 +411,11 @@ results_final <- results_summary %>%
   select(Method, all_of(metric_names))
 
 
-filename <- paste0("./results/", curr_datetime, "_summary_results_indicator.csv")
+filename <- paste0("./results/", curr_datetime, "/summary_results_indicator.csv")
 write_csv(results_final, filename)
 
 
-filename <- paste0("./results/", curr_datetime, "_params.txt")
+filename <- paste0("./results/", curr_datetime, "/params.txt")
 sink(filename)
 
 for (param in names(params)) {
