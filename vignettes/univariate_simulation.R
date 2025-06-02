@@ -418,28 +418,28 @@ if (!params$testing) write_csv(results_df, filename)
 # Get metric names
 metric_names <- c("Coverage", "MSE", "MAE", "MSE_func", "CRPS", "Sigma CRPS")
 
-# Step 1: Summarize with lb, mean, ub
+# Step 1: Summarize with lb, median, ub
 results_summary <- results_df %>% 
   filter(Metric %in% metric_names) %>%
   pivot_wider(names_from = Metric, values_from = Value) %>%
   group_by(Method) %>%
   summarise(across(everything(), list(
     lb = ~ quantile(., 0.025),
-    mean = mean,
+    median = median,
     ub = ~ quantile(., 0.975)
   ), .names = "{.col}_{.fn}")) %>%
   ungroup()
 
-# Step 2: Combine mean, lb, ub into single string columns
-format_estimate <- function(mean, lb, ub) {
-  sprintf("%.3f (%.3f, %.3f)", mean, lb, ub)
+# Step 2: Combine median, lb, ub into single string columns
+format_estimate <- function(median, lb, ub) {
+  sprintf("%.3f (%.3f, %.3f)", median, lb, ub)
 }
 
 
 # Step 3: Create formatted columns
 for (metric in metric_names) {
   results_summary[[metric]] <- format_estimate(
-    results_summary[[paste0(metric, "_mean")]],
+    results_summary[[paste0(metric, "_median")]],
     results_summary[[paste0(metric, "_lb")]],
     results_summary[[paste0(metric, "_ub")]]
   )
