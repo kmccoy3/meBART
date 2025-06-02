@@ -62,6 +62,7 @@
 #' 
 #' @importFrom parallel detectCores
 #' @importFrom tools psnice
+#' @importFrom abind abind
 #' 
 mc.mebart <- function(
     x.train, 
@@ -206,6 +207,12 @@ mc.mebart <- function(
                     post.list[[i]]$yhat.test
                 )
             }
+
+            post$x_draws <- abind(
+                post$x_draws,
+                post.list[[i]]$x_draws,
+                along=3
+            )
 
 
             post$sigma <- cbind(post$sigma, post.list[[i]]$sigma)
