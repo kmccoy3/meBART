@@ -12,8 +12,8 @@ setwd("~/Documents/documents-main/research/rice_research/projects/BART/working_r
 
 
 params <- list(
-    notes = "Test with folders now.",
-    short_desc = "_sigma_prior",
+    notes = "Regular combo.",
+    short_desc = "_combo",
         
         
     # Data generation parameters
@@ -33,7 +33,7 @@ params <- list(
     
     
     meas_error_sd = 0.01*diag(x=1, nrow=1, ncol=1),
-    function_type = "sin",
+    function_type = "combo",
     num_iters = 25,
     testing = FALSE
 )
@@ -447,7 +447,7 @@ for (metric in metric_names) {
 
 # Step 4: Keep only Method and formatted metrics
 results_final <- results_summary %>%
-  select(Method, all_of(metric_names))
+  dplyr::select(Method, all_of(metric_names))
 
 
 filename <- paste0("./results/", curr_datetime, "/summary_results_indicator.csv")

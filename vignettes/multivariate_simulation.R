@@ -5,6 +5,7 @@ library(meBART)
 library(tidyverse)
 library(latex2exp)
 library(ggridges)
+library(gridExtra)
 
 setwd("~/Documents/documents-main/research/rice_research/projects/BART/working_repo/meBART/vignettes")
 
@@ -13,15 +14,15 @@ p = 5
 
 params <- list(
     notes = "Test Multivariate Run.",
-        
+    short_desc = "_multivariate_full",
         
     # Data generation parameters
     n = 200, # number of TOTAL observations 
     p = 5,
     sigma_meas = 0.1, # sd of measurement error
     sigma_y = 0.1, # sd of y noise
-    mu_x = matrix(0.0, nrow=1, ncol=p),
-    sigma_x = 0.3^2 * diag(x=1, nrow=p, ncol=p),
+    mu_x = matrix(0.5, nrow=1, ncol=p),
+    sigma_x = 0.2^2 * diag(x=1, nrow=p, ncol=p),
     
     # Tree / Model parameters
     nskip = 100, # (Default: 100L) 
@@ -71,9 +72,9 @@ generate_data <- function(MY_SEED){
 }
 
 
-ci_calculation <- function(mdl, model){
+ci_calculation <- function(mdl, model_name){
 
-    values <- mdl$treedraws$cutpoints[[1]]
+    values <- MASS::mvrnorm(100, params$mu_x, params$sigma_x)
     output <- predict(mdl, data.frame(values))
     means <- colMeans(output)
 
@@ -84,10 +85,12 @@ ci_calculation <- function(mdl, model){
         lower_CI <- c(lower_CI, quantile(output[,i], 0.025))
         upper_CI <- c(upper_CI, quantile(output[,i], 0.975))
     }
+    
+    my_func <- get_function(params$function_type)
 
-    ci_df <- data.frame(X=values, y=means, lower_CI=lower_CI, upper_CI=upper_CI)
+    ci_df <- data.frame(y_true=my_func(values), y_pred=means, lower_CI=lower_CI, upper_CI=upper_CI)
 
-    ci_df$model <- model
+    ci_df$model <- model_name
 
 
     return(ci_df)
@@ -97,7 +100,7 @@ ci_calculation <- function(mdl, model){
 
 get_crps <- function(mdl){
 
-    values <- seq(from=as.numeric(params$mu_x - 2*params$sigma_x), to=as.numeric(params$mu_x + 2*params$sigma_x), length.out = 100)
+    values <- MASS::mvrnorm(100, params$mu_x, params$sigma_x)
     output <- predict(mdl, data.frame(values))
     n <- nrow(mdl$varcount)
 
@@ -111,6 +114,17 @@ get_crps <- function(mdl){
 
 }
 
+
+
+calculate_sigma_crps <- function(mdl_BART, mdl_meBART){
+    n <- nrow(mdl_meBART$varcount)
+    BART_sigma_crps <- loo::crps(x=mdl_BART$sigma[1:(n/2)], x2=mdl_BART$sigma[(n/2+1):n], y=params$sigma_y)
+    
+    meBART_sigma_crps <- loo::crps(x=mdl_meBART$sigma[1:(n/2)], x2=mdl_meBART$sigma[(n/2+1):n], y=params$sigma_y)
+    
+    return(c(-1*BART_sigma_crps$estimates[[1]], -1* meBART_sigma_crps$estimates[[1]]))
+    
+}
 
 
 get_file_ext <- function(){
@@ -135,11 +149,8 @@ get_coverage <- function(ci_df){
     my_func <- get_function(params$function_type)
 
     for (i in 1:nrow(ci_df)){
-        x_val <- my_func(ci_df$X[i])
 
-        # x_val <- sin(2*pi*ci_df$X[i]) # TODO: Remove hardcoding
-
-        if (ci_df$lower_CI[i] <= x_val && ci_df$upper_CI[i] >= x_val){
+        if (ci_df$lower_CI[i] <= ci_df$y_true[i] && ci_df$upper_CI[i] >= ci_df$y_true[i]){
             coverage <- c(coverage, 1)
         } else {
             coverage <- c(coverage, 0)
@@ -247,7 +258,7 @@ plot_x_draws <- function(mdl, df_me, MY_SEED){
     
     filename <- paste0("./results/", curr_datetime, "/SEED-", MY_SEED, "_x_draws.png")
     
-    ggsave(filename, plot, height=6, dpi=300, units="in")
+    ggsave(filename, plot, height=18, width= 12, dpi=300, units="in")
     
 }
 
@@ -287,11 +298,11 @@ for (MY_SEED in 1:params$num_iters){
     
 
     
-    # ci_BART <- ci_calculation(mdl_BART, "BART")
-    # ci_meBART <- ci_calculation(mdl_meBART, "meBART")
+    ci_BART <- ci_calculation(mdl_BART, "BART")
+    ci_meBART <- ci_calculation(mdl_meBART, "meBART")
     # 
-    # BART_coverage <- get_coverage(ci_BART)
-    # meBART_coverage <- get_coverage(ci_meBART)
+    BART_coverage <- get_coverage(ci_BART)
+    meBART_coverage <- get_coverage(ci_meBART)
     
 
     
@@ -308,8 +319,12 @@ for (MY_SEED in 1:params$num_iters){
     
     ar_meBART <- mean(mdl_meBART$acceptances)
     
-    # crps.BART <- get_crps(mdl_BART)
-    # crps.meBART <- get_crps(mdl_meBART)
+    crps.BART <- get_crps(mdl_BART)
+    crps.meBART <- get_crps(mdl_meBART)
+    
+    sigma_crps <- calculate_sigma_crps(mdl_BART, mdl_meBART)
+    BART_sigma_crps <- sigma_crps[1]
+    meBART_sigma_crps <- sigma_crps[2]
     
     plot_x_draws(mdl_meBART, df_me, MY_SEED)
     
@@ -338,10 +353,10 @@ for (MY_SEED in 1:params$num_iters){
     #                                     "Value" = c(BART_coverage, mse_BART, mae_BART, mse_func_BART, crps.BART, 
     #                                                 meBART_coverage, mse_meBART, mae_meBART, mse_func_meBART, crps.meBART)))
     
-    results_df <- rbind(results_df, data.frame("SEED"=rep(MY_SEED, 4),
-                                               "Method"= rep(c("Vanilla BART", "meBART"), each=2),
-                                               "Metric"= rep(c("MSE", "MAE"), times=2),
-                                               "Value" = c(mse_BART, mae_BART, mse_meBART, mae_meBART)))
+    results_df <- rbind(results_df, data.frame("SEED"=rep(MY_SEED, 10),
+                                               "Method"= rep(c("Vanilla BART", "meBART"), each=5),
+                                               "Metric"= rep(c("Coverage", "MSE", "MAE", "CRPS", "Sigma CRPS"), times=2),
+                                               "Value" = c(BART_coverage, mse_BART, mae_BART,crps.BART, BART_sigma_crps, meBART_coverage, mse_meBART, mae_meBART, crps.meBART, meBART_sigma_crps)))
     
     
     # 
@@ -376,8 +391,7 @@ write_csv(results_df, filename)
 
 
 # Get metric names
-metric_names <- c("Coverage", "MSE", "MAE", "MSE_func", "CRPS")
-metric_names <- c("MSE", "MAE")
+metric_names <- c("Coverage", "MSE", "MAE", "CRPS", "Sigma CRPS")
 
 # Step 1: Summarize with lb, mean, ub
 results_summary <- results_df %>% 
