@@ -27,6 +27,7 @@
 #include "bart.h"
 #include "rtnorm.h"
 // #include "rtruncnorm.h"
+#include "mefuns.h"
 
 #ifndef NoRcpp
 
@@ -77,6 +78,9 @@ RcppExport SEXP cpbart(
     size_t p = Rcpp::as<int>(_ip);
     size_t np = Rcpp::as<int>(_inp);
     Rcpp::NumericVector xv(_ix);
+    
+    arma::mat x_matrix = Rcpp::as<arma::mat>(_ix); // me
+
     double *ix = &xv[0];
     Rcpp::IntegerVector yv(_iy); // binary
     int *iy = &yv[0];
@@ -134,6 +138,13 @@ RcppExport SEXP cpbart(
     //   Rcpp::List list_of_lists(nkeeptreedraws*treesaslists);
     Rcpp::NumericMatrix varprb(nkeeptreedraws, p);
     Rcpp::IntegerMatrix varcnt(nkeeptreedraws, p);
+
+
+    // Convert R sigma objets to arma matrices
+    arma::mat proposal_sigma = Rcpp::as<arma::mat>(_proposal_sigma);
+    arma::mat meas_error_sigma = Rcpp::as<arma::mat>(_meas_error_sigma);
+    arma::vec x_mu = Rcpp::as<arma::vec>(_x_mu);
+    arma::mat x_sigma = Rcpp::as<arma::mat>(_x_sigma);
 
     // random number generation
     arn gen;
@@ -327,6 +338,17 @@ void cpbart(
     int time1 = time(&tp);
     xinfo &xi = bm.getxinfo();
     size_t total = nd + burn;
+
+
+    // Define x_draws object to store all draws of x
+    arma::cube x_draws_(p, n, total + 1); // p x n x (total + 1) cube to store all draws of x
+    x_draws_.slice(0) = x_matrix; // Initialize first entry of x_draws with the observed x values
+
+    // Create storage for acceptances of each x draw
+    Rcpp::NumericMatrix acceptances(total, n);
+
+
+
     for (size_t i = 0; i < total; i++)
     {
         if (i % printevery == 0)
@@ -348,6 +370,89 @@ void cpbart(
                 else iz[k]=r_lefttruncnorm(bm.f(k), -binaryOffset, 1., gen);
             */
         }
+
+        // =========================================================================================
+        // Measurement Error Step in Gibbs Sampler
+
+        Rcpp::NumericVector last_xv(n*p);
+        for (size_t j = 0; j < p ; j++){
+            for (size_t l = 0; l < n; l++){
+                last_xv[j + l*p] = x_draws_.slice(i).col(l)[j]; // Copy the current x_draws_ into last_x
+            }
+        }
+
+
+        // Loop through each observation
+        for (size_t k = 0; k < n; k++)
+        {
+
+            // Get x values of interest
+            arma::vec x_meas = x_matrix.col(k); // observed value of x
+            arma::vec x_true = x_draws_.slice(i).col(k); // old value of x_true
+            arma::vec x_true_prime = rmvnorm(x_true, proposal_sigma); // // TODO: Fix hardcoding of 0.1
+
+
+            double y_true = iz[k];
+            double y_pred = bm.f(k);
+
+
+            // TODO: Check that this is right, probably isnt
+            bart bm_prime;
+            bm_prime = bm;
+
+
+            Rcpp::NumericVector xv_prime(Rcpp::clone(last_xv));
+            for (size_t j=0; j<p; j++){
+                xv_prime[j + k*p] = x_true_prime[j];
+            }
+
+            // if (i < 5){
+            //     Rcpp::Rcout << "x_meas: " << xv << std::endl;
+            //     Rcpp::Rcout << "last_xv: " << last_xv << std::endl;
+            // }
+
+            double *ix = &xv_prime[0];
+            // double *ix = &last_xv[0];
+            bm_prime.setdata(p, n, ix, iz, numcut);
+            double y_pred_prime = bm_prime.f(k);
+
+            // Calculate MH ratio
+            double alpha = 0.0;
+
+            // Old values
+            alpha -= log(dnorm(y_true, y_pred, 1.)); // y likelihood
+            alpha -= log(dmvnorm(x_meas, x_true, meas_error_sigma)); // x likelihood
+            alpha -= log(dmvnorm(x_true, x_mu, x_sigma));   // x prior
+
+            // Proposed values
+            alpha += log(dnorm(y_true, y_pred_prime, 1.));   // y likelihood
+            alpha += log(dmvnorm(x_meas, x_true_prime, meas_error_sigma)); // x likelihood
+            alpha += log(dmvnorm(x_true_prime, x_mu, x_sigma));   // x prior
+
+
+            // Calculate Metropolis-Hastings acceptance ratio
+            alpha = exp(alpha); // Convert back from log scale
+            double acceptance_ratio = std::min<double>(1, alpha);
+            bool accept = gen.uniform() < acceptance_ratio;
+
+            // Update draw of X
+            if (accept)
+            {
+                x_draws_.slice(i + 1).col(k) = x_true_prime; // Update the draw of x_true
+
+                // Give original BART model new x data
+                bm.resetdata(p, n, ix, iz);
+                acceptances(i, k) = 1;
+            }
+            else
+            {
+                x_draws_.slice(i + 1).col(k) = x_true; // Keep the old value of x_true
+                acceptances(i, k) = 0;
+            }
+        }
+
+        // =========================================================================================
+
 
         if (i >= burn)
         {
