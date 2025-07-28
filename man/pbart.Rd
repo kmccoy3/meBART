@@ -32,7 +32,11 @@ pbart(
   nkeeptest = ndpost,
   nkeeptreedraws = ndpost,
   printevery = 100L,
-  transposed = FALSE
+  transposed = FALSE,
+  proposal_sigma = meas_error_sigma,
+  meas_error_sigma,
+  x_mu,
+  x_sigma
 )
 }
 \arguments{

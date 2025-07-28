@@ -63,7 +63,12 @@ RcppExport SEXP cpbart(
     SEXP _inkeeptreedraws,
     SEXP _inprintevery,
     //   SEXP _treesaslists,
-    SEXP _Xinfo)
+    SEXP _Xinfo,           // cutpoints, now specified
+    SEXP _proposal_sigma,  // standard deviation of proposal distribution for new MH step
+    SEXP _meas_error_sigma, // standard deviation of measurement error
+    SEXP _x_mu,
+    SEXP _x_sigma // TODO: Add verbose parameter to control output
+    )
 {
 
     //--------------------------------------------------

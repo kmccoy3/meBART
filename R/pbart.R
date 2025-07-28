@@ -116,9 +116,12 @@ pbart = function(x.train,
                  ##nkeeptestmean=ndpost,
                  nkeeptreedraws = ndpost,
                  printevery = 100L,
-                 transposed = FALSE)
-##treesaslists=FALSE)
-{
+                 transposed = FALSE, # used if called by mc.wbart
+                 proposal_sigma = meas_error_sigma, # standard deviation of the proposal distribution
+                 meas_error_sigma, # standard deviation of the measurement error
+                 x_mu,
+                 x_sigma
+                 ) {
     #--------------------------------------------------
     #data
     n = length(y.train)
@@ -164,6 +167,18 @@ pbart = function(x.train,
         rm.const <- 1:p
     if (length(grp) == 0)
         grp <- 1:p
+
+
+        # I added these
+    if (nrow(meas_error_sigma) != ncol(meas_error_sigma)) {
+        stop("The meas_error_sigma matrix must be square")
+    }
+    if (p != nrow(meas_error_sigma)){
+        stop("The number of rows/columns in meas_error_sigma must be equal to the number of columns in x.train")
+    }
+    if (any(eigen(meas_error_sigma)$values <= 0) | any(meas_error_sigma != t(meas_error_sigma))) {
+        stop("The meas_error_sigma matrix must be symmetric and positive definite")
+    }
     
     #--------------------------------------------------
     #set  nkeeps for thinning
@@ -248,7 +263,11 @@ pbart = function(x.train,
         nkeeptreedraws,
         printevery,
         ##treesaslists,
-        xinfo
+        xinfo, # cutpoints, now specified
+        proposal_sigma, # standard deviation of the proposal distribution
+        meas_error_sigma, # standard deviation of the measurement error
+        x_mu,
+        x_sigma
     )
     
     res$proc.time <- proc.time() - ptm
