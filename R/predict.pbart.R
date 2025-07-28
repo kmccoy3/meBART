@@ -1,5 +1,4 @@
 
-
 ## BART: Bayesian Additive Regression Trees
 ## Copyright (C) 2017 Robert McCulloch and Rodney Sparapani
 
@@ -17,52 +16,63 @@
 ## along with this program; if not, a copy is available at
 ## https://www.R-project.org/Licenses/GPL-2
 
-predict.pbart <- function(object,
-                          newdata,
-                          mc.cores = 1,
-                          openmp = (mc.cores.openmp() > 0),
-                          ...) {
+
+#' @title Predictions for meBART, probit
+#' 
+#' @description This function makes predictions using a meBART model.
+#' 
+#' @param object A meBART object.
+#' @param newdata A matrix of new data for prediction.
+#' @param mc.cores Number of cores to use for parallel processing.
+#' @param openmp Logical. If TRUE, OpenMP is used for parallel processing.
+#' @param ... Additional arguments.
+#' 
+#' @return A matrix of predictions.
+#' 
+#' @export
+#' @importFrom parallel detectCores
+#' 
+#' @examples
+#' # Example usage
+#' # Load the meBART package
+#' # library(meBART)
+#' #' # Create a meBART object
+#' #' # model <- mebart(x.train, y.train, ...)
+#' #' # Create new data for prediction
+#' #' # newdata <- matrix(...)
+#' #' # Make predictions
+#' #' #' predictions <- predict(model, newdata)
+#' #' # Print predictions
+#' #' #' print(predictions)
+#' 
+predict.pbart <- function(object, newdata, mc.cores=1, openmp=(mc.cores.openmp()>0), ...) {
+
     ##if(class(newdata) != "matrix") stop("newdata must be a matrix")
-    
+
     p <- length(object$treedraws$cutpoints)
-    
-    if (p != ncol(newdata))
+
+    if(p!=ncol(newdata))
         stop(paste0('The number of columns in newdata must be equal to ', p))
-    
-    if (.Platform$OS.type == "unix")
-        mc.cores.detected <- detectCores()
-    else
-        mc.cores.detected <- NA
-    
-    if (!is.na(mc.cores.detected) &&
-        mc.cores > mc.cores.detected)
-        mc.cores <- mc.cores.detected
-    
-    if (.Platform$OS.type != "unix" ||
-        openmp || mc.cores == 1)
-        call <- pwbart
-    else
-        call <- mc.pwbart
-    
+
+    if(.Platform$OS.type == "unix") mc.cores.detected <- detectCores()
+    else mc.cores.detected <- NA
+
+    if(!is.na(mc.cores.detected) && mc.cores>mc.cores.detected) mc.cores <- mc.cores.detected
+
+    if(.Platform$OS.type != "unix" || openmp || mc.cores==1) call <- pwbart
+    else call <- mc.pwbart
+
     ##return(call(newdata, object$treedraws, mc.cores=mc.cores, mu=object$binaryOffset, ...))
-    
-    if (length(object$binaryOffset) == 0)
-        object$binaryOffset = object$offset
-    
-    pred <- list(
-        yhat.test = call(
-            newdata,
-            object$treedraws,
-            mc.cores = mc.cores,
-            mu = object$binaryOffset,
-            ...
-        )
-    )
-    
+
+    if(length(object$binaryOffset)==0) object$binaryOffset=object$offset
+
+    pred <- list(yhat.test=call(newdata, object$treedraws, mc.cores=mc.cores,
+                                mu=object$binaryOffset, ...))
+
     pred$prob.test <- pnorm(pred$yhat.test)
     pred$prob.test.mean <- apply(pred$prob.test, 2, mean)
     pred$binaryOffset <- object$binaryOffset
     attr(pred, 'class') <- 'pbart'
-    
+
     return(pred)
 }

@@ -17,7 +17,54 @@
 ## along with this program; if not, a copy is available at
 ## https://www.R-project.org/Licenses/GPL-2
 
-
+#' @title Multicore PROBIT BART
+#' 
+#' @description This function performs Bayesian Additive Regression Trees (BART) using multiple cores.
+#' 
+#' @param x.train Training data matrix.
+#' @param y.train Response variable for training data.
+#' @param x.test Test data matrix (optional).
+#' @param sparse Logical. If TRUE, sparse matrix is used.
+#' @param theta Parameter for the model.
+#' @param omega Parameter for the model.
+#' @param a Parameter for the model.
+#' @param b Parameter for the model.
+#' @param augment Logical. If TRUE, augmentation is used.
+#' @param rho Parameter for the model.
+#' @param xinfo Information about the model matrix.
+#' @param usequants Logical. If TRUE, quantiles are used for cut points.
+#' @param cont Logical. If TRUE, continuous variables are treated as such.
+#' @param rm.const Logical. If TRUE, constant variables are removed.
+#' @param sigest Initial estimate of the error variance.
+#' @param sigdf Degrees of freedom for the error variance.
+#' @param sigquant Quantile for the error variance.
+#' @param k Parameter for the model.
+#' @param power Parameter for the model.
+#' @param base Parameter for the model.
+#' @param sigmaf Parameter for the model.
+#' @param lambda Parameter for the model.
+#' @param fmean Mean of the response variable.
+#' @param w Weights for the response variable.
+#' @param ntree Number of trees to grow.
+#' @param numcut Number of cut points for each variable.
+#' @param ndpost Number of posterior samples to draw.
+#' @param nskip Number of samples to skip.
+#' @param keepevery Keep every nth sample.
+#' @param printevery Print progress every nth sample.
+#' @param keeptrainfits Logical. If TRUE, training fits are kept.
+#' @param transposed Logical. If TRUE, the data is transposed.
+#' @param mc.cores Number of cores to use for parallel processing.
+#' @param nice Nice level for the process.
+#' @param seed Random seed for reproducibility.
+#' 
+#' @return A list containing the posterior samples, predictions, and other information.
+#' 
+#' @export
+#' 
+#' @importFrom parallel detectCores
+#' @importFrom tools psnice
+#' @importFrom abind abind
+#' 
 mc.pbart <- function(x.train,
                      y.train,
                      x.test = matrix(0.0, 0L, 0L),
