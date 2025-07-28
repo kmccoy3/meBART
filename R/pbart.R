@@ -71,8 +71,8 @@
 #' \item{varcount}{A matrix of variable counts in the model.}
 #' \item{varprob}{A matrix of variable probabilities in the model.}
 #' \item{treedraws}{A list of posterior tree draws (if `nkeeptreedraws > 0`).}
-#' \item{x_draws}
-#' \item{acceptances}
+#' \item{x_draws}{Tensor with posterior draws for the training data.}
+#' \item{acceptances}{Whether or not the proposal was accepted.}
 #' \item{proc.time}{The time taken for the C++ code to run.}
 #' \item{varcount.mean}{The mean of the variable counts.}
 #' \item{varprob.mean}{The mean of the variable probabilities.}
