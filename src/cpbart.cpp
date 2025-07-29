@@ -571,6 +571,9 @@ void cpbart(
     // if(treesaslists) treesL["lists"]=list_of_lists;
     ret["treedraws"] = treesL;
 
+    ret["x_draws"] = x_draws_; // TODO: Don't return burn-in values
+    ret["acceptances"] = acceptances; // TODO: Don't return burn-in values
+
     return ret;
 #else
 
