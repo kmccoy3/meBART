@@ -3,7 +3,7 @@ Type: Package
 Title: Bayesian Additive Regression Trees with Measurement Error
 Version: 0.0.1
 Date: 2025-02-18
-Description: Bayesian Additive Regression Trees (BART) sum-of-trees model expanded to incorporate measurement errors in the independent variables.
+Description: Bayesian Additive Regression Trees (BART) sum-of-trees model expanded to incorporate measurement errors in the independent variables. It is a modification of the BART package available at https://cran.r-project.org/package=BART.
 License: GPL (>= 2)
 Depends: R (>= 3.6)
 Imports: Rcpp (>= 0.12.3), parallel, tools
@@ -20,11 +20,15 @@ Config/testthat/edition: 3
 Authors@R: c(
     person(given="Kevin", family="McCoy", email="kmm12@rice.edu", role = c("aut", "cre")),
     person(given="Zachary", family="Wooten", role = "aut"),
-    person(given="Christine", family="Peterson", role = "aut")
+    person(given="Christine", family="Peterson", role = "aut"),
+    person(given='Robert', family='McCulloch', role='cph', comment='Original author of BART package',),
+    person(given='Rodney', family='Sparapani', role='cph', comment='Original author of BART package')
   )
 Author: Kevin McCoy [aut, cre],
     Zachary Wooten [aut],
-    Christine Peterson [aut]
+    Christine Peterson [aut],
+    Robert McCulloch [cph],
+    Rodney Sparapani [cph]
 Maintainer: Kevin McCoy <kmm12@rice.edu>
 RoxygenNote: 7.3.2
 Encoding: UTF-8

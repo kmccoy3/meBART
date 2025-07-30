@@ -1,8 +1,8 @@
+## meBART: Bayesian Additive Regression Trees with Measurement Error
+## Copyright (C) 2025 Kevin McCoy, Zachary Wooten, and Christine Peterson
 
-
-
-
-## BART: Bayesian Additive Regression Trees
+## This package is a modification of the BART package originally created by 
+## Robert McCulloch and Rodney Sparapani, who own the original copyright.
 ## Copyright (C) 2017 Robert McCulloch and Rodney Sparapani
 
 ## This program is free software; you can redistribute it and/or modify
@@ -18,6 +18,7 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program; if not, a copy is available at
 ## https://www.R-project.org/Licenses/GPL-2
+
 
 
 

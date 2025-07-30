@@ -5,7 +5,7 @@
 \alias{meBART-package}
 \title{meBART: Bayesian Additive Regression Trees with Measurement Error}
 \description{
-Bayesian Additive Regression Trees (BART) sum-of-trees model expanded to incorporate measurement errors in the independent variables.
+Bayesian Additive Regression Trees (BART) sum-of-trees model expanded to incorporate measurement errors in the independent variables. It is a modification of the BART package available at https://cran.r-project.org/package=BART.
 }
 \author{
 \strong{Maintainer}: Kevin McCoy \email{kmm12@rice.edu}
@@ -14,6 +14,12 @@ Authors:
 \itemize{
   \item Zachary Wooten
   \item Christine Peterson
+}
+
+Other contributors:
+\itemize{
+  \item Robert McCulloch (Original author of BART package) [copyright holder]
+  \item Rodney Sparapani (Original author of BART package) [copyright holder]
 }
 
 }

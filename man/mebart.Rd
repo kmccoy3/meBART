@@ -2,7 +2,7 @@
 % Please edit documentation in R/mebart.R
 \name{mebart}
 \alias{mebart}
-\title{Fit a Bayesian Additive Regression Tree (BART) Model}
+\title{Fit a Measurement Error Bayesian Additive Regression Tree (meBART) Model}
 \usage{
 mebart(
   x.train,
@@ -53,23 +53,23 @@ mebart(
 
 \item{x.test}{A matrix or data frame of test data (optional, default is an empty matrix). The structure should match `x.train`.}
 
-\item{sparse}{A logical value (default is FALSE). If TRUE, uses a Dirichlet prior for variable selection.}
+\item{sparse}{A logical value (default is FALSE). If TRUE, uses a Dirichlet prior for variable selection, i.e. performs DART.}
 
-\item{theta}{A numeric value (default is 0). Parameter for model specification (unspecified usage).}
+\item{theta}{A numeric value (default is 0). alpha parameter in Linero 2018 equation (2), governs DART prior (DART ONLY)}
 
-\item{omega}{A numeric value (default is 1). Parameter for model specification (unspecified usage).}
+\item{omega}{A numeric value (default is 1). Unknown DART parameter. (DART ONLY)}
 
-\item{a}{A numeric value (default is 0.5). Beta parameter used in DART (Dropout Additive Regression Trees).}
+\item{a}{A numeric value (default is 0.5). Beta prior parameter. (DART ONLY)}
 
-\item{b}{A numeric value (default is 1). Beta parameter used in DART.}
+\item{b}{A numeric value (default is 1). Beta prior parameter. (DART ONLY)}
 
-\item{augment}{A logical value (default is FALSE). An additional parameter (unspecified usage).}
+\item{augment}{A logical value (default is FALSE). FALSE uses Assumption 2.2 in Linero 2018, TRUE uses assumption 2.1 (DART ONLY)}
 
-\item{rho}{A numeric value (default is NULL). Sparsity parameter used in DART.}
+\item{rho}{A numeric value (default is NULL). Sparsity parameter used in DART. (DART ONLY)}
 
 \item{xinfo}{A matrix of cutpoints (default is an empty matrix). Specifies cutpoints for the model if desired.}
 
-\item{usequants}{A logical value (default is FALSE). If TRUE, uniform quantiles are used for cutpoints; otherwise, uniform cutpoints are used.}
+\item{usequants}{A logical value (default is FALSE). If TRUE, quantiles are used for cutpoints; otherwise, uniform cutpoints are used.}
 
 \item{cont}{A logical value (default is FALSE). Specifies if all variables are continuous.}
 
@@ -81,11 +81,11 @@ mebart(
 
 \item{sigquant}{A numeric value (default is 0.90). Quantile for the sigma prior.}
 
-\item{k}{A numeric value (default is 2.0). Prior parameter for the mean of the output data.}
+\item{k}{A numeric value (default is 2.0). Prior parameter for leaf nodes.}
 
-\item{power}{A numeric value (default is 2.0). Tree depth prior, beta in the CGM (Conditional Gaussian Model).}
+\item{power}{A numeric value (default is 2.0). Tree depth prior, beta in CGM18.}
 
-\item{base}{A numeric value (default is 0.95). Tree depth prior, alpha in the CGM.}
+\item{base}{A numeric value (default is 0.95). Tree depth prior, alpha in CGM18.}
 
 \item{sigmaf}{A numeric value (default is NA). Parameter for the sigma prior, not scaled by the number of trees.}
 
@@ -93,7 +93,7 @@ mebart(
 
 \item{fmean}{A numeric value (default is the mean of `y.train`). The mean of the output variable `y.train`.}
 
-\item{w}{A numeric vector (default is a vector of ones). Weights to multiply the standard deviation.}
+\item{w}{A numeric vector (default is a vector of ones). Weights to multiply the standard deviation. Must be of length n.}
 
 \item{ntree}{An integer (default is 200L). The number of trees to use in the model.}
 
@@ -115,7 +115,15 @@ mebart(
 
 \item{printevery}{An integer (default is 100L). The number of iterations before progress is printed.}
 
-\item{transposed}{A logical value (default is FALSE). Used if called by `mc.wbart`.}
+\item{transposed}{A logical value (default is FALSE). Whether or not the input data is transposed.}
+
+\item{proposal_sigma}{A numeric value (default is `meas_error_sigma`). Covariance matrix of the proposal distribution.}
+
+\item{meas_error_sigma}{A numeric matrix. Covariance matrix of the measurement error, must be square and match the number of columns in `x.train`.}
+
+\item{x_mu}{A numeric column vector. Mean of the explanatory variables.}
+
+\item{x_sigma}{A numeric matrix. Covariance matrix of the explanatory variables.}
 }
 \value{
 A list with the following elements:
@@ -135,15 +143,19 @@ A list with the following elements:
 \item{rm.const}{A vector specifying which columns were removed from `x.train`.}
 }
 \description{
-This function fits a Bayesian Additive Regression Tree model for continuous data using a set of explanatory variables.
-It provides options for handling test data, priors, and other model parameters, including options for variable selection and sparsity control.
+This function fits a meBART model with continuous output data.
 }
 \examples{
 # Example usage:
-set.seed(42)
+set.seed(0)
 x.train <- matrix(rnorm(1000), ncol = 10)
 y.train <- rnorm(100)
-result <- mebart(x.train, y.train, ntree = 50)
-print(result$yhat.train.mean)
-
+mdl <- mebart(x.train, y.train,
+              ndpost = 500,
+              ntree = 50,
+              meas_error_sigma = diag(10),
+              x_mu = matrix(0, nrow=10, ncol=1),
+              x_sigma = diag(10))
+preds <- mdl$yhat.train.mean
+print(paste0("Training MSE: ", round(mean((y.train - preds)^2), 3)))
 }
