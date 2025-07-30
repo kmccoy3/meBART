@@ -2,7 +2,7 @@
 % Please edit documentation in R/predict.mebart.R
 \name{predict.mebart}
 \alias{predict.mebart}
-\title{Predictions for meBART}
+\title{Make Predictions for meBART Model with Continuous Outcomes}
 \usage{
 \method{predict}{mebart}(object, newdata, mc.cores = 1, openmp = (mc.cores.openmp() > 0), ...)
 }
@@ -18,22 +18,21 @@
 \item{...}{Additional arguments.}
 }
 \value{
-A matrix of predictions.
+A matrix of predictions with size (ndpost x n)
 }
 \description{
-This function makes predictions using a meBART model.
+This function makes predictions using a meBART model with \emph{continuous} outcomes.
 }
 \examples{
-# Example usage
-# Load the meBART package
-# library(meBART)
-#' # Create a meBART object
-#' # model <- mebart(x.train, y.train, ...)
-#' # Create new data for prediction
-#' # newdata <- matrix(...)
-#' # Make predictions
-#' #' predictions <- predict(model, newdata)
-#' # Print predictions
-#' #' print(predictions)
-
+# Example usage:
+set.seed(0)
+x.train <- matrix(rnorm(1000), ncol = 10)
+y.train <- rnorm(100)
+mdl <- meBART::mebart(x.train, y.train,
+              ndpost = 500,
+              ntree = 50,
+              meas_error_sigma = diag(10),
+              x_mu = matrix(0, nrow=10, ncol=1),
+              x_sigma = diag(10))
+preds <- predict(mdl, newdata = x.train)
 }

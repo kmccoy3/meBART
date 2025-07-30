@@ -2,7 +2,7 @@
 % Please edit documentation in R/predict.pbart.R
 \name{predict.pbart}
 \alias{predict.pbart}
-\title{Predictions for meBART, probit}
+\title{Make Predictions for meBART Model with Binary Outcomes}
 \usage{
 \method{predict}{pbart}(object, newdata, mc.cores = 1, openmp = (mc.cores.openmp() > 0), ...)
 }
@@ -18,22 +18,25 @@
 \item{...}{Additional arguments.}
 }
 \value{
-A matrix of predictions.
+A list with the following components:
+\item{yhat.test}{A matrix of predictions in the latent Z space with size (ndpost x n).}
+\item{prob.test}{A matrix of probabilities with size (ndpost x n).}
+\item{prob.test.mean}{A vector of mean probabilities for each test sample.}
+\item{binaryOffset}{The offset used in the model.}
 }
 \description{
-This function makes predictions using a meBART model.
+This function makes predictions using a meBART model with \emph{binary} outcomes.
 }
 \examples{
-# Example usage
-# Load the meBART package
-# library(meBART)
-#' # Create a meBART object
-#' # model <- mebart(x.train, y.train, ...)
-#' # Create new data for prediction
-#' # newdata <- matrix(...)
-#' # Make predictions
-#' #' predictions <- predict(model, newdata)
-#' # Print predictions
-#' #' print(predictions)
-
+# Example usage:
+set.seed(0)
+x.train <- matrix(rnorm(1000), ncol = 10)
+y.train <- rbinom(100, 1, 0.5)
+mdl <- meBART::pbart(x.train, y.train,
+              ndpost = 500,
+              ntree = 50,
+              meas_error_sigma = diag(10),
+              x_mu = matrix(0, nrow=10, ncol=1),
+              x_sigma = diag(10))
+preds <- predict(mdl, newdata = x.train)
 }
