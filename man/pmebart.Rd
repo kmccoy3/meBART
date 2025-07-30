@@ -2,7 +2,7 @@
 % Please edit documentation in R/pmebart.R
 \name{pmebart}
 \alias{pmebart}
-\title{Single core BART Predictions}
+\title{Single-core + Multi-core (OpenMP) meBART Predictions}
 \usage{
 pmebart(
   x.test,
@@ -17,21 +17,23 @@ pmebart(
 \arguments{
 \item{x.test}{A matrix of test data.}
 
-\item{treedraws}{A list containing the tree draws.}
+\item{treedraws}{A list containing the tree draws. (Part of the meBART model)}
 
-\item{mu}{A numeric value to add to the predictions.}
+\item{mu}{Offset for the predictions.}
 
 \item{mc.cores}{Number of cores to use for parallel processing.}
 
-\item{transposed}{}
+\item{transposed}{Logical. Is x.test transposed?}
 
-\item{dodraws}{Logical. If TRUE, draws are returned.}
+\item{dodraws}{Logical. If TRUE, all posterior draws are returned; if FALSE, only the mean is returned.}
 
-\item{nice}{Nice level for the process.}
+\item{nice}{Nice level for the process. I'm pretty sure this is not used in the code.}
 }
 \value{
-A matrix of predictions.
+Prediction matrix of size (ndpost x n).
 }
 \description{
-This function performs multicore predictions using BART.
+This function performs single-core or multi-core (OpenMP) predictions for meBART 
+models. This function is also called by `mc.pmebart.R`.
 }
+\keyword{internal}

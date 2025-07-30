@@ -20,50 +20,56 @@
 ## https://www.R-project.org/Licenses/GPL-2
 
 
-#' @title Single core BART Predictions
-#' 
-#' @description This function performs multicore predictions using BART.
-#' 
+#' @title Single-core + Multi-core (OpenMP) meBART Predictions
+#'
+#' @description This function performs single-core or multi-core (OpenMP) predictions for meBART 
+#' models. This function is also called by `mc.pmebart.R`.
+#'
 #' @param x.test A matrix of test data.
-#' @param treedraws A list containing the tree draws.
-#' @param mu A numeric value to add to the predictions.
+#' @param treedraws A list containing the tree draws. (Part of the meBART model)
+#' @param mu Offset for the predictions.
 #' @param mc.cores Number of cores to use for parallel processing.
-#' @param transposed 
-#' @param dodraws Logical. If TRUE, draws are returned.
-#' @param nice Nice level for the process.
-#' 
-#' @return A matrix of predictions.
-#' 
-#' @export
-#' @importFrom parallel detectCores
-#' @importFrom tools psnice
-#' 
-pmebart <- function(
-    x.test, # x matrix to predict at
-    treedraws, # $treedraws from wbart
-    mu = 0, # mean to add on
-    mc.cores = 1L, # thread count
-    transposed = FALSE,
-    dodraws = TRUE,
-    nice = 19L # mc.pwbart only
-    ) {
-   if (!transposed) x.test <- t(bartModelMatrix(x.test))
+#' @param transposed Logical. Is x.test transposed?
+#' @param dodraws Logical. If TRUE, all posterior draws are returned; if FALSE, only the mean is returned.
+#' @param nice Nice level for the process. I'm pretty sure this is not used in the code.
+#'
+#' @return Prediction matrix of size (ndpost x n).
+#'
+#' @keywords internal
 
-   p <- length(treedraws$cutpoints)
+pmebart <- function(x.test,
+                    treedraws,
+                    mu = 0,
+                    mc.cores = 1L,
+                    transposed = FALSE,
+                    dodraws = TRUE,
+                    nice = 19L
+                    ) {
 
-   if (p != nrow(x.test)) {
-      stop(paste0("The number of columns in x.test must be equal to ", p))
-   }
+    # Transpose x.test if it hasn't been already 
+    if (!transposed){
+        x.test <- t(bartModelMatrix(x.test))
+    }
+    
+    # Check that new data conforms to the trained model
+    p <- length(treedraws$cutpoints)
+    if (p != nrow(x.test)) {
+        stop(paste0("The number of columns in x.test must be equal to ", p))
+    }
+    
+    # Call the C++ function for predictions
+    res <- .Call(
+        "cpmebart",
+        treedraws,
+        x.test,
+        mc.cores
+    )
 
-   res <- .Call(
-      "cpmebart",
-      treedraws, # trees list
-      x.test, # the test x
-      mc.cores # thread count
-   )
-   if (dodraws) {
-      return(res$yhat.test + mu)
-   } else {
-      return(apply(res$yhat.test, 2, mean) + mu)
-   }
+    # Return all posterior draws or just the means
+    if (dodraws) {
+        return(res$yhat.test + mu)
+    } else {
+        return(apply(res$yhat.test, 2, mean) + mu)
+    }
+
 }
