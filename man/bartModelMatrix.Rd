@@ -2,7 +2,7 @@
 % Please edit documentation in R/bartModelMatrix.R
 \name{bartModelMatrix}
 \alias{bartModelMatrix}
-\title{BART Model Matrix}
+\title{Create a matrix out of a vector or data.frame}
 \usage{
 bartModelMatrix(
   X,
@@ -15,37 +15,30 @@ bartModelMatrix(
 )
 }
 \arguments{
-\item{X}{A data frame, matrix, or vector.}
+\item{X}{A vector or data.frame to create the matrix from.}
 
-\item{numcut}{The number of cut points for each variable.}
+\item{numcut}{Integer. The maximum number of cutpoints to consider. If numcut=0, then just 
+return a matrix; otherwise, return a list containing a matrix X, a vector numcut and a list xinfo.}
 
-\item{usequants}{Logical. If TRUE, quantiles are used for cut points.}
+\item{usequants}{Logical. If usequants is FALSE, then the cutpoints in xinfo are generated 
+uniformly; otherwise, if TRUE, then quantiles are used for the cutpoints.}
 
-\item{type}{The type of quantile to use.}
+\item{type}{Determines which quantile algorithm is employed.}
 
-\item{rm.const}{Logical. If TRUE, constant variables are removed.}
+\item{rm.const}{Logical. Whether or not to remove constant variables.}
 
-\item{cont}{Logical. If TRUE, continuous variables are treated as such.}
+\item{cont}{Logical. Whether or not to assume all variables are continuous.}
 
-\item{xinfo}{A list or matrix of cut points.}
+\item{xinfo}{You can provide the cutpoints to BART or let BART choose them for you. To provide 
+them, use the xinfo argument to specify a list (matrix) where the items (rows) are the 
+covariates and the contents of the items (columns) are the cutpoints.}
 }
 \value{
-A list containing the model matrix, number of cut points, removed variables, and cut points information.
+A list containing the cleaned input data, number of cut points, removed variables, and cut point information.
 }
 \description{
-This function creates a model matrix for BART.
+The external BART functions operate on matrices in memory. Therefore, if the user 
+submits a vector or data.frame, then this function converts it to a matrix. Also, it determines 
+the number of cutpoints necessary and their values for each column when asked to do so.
 }
-\examples{
-#' # Example usage
-data(iris)
-X <- iris[, -5]
-numcut <- 3
-usequants <- TRUE
-rm.const <- TRUE
-cont <- FALSE
-xinfo <- NULL
-
-#' result <- bartModelMatrix(X, numcut, usequants, rm.const, cont, xinfo)
-#' print(result)
-
-}
+\keyword{internal}
