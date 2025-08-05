@@ -10,8 +10,9 @@ class.ind(cl)
 \item{cl}{A factor or vector of class labels.}
 }
 \value{
-A matrix with rows corresponding to observations and columns to classes.
+A (n x num_levels) matrix with rows corresponding to observations and columns corresponding to each unique level of the factor.
 }
 \description{
-This function creates a class indicator matrix from a factor.
+This function one hot encodes a factor to create a class indicator matrix.
 }
+\keyword{internal}

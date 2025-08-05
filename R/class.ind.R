@@ -21,19 +21,32 @@
 
 
 #' @title Class Indicator Matrix
-#' @description This function creates a class indicator matrix from a factor.
+#' 
+#' @description This function one hot encodes a factor to create a class indicator matrix.
 #' 
 #' @param cl A factor or vector of class labels.
 #' 
-#' @return A matrix with rows corresponding to observations and columns to classes.
+#' @return A (n x num_levels) matrix with rows corresponding to observations and columns corresponding to each unique level of the factor.
 #' 
-#'
+#' @keywords internal
+
 class.ind <- function(cl)
 {
+    # Get number of observations
     n <- length(cl)
+
+    # If not already a factor, convert to factor
     cl <- as.factor(cl)
+
+    # Create zero-matrix with n rows and number of levels in cl columns
     x <- matrix(0, n, length(levels(cl)) )
+
+    # Set the appropriate entries to 1
     x[(1L:n) + n*(unclass(cl)-1L)] <- 1
+
+    # Set row and column names, rownames are usually NULL
     dimnames(x) <- list(names(cl), levels(cl))
+
+    # Return the class indicator matrix
     x
 }

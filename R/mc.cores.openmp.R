@@ -19,4 +19,12 @@
 ## along with this program; if not, a copy is available at
 ## https://www.R-project.org/Licenses/GPL-2
 
+
+#' @title OpenMP Cores Count
+#' 
+#' @description This function calls the C function to get the number of OpenMP cores available.
+#' 
+#' @return 0 if OpenMP is not available, otherwise the number of OpenMP cores.
+#' 
+#' @keywords internal
 mc.cores.openmp <- function() .Call("mc_cores_openmp")
