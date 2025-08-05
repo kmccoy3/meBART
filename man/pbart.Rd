@@ -2,7 +2,7 @@
 % Please edit documentation in R/pbart.R
 \name{pbart}
 \alias{pbart}
-\title{Fit a Bayesian Additive Regression Tree (BART) Model PROBIT}
+\title{Fit a meBART Model with \emph{Binary} Output Data}
 \usage{
 pbart(
   x.train,
@@ -128,8 +128,8 @@ A list with the following elements:
 \item{rm.const}{A vector specifying which columns were removed from `x.train`.}
 }
 \description{
-This function fits a Bayesian Additive Regression Tree model for continuous data using a set of explanatory variables.
-It provides options for handling test data, priors, and other model parameters, including options for variable selection and sparsity control.
+This function fits a Bayesian Additive Regression Tree (BART) model which also also models measurement error in the explanatory variables. 
+This function specifically handles \emph{binary} output data.
 }
 \examples{
 # Example usage:

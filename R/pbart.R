@@ -22,10 +22,10 @@
 
 
 
-#' Fit a Bayesian Additive Regression Tree (BART) Model PROBIT
+#' @title Fit a meBART Model with \emph{Binary} Output Data
 #'
-#' This function fits a Bayesian Additive Regression Tree model for continuous data using a set of explanatory variables.
-#' It provides options for handling test data, priors, and other model parameters, including options for variable selection and sparsity control.
+#' @description This function fits a Bayesian Additive Regression Tree (BART) model which also also models measurement error in the explanatory variables. 
+#' This function specifically handles \emph{binary} output data.
 #'
 #' @param x.train A matrix or data frame containing the explanatory variables for the training data.
 #' @param y.train A numeric vector containing the continuous outcome variable for the training data.

@@ -20,37 +20,35 @@
 ## https://www.R-project.org/Licenses/GPL-2
 
 
-
-
-#' Fit a Bayesian Additive Regression Tree (BART) Model
+#' @title Fit a meBART Model with \emph{Continuous} Output Data
 #'
-#' This function fits a Bayesian Additive Regression Tree model for continuous data using a set of explanatory variables.
-#' It provides options for handling test data, priors, and other model parameters, including options for variable selection and sparsity control.
+#' @description This function fits a Bayesian Additive Regression Tree (BART) model which also also models measurement error in the explanatory variables. 
+#' This function specifically handles \emph{continuous} output data.
 #'
 #' @param x.train A matrix or data frame containing the explanatory variables for the training data.
 #' @param y.train A numeric vector containing the continuous outcome variable for the training data.
 #' @param x.test A matrix or data frame of test data (optional, default is an empty matrix). The structure should match `x.train`.
-#' @param sparse A logical value (default is FALSE). If TRUE, uses a Dirichlet prior for variable selection.
-#' @param theta A numeric value (default is 0). Parameter for model specification (unspecified usage).
-#' @param omega A numeric value (default is 1). Parameter for model specification (unspecified usage).
-#' @param a A numeric value (default is 0.5). Beta parameter used in DART (Dropout Additive Regression Trees).
-#' @param b A numeric value (default is 1). Beta parameter used in DART.
-#' @param augment A logical value (default is FALSE). An additional parameter (unspecified usage).
-#' @param rho A numeric value (default is NULL). Sparsity parameter used in DART.
+#' @param sparse A logical value (default is FALSE). If TRUE, uses a Dirichlet prior for variable selection, i.e. performs DART.
+#' @param theta A numeric value (default is 0). alpha parameter in Linero 2018 equation (2), governs DART prior (DART ONLY)
+#' @param omega A numeric value (default is 1). Unknown DART parameter. (DART ONLY)
+#' @param a A numeric value (default is 0.5). Beta prior parameter. (DART ONLY)
+#' @param b A numeric value (default is 1). Beta prior parameter. (DART ONLY)
+#' @param augment A logical value (default is FALSE). FALSE uses Assumption 2.2 in Linero 2018, TRUE uses assumption 2.1 (DART ONLY)
+#' @param rho A numeric value (default is NULL). Sparsity parameter used in DART. (DART ONLY)
 #' @param xinfo A matrix of cutpoints (default is an empty matrix). Specifies cutpoints for the model if desired.
-#' @param usequants A logical value (default is FALSE). If TRUE, uniform quantiles are used for cutpoints; otherwise, uniform cutpoints are used.
+#' @param usequants A logical value (default is FALSE). If TRUE, quantiles are used for cutpoints; otherwise, uniform cutpoints are used.
 #' @param cont A logical value (default is FALSE). Specifies if all variables are continuous.
 #' @param rm.const A logical value (default is TRUE). If TRUE, removes constant columns from `x.train`.
 #' @param sigest A numeric value (default is NA). Prior estimate for sigma; if NA, it is estimated from the data.
 #' @param sigdf A numeric value (default is 3). Degrees of freedom for the sigma prior.
 #' @param sigquant A numeric value (default is 0.90). Quantile for the sigma prior.
-#' @param k A numeric value (default is 2.0). Prior parameter for the mean of the output data.
-#' @param power A numeric value (default is 2.0). Tree depth prior, beta in the CGM (Conditional Gaussian Model).
-#' @param base A numeric value (default is 0.95). Tree depth prior, alpha in the CGM.
+#' @param k A numeric value (default is 2.0). Prior parameter for leaf nodes.
+#' @param power A numeric value (default is 2.0). Tree depth prior, beta in CGM18.
+#' @param base A numeric value (default is 0.95). Tree depth prior, alpha in CGM18.
 #' @param sigmaf A numeric value (default is NA). Parameter for the sigma prior, not scaled by the number of trees.
 #' @param lambda A numeric value (default is NA). Scale parameter used in the sigma prior.
 #' @param fmean A numeric value (default is the mean of `y.train`). The mean of the output variable `y.train`.
-#' @param w A numeric vector (default is a vector of ones). Weights to multiply the standard deviation.
+#' @param w A numeric vector (default is a vector of ones). Weights to multiply the standard deviation. Must be of length n.
 #' @param ntree An integer (default is 200L). The number of trees to use in the model.
 #' @param numcut An integer (default is 100L). The number of cutpoints to consider for each variable.
 #' @param ndpost An integer (default is 1000L). The number of posterior draws to return.
@@ -61,7 +59,11 @@
 #' @param nkeeptestmean An integer (default is equal to `ndpost`). The number of MCMC iterations to return for the test mean.
 #' @param nkeeptreedraws An integer (default is equal to `ndpost`). The number of MCMC iterations to return for tree draws.
 #' @param printevery An integer (default is 100L). The number of iterations before progress is printed.
-#' @param transposed A logical value (default is FALSE). Used if called by `mc.wbart`.
+#' @param transposed A logical value (default is FALSE). Whether or not the input data is transposed.
+#' @param proposal_sigma A numeric value (default is `meas_error_sigma`). Covariance matrix of the proposal distribution.
+#' @param meas_error_sigma A numeric matrix. Covariance matrix of the measurement error, must be square and match the number of columns in `x.train`.
+#' @param x_mu A numeric column vector. Mean of the explanatory variables.
+#' @param x_sigma A numeric matrix. Covariance matrix of the explanatory variables.
 #'
 #' @return A list with the following elements:
 #' \item{mu}{The mean of the outcome variable `y.train`, centered back in the predictions.}
@@ -83,22 +85,32 @@
 #'
 #' @examples
 #' # Example usage:
-#' set.seed(42)
+#' set.seed(0)
 #' x.train <- matrix(rnorm(1000), ncol = 10)
 #' y.train <- rnorm(100)
-#' result <- mebart(x.train, y.train, ntree = 50)
-#' print(result$yhat.train.mean)
-#'
+#' mdl <- mebart(x.train, y.train,
+#'               ndpost = 500,
+#'               ntree = 50,
+#'               meas_error_sigma = diag(10),
+#'               x_mu = matrix(0, nrow=10, ncol=1),
+#'               x_sigma = diag(10))
+#' preds <- mdl$yhat.train.mean
+#' print(paste0("Training MSE: ", round(mean((y.train - preds)^2), 3)))
+
+# ==================================================================================================
+# Function header for meBART
+# ==================================================================================================
+
 mebart <- function(x.train, # explanatory variables for training data, matrix or dataframe
                    y.train, # continuous outcome variable
                    x.test = matrix(0.0, 0, 0), # x test data, same structure as x.train
-                   sparse = FALSE, # use Dirichlet prior for variable selection
-                   theta = 0, # TODO ???
-                   omega = 1, # TODO ???
-                   a = 0.5, # Beta parameters, used in DART only
-                   b = 1, # Beta parameters, used in DART only
-                   augment = FALSE, # TODO ???
-                   rho = NULL, # Sparsity parameter, used in DART only
+                   sparse = FALSE, # use Dirichlet prior (aka DART) for variable selection 
+                   theta = 0, # alpha parameter in Linero 2018 equation (2), governs DART prior (DART ONLY)
+                   omega = 1, # Some unknown DART parameter # TODO: Find out what this parameter does (DART ONLY)
+                   a = 0.5, # Beta parameters (DART ONLY)
+                   b = 1, # Beta parameters (DART ONLY)
+                   augment = FALSE, # FALSE uses Assumption 2.2 in Linero 2018, TRUE uses assumption 2.1 (DART ONLY)
+                   rho = NULL, # Sparsity parameter (DART ONLY)
                    xinfo = matrix(0.0, 0, 0), # cutpoints, if you want to specify them
                    usequants = FALSE, # if false makes cutpoints uniform, if true uniform quantiles are used
                    cont = FALSE, # whether or not to assume all variables are continuous
@@ -126,13 +138,14 @@ mebart <- function(x.train, # explanatory variables for training data, matrix or
                    transposed = FALSE, # used if called by mc.wbart
                    proposal_sigma = meas_error_sigma, # standard deviation of the proposal distribution
                    meas_error_sigma, # standard deviation of the measurement error
-                   x_mu,
-                   x_sigma
+                   x_mu, # mean of the explanatory variables
+                   x_sigma # Sigma matrix of the explanatory variables
                    ) {
-    #--------------------------------------------------
-    # data
-    n <- length(y.train)
 
+    # ==============================================================================================
+    # Process input X data
+    # ==============================================================================================
+    
     if (!transposed) { # if being called wbart, skipped if being called by mc.wbart
         temp <- bartModelMatrix(
             x.train,
@@ -157,12 +170,29 @@ mebart <- function(x.train, # explanatory variables for training data, matrix or
         grp <- NULL
     }
 
+    # ==============================================================================================
+    # Perform input checks
+    # ==============================================================================================
+
+    # Get dimensions of x.train and x.test
+    n <- length(y.train)
+    p <- nrow(x.train)
+    np <- ncol(x.test)
+
     if (n != ncol(x.train)) { # check if the number of observations in x.train is equal to the length of y.train, remember x.train is transposed
         stop("The length of y.train and the number of rows in x.train must be identical")
     }
+    if (nrow(meas_error_sigma) != ncol(meas_error_sigma)) {
+        stop("The meas_error_sigma matrix must be square")
+    }
+    if (p != nrow(meas_error_sigma)) {
+        stop("The number of rows/columns in meas_error_sigma must be equal to the number of columns in x.train")
+    }
+    if (any(eigen(meas_error_sigma)$values <= 0) | any(meas_error_sigma != t(meas_error_sigma))) {
+        stop("The meas_error_sigma matrix must be symmetric and positive definite")
+    }
 
-    p <- nrow(x.train)
-    np <- ncol(x.test)
+
     if (length(rho) == 0) {
         rho <- p
     }
@@ -173,24 +203,17 @@ mebart <- function(x.train, # explanatory variables for training data, matrix or
         grp <- 1:p
     }
 
-    # I added these
-    if (nrow(meas_error_sigma) != ncol(meas_error_sigma)) {
-        stop("The meas_error_sigma matrix must be square")
-    }
-    if (p != nrow(meas_error_sigma)){
-        stop("The number of rows/columns in meas_error_sigma must be equal to the number of columns in x.train")
-    }
-    if (any(eigen(meas_error_sigma)$values <= 0) | any(meas_error_sigma != t(meas_error_sigma))) {
-        stop("The meas_error_sigma matrix must be symmetric and positive definite")
-    }
+    # Center output data
+    y.train <- y.train - fmean 
 
+    # ==============================================================================================
+    # Reconcile 'keep' input paramaters
+    # ==============================================================================================
 
-    y.train <- y.train - fmean # centers output data
-    #------------------------------------------------------------------------------------------------------------
-    # set nkeeps for thinning ######### Basically makes sure these variables dont conflict with one another
+    # Basically makes sure these variables dont conflict with one another
     if ((nkeeptrain != 0) & ((ndpost %% nkeeptrain) != 0)) { # if
         nkeeptrain <- ndpost
-        cat("*****nkeeptrain set to ndpost\n") # cat is just a simpler version of print
+        cat("*****nkeeptrain set to ndpost\n")
     }
     if ((nkeeptest != 0) & ((ndpost %% nkeeptest) != 0)) {
         nkeeptest <- ndpost
@@ -204,33 +227,43 @@ mebart <- function(x.train, # explanatory variables for training data, matrix or
         nkeeptreedraws <- ndpost
         cat("*****nkeeptreedraws set to ndpost\n")
     }
-    #----------------------------------------------------------------------------------------------
-    # prior
-    nu <- sigdf # nu / DOF in sigma prior
+
+    # ==============================================================================================
+    # Sigma prior calculations
+    # ==============================================================================================
+
+    nu <- sigdf # DOF in sigma prior # TODO: rename sigdf
     if (is.na(lambda)) { # NA by default
         if (is.na(sigest)) { # NA by default
+            # Use linear model to estimate sigma of y.train
             if (p < n) {
                 df <- data.frame(t(x.train), y.train)
-                lmf <- lm(y.train ~ ., df) # trains linear model
+                lmf <- stats::lm(y.train ~ ., df) # trains linear model
                 sigest <- summary(lmf)$sigma # gets sigma from linear model
+            # Otherwise, use standard deviation of y.train
             } else {
-                sigest <- sd(y.train)
+                sigest <- stats::sd(y.train)
             }
         }
-        qchi <- qchisq(1.0 - sigquant, nu) # gets quantile from chi squared distribution
+        qchi <- stats::qchisq(1.0 - sigquant, nu) # gets quantile from chi squared distribution
         lambda <- (sigest * sigest * qchi) / nu # lambda parameter for sigma prior
     } else {
         sigest <- sqrt(lambda)
     }
 
+    # Calculate tau, which is sigma from mu prior scaled by the number of trees
     if (is.na(sigmaf)) { # NA by default
         tau <- (max(y.train) - min(y.train)) / (2 * k * sqrt(ntree))
     } else {
         tau <- sigmaf / sqrt(ntree)
     }
-    #-------------------------------------------------------------------------------------------------------
+
+    # ==============================================================================================
+    # Call C++ function to fit meBART model
+    # ==============================================================================================
+    
     ptm <- proc.time() # how much real and CPU time (in seconds) the currently running R process has already taken.
-    # call
+
     res <- .Call(
         "cmebart",
         n, # number of observations in training data
@@ -251,13 +284,13 @@ mebart <- function(x.train, # explanatory variables for training data, matrix or
         sigest, # sigma prior, estimated from the data
         w, # vector of weights to multiply the standard deviation, defaults to one
         sparse, # use Dirichlet prior for variable selection
-        theta, # TODO ???
+        theta, # alpha parameter in Linero 2018 equation (2), governs DART prior (DART ONLY)
         omega, # TODO ???
         grp, # counts out which variables are unique / which ones are factors
         a, # Beta parameters, used in DART only
         b, # Beta parameters, used in DART only
         rho, # Sparsity parameter, used in DART only
-        augment, # TODO ???
+        augment, # FALSE uses Assumption 2.2 in Linero 2018, TRUE uses assumption 2.1 (DART ONLY)
         nkeeptrain, # number of training data posterior draws to keep
         nkeeptest, # number of test data posterior draws to keep
         nkeeptestmean, # number of MCMC iters to be returned for test mean
@@ -266,31 +299,37 @@ mebart <- function(x.train, # explanatory variables for training data, matrix or
         xinfo, # cutpoints, now specified
         proposal_sigma, # standard deviation of the proposal distribution
         meas_error_sigma, # standard deviation of the measurement error
-        x_mu,
-        x_sigma
+        x_mu, # mean of the explanatory variables
+        x_sigma # Sigma matrix of the explanatory variables
     )
 
-    res$proc.time <- proc.time() - ptm # how much time C++ code has taken
+    # ==============================================================================================
+    # Process results from C++ function
+    # ==============================================================================================
 
-    # Centering variable, add back in
+    # Calculate total time taken
+    res$proc.time <- proc.time() - ptm 
+
+    # Add centering value back to the results
     res$mu <- fmean
     res$yhat.train.mean <- res$yhat.train.mean + fmean
     res$yhat.train <- res$yhat.train + fmean
     res$yhat.test.mean <- res$yhat.test.mean + fmean
     res$yhat.test <- res$yhat.test + fmean
 
-
-
+    # Add variable names to the results
     if (nkeeptreedraws > 0) {
         names(res$treedraws$cutpoints) <- dimnames(x.train)[[1]]
     }
-    dimnames(res$varcount)[[2]] <- as.list(dimnames(x.train)[[1]])
-    dimnames(res$varprob)[[2]] <- as.list(dimnames(x.train)[[1]])
+    dimnames(res$varcount)[[2]] <- as.list(dimnames(x.train)[[1]]) # Recall x.train is transposed
+    dimnames(res$varprob)[[2]] <- as.list(dimnames(x.train)[[1]]) # Recall x.train is transposed
 
+    # Calculate means for variable counts and probabilities
+    res$varcount.mean <- apply(res$varcount, 2, mean) # Get column means
+    res$varprob.mean <- apply(res$varprob, 2, mean) # Get column means
+    res$rm.const <- rm.const # Which columns were removed from x.train, if any
 
-    res$varcount.mean <- apply(res$varcount, 2, mean)
-    res$varprob.mean <- apply(res$varprob, 2, mean)
-    res$rm.const <- rm.const
+    # Return result with class "mebart"
     attr(res, "class") <- "mebart"
     return(res)
 }

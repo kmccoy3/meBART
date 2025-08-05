@@ -2,7 +2,7 @@
 % Please edit documentation in R/mebart.R
 \name{mebart}
 \alias{mebart}
-\title{Fit a Measurement Error Bayesian Additive Regression Tree (meBART) Model}
+\title{Fit a meBART Model with \emph{Continuous} Output Data}
 \usage{
 mebart(
   x.train,
@@ -143,7 +143,8 @@ A list with the following elements:
 \item{rm.const}{A vector specifying which columns were removed from `x.train`.}
 }
 \description{
-This function fits a meBART model with continuous output data.
+This function fits a Bayesian Additive Regression Tree (BART) model which also also models measurement error in the explanatory variables. 
+This function specifically handles \emph{continuous} output data.
 }
 \examples{
 # Example usage:
