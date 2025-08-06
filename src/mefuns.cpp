@@ -21,13 +21,7 @@
  * https://www.R-project.org/Licenses/GPL-2
  */
 
-#include "tree.h"
-#include "treefuns.h"
-#include "info.h"
-#include "bartfuns.h"
-#include "bd.h"
-#include "bart.h"
-#include "heterbart.h"
+#include "common.h"
 #include "mefuns.h"
 #include <RcppArmadillo.h>
 #include <random>
@@ -41,7 +35,6 @@ double rnorm(double mu, double sigma)
 
 double dnorm(double x, double mu, double sigma)
 {
-    // TODO: check if this is how the package normally does this
     double tmp = (x - mu) / sigma;
     tmp = -0.5 * tmp * tmp;
     tmp = exp(tmp);
@@ -66,7 +59,6 @@ arma::vec rmvnorm(arma::vec mu, arma::mat sigma)
 
 double dmvnorm(arma::vec x, arma::vec mu, arma::mat sigma)
 {
-
     int dim = x.n_elem;
     double tmp = 1.0;
 
