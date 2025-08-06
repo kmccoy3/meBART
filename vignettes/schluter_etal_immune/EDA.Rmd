@@ -1,0 +1,69 @@
+---
+title: "EDA"
+output: html_document
+---
+
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+setwd("C:/Users/kevin/Documents/research/meBART/vignettes/schluter_etal_immune")
+
+url <- "https://static-content.springer.com/esm/art%3A10.1038%2Fs41586-020-2971-8/MediaObjects/41586_2020_2971_MOESM3_ESM.zip"
+
+download.file(url, destfile = "schluter_etal_immune.zip")
+
+# List files in the zip archive
+zip_contents <- unzip("schluter_etal_immune.zip", list = TRUE)
+
+# Filter out problematic files (e.g., those with "Icon" or "__MACOSX")
+valid_files <- zip_contents$Name[!grepl("Icon|__MACOSX", zip_contents$Name)]
+
+# Unzip only the valid files
+unzip("schluter_etal_immune.zip", files = valid_files, exdir = "data", junkpaths = TRUE)
+
+
+```
+
+
+```{r}
+
+data_dir <- "./data/"
+list_of_files = list.files(path = data_dir)
+filenames <- basename(list_of_files)
+filenames <- filenames[grepl("\\.csv$", filenames)]
+
+for (filename in filenames){
+
+  assign(sub("\\.csv$", "", filename), read_csv(paste0(data_dir, filename), show_col_types = FALSE))
+  
+}
+
+```
+
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

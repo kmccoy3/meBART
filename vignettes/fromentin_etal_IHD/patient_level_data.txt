@@ -1,0 +1,71 @@
+Supplementary Table 9: Individual metadata and metagenomics sequencing data.
+[1] "ID"                                                 
+ [2] "Status"                                             
+ [3] "Read count"                                         
+ [4] "High quality read count"                            
+ [5] "High quality clean read count"                      
+ [6] "Homo sapiens GRCh37.p10 may2014 excluded read count"
+ [7] "Bos Taurus 4.6.1 may2014 excluded read count"       
+ [8] "A thaliana may2014 excluded read count"             
+ [9] "Mapped read count"                                  
+[10] "Percentage of mapped read count"                    
+[11] "Unique mapped read count"                           
+[12] "Percentage of unique mapped read count"             
+[13] "Age (years)"                                        
+[14] "BMI (kg/m²)"                                        
+[15] "Waist circumference (cm)"                           
+[16] "Fasting plasma triglycerides (mmol/L)"              
+[17] "Fasting plasma adiponectin (mg/L)"                  
+[18] "Fasting plasma CRP (mg/L)"                          
+[19] "HbA1c (%)"                                          
+[20] "Systolic blood pressure (mmHg)"                     
+[21] "Diastolic blood pressure (mmHg)"                    
+[22] "Left ventricular ejection fraction (%)"             
+[23] "Fasting plasma pro-ANP (pmol/L)"                    
+[24] "Physical activity (h/week)"                         
+[25] "Gender"                                             
+[26] "Nationality"                                        
+[27] "Diabetic status"     
+
+
+
+
+Supplementary Table 10: Individual data for gut microbiome richness and taxonomy.
+
+
+
+Supplementary Table 11: Individual data for GMM and KEGG abundances. 
+
+
+Supplementary Table 12: Individual log-transformed serum metabolites.
+
+
+
+Supplementary Table 13: Annotated urine metabolites data per study individual.
+ [1] "ID"                      "Status"                  "U Proline betaine"      
+ [4] "U Pyruvic acid"          "U Fumaric acid"          "U D Lactose"            
+ [7] "U Creatine"              "U Arginine"              "U 1 Methylhistidine"    
+[10] "U D Mandelic acid"       "U D Mannose"             "U Sarcosine"            
+[13] "U 1 Methylnicotinamide"  "U Hippuric acid"         "U Acetoacetic acid"     
+[16] "U Tartaric acid"         "U Inosine"               "U Lactic acid"          
+[19] "U Trigonelline"          "U Taurine"               "U Acetic acid"          
+[22] "U Valine"                "U Succinic acid"         "U Oxaloacetic acid"     
+[25] "U Alanine"               "U 2 Furoylglycine"       "U 3 Hydroxybutyric acid"
+[28] "U D Galactose"           "U Formic acid"           "U Methionine"           
+[31] "U 2 Oxoglutaric acid"    "U Caffeine"              "U Citric acid"          
+[34] "U Glycine"               "U Acetone"               "U Guanidinoacetic acid" 
+[37] "U Trimethylamine"        "U Betaine"               "U D Mannitol"           
+[40] "U N,N Dimethylglycine"   "U 4 Aminobutyric acid"   "U Benzoic acid"         
+[43] "U Allantoin"             "U D Glucose"             "U Allopurinol Zyloprim" 
+[46] "U Imidazole"             "U Dimethylamine" 
+
+Supplementary Table 14: Individual drug intake.
+ [1] "ID"                          "Status"                      "Antidiabetic drugs"         
+ [4] "Insulin"                     "Metformin"                   "Sulfonurea"                 
+ [7] "DPP IV  inhibitors"          "GLP1 agonists"               "Anti-hypertensive drugs"    
+[10] "Beta-blockers"               "ACE"                         "AT2 inhibitor"              
+[13] "Calcium blockers"            "Anse diuretics"              "Potassium- sparing diuretic"
+[16] "Thiazides"                   "Lipid lowering drugs"        "Statin"                     
+[19] "Ezetimib"                    "Fibrate"                     "Nitrate"                    
+[22] "Amiodarone"                  "Digitalic"                   "Aspirine"                   
+[25] "Clopidogrel"                 "Coumarin"                    "Proton pump inhibitor"    

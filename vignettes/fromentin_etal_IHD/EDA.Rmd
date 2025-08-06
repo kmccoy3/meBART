@@ -1,0 +1,67 @@
+---
+title: "EDA"
+output: html_document
+---
+
+```{r}
+setwd("C:/Users/kevin/Documents/research/meBART/vignettes/fromentin_etal_IHD")
+
+library(tidyverse)
+```
+
+```{r}
+url <- "https://static-content.springer.com/esm/art%3A10.1038%2Fs41591-022-01688-4/MediaObjects/41591_2022_1688_MOESM3_ESM.xlsx"
+
+download.file(url, destfile = "fromentin_etal_IHD.xlsx", mode="wb")
+```
+
+
+
+
+```{r}
+
+sheets <- readxl::excel_sheets("fromentin_etal_IHD.xlsx")
+
+legends <- readxl::read_excel("fromentin_etal_IHD.xlsx", sheet="Legends")
+
+
+
+df_ST9  <- readxl::read_excel("fromentin_etal_IHD.xlsx", sheet="ST9", skip=1)
+# df_ST10 <- readxl::read_excel("41591_2022_1688_MOESM3_ESM.xlsx", sheet="ST10", skip=1)
+# df_ST11 <- readxl::read_excel("41591_2022_1688_MOESM3_ESM.xlsx", sheet="ST11", skip=1)
+# df_ST12 <- readxl::read_excel("41591_2022_1688_MOESM3_ESM.xlsx", sheet="ST12", skip=1)
+# df_ST13 <- readxl::read_excel("41591_2022_1688_MOESM3_ESM.xlsx", sheet="ST13", skip=1)
+# df_ST14 <- readxl::read_excel("41591_2022_1688_MOESM3_ESM.xlsx", sheet="ST14", skip=1)
+
+```
+
+```{r}
+
+cols <- c("ID", "Status", "Gender", "Nationality", "Diabetic status")
+
+df_ST9  <- readxl::read_excel("fromentin_etal_IHD.xlsx", sheet="ST9", skip=1)
+
+df <- df_ST9 %>% 
+    mutate_at(cols, factor) %>%
+    mutate(across(
+    .cols = -all_of(cols),
+    .fns = ~ as.numeric(.)
+  ))
+
+
+
+
+# Summarize the number of NAs in each column
+na_summary <- df %>%
+  summarize(across(
+    .cols = everything(),
+    .fns = ~ sum(is.na(.)),
+    .names = "na_count_{.col}"
+  ))
+
+# Print the summary
+print(na_summary)
+
+
+```
+
