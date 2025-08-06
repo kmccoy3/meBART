@@ -1,0 +1,127 @@
+---
+title: "probit_sandbox"
+output: html_document
+---
+
+```{r}
+
+set.seed(0)
+
+# x <- rnorm(100)
+# y <- rbinom(100, 1, 0.5)
+
+x_true <- rnorm(100, 0.5, 0.3)
+y <- as.numeric(x_true > 0.5)
+x <- x_true + rnorm(length(x), sd = 0.2) # add some noise
+
+df <- data.frame(x, y)
+
+mdl_meBART <- meBART::pbart(df$x, df$y,
+                     meas_error_sigma = matrix(0.2),
+                     x_mu = matrix(0.5),
+                     x_sigma = matrix(0.3))
+
+
+mdl_BART <- BART::pbart(df$x, df$y)
+
+```
+
+
+```{r}
+
+
+preds_BART <- predict(mdl_BART, data.frame(x))
+
+preds_meBART <- predict(mdl_meBART, data.frame(x))
+
+
+```
+
+```{r}
+library(ggplot2)
+
+df2 <- data.frame(x=x,
+                  probs=preds_BART$prob.test.mean,
+                  y = y,
+                  z=preds_BART$prob.test.mean>0.5)
+
+ggplot(df2, aes(x = x, y = probs, color=z)) +
+    geom_point() + 
+    geom_point(aes(x=x, y=y)) + 
+    geom_vline(xintercept=0.5) +
+    labs(title = "BART Probit",
+       x = "x",
+       y = "y")
+
+
+```
+
+
+
+```{r}
+library(ggplot2)
+
+df2 <- data.frame(x=x,
+                  probs=preds_meBART$prob.test.mean,
+                  y = y,
+                  z=preds_meBART$prob.test.mean>0.5)
+
+ggplot(df2, aes(x = x, y = probs, color=z)) +
+    geom_point() + 
+    geom_point(aes(x=x, y=y)) + 
+    geom_vline(xintercept=0.5) +
+    labs(title = "meBART Probit",
+       x = "x",
+       y = "y")
+
+
+```
+
+
+
+
+
+
+```{r}
+
+mdl <- mdl_meBART
+
+x_draws <- mdl$x_draws[1,,]
+x_draws_means <- rowMeans(x_draws)
+
+df_me <- data.frame(X = x,
+                    X_true= x_true)
+
+df_me <- df_me[, c("X", "X_true")]
+
+df_me$x_true_est <- x_draws_means
+
+# 
+# df <- data.frame(x_meas=x_meas, x_true = x_true, x_true_est = x_draws_means)
+
+df <- df_me[order(df_me$X_true), ]
+df$y <- 1:100
+
+df2 <- reshape2::melt(df, id="y")
+
+plot <- ggplot(df2) +
+    geom_point(aes(x=value, y=y, color=variable), 
+               shape=19, 
+               size=2) + 
+    theme(axis.text.y=element_blank(),
+          axis.title.y=element_blank(),
+          axis.ticks.y=element_blank(),
+          legend.position = "bottom") +
+    labs(title=TeX("Estimation of True Value of $X_i$"), 
+         x="X",
+         color="Variable") +
+    geom_segment(data=df, 
+                 aes(x=X, xend=x_true_est, y=y, yend=y), 
+                 arrow=arrow(length=unit(0.2,"cm"))) +
+    # scale_x_continuous(limits = c(-1, 1), breaks = seq(-1.2, 1.2, 0.2)) +
+    scale_color_discrete(labels = unname(TeX(c("Measured Value, $X_i^*$", "True Value, $X_i$", "Estimated True Value, $\\hat{X_i}$"))))
+
+
+plot
+```
+
