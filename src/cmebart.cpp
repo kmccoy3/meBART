@@ -81,7 +81,7 @@ RcppExport SEXP cmebart(
 
 
     Rcpp::NumericVector xv(_ix);
-    arma::mat x_matrix = Rcpp::as<arma::mat>(_ix);
+    arma::mat x_matrix = Rcpp::as<arma::mat>(_ix); // TODO: Allow for factors to be present in the input data
 
 
     double *ix = &xv[0];
