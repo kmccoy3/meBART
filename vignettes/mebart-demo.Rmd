@@ -68,7 +68,7 @@ ntree <- 200 # (Default: 200L)
 # proposal_sd = 0.10
 meas_error_sd <- 0.01*diag(x=1, nrow=1, ncol=1)
 x_mu = matrix(0.5)
-x_sigma = matrix(0.2)
+x_sigma = matrix(0.2^2)
 
 # Vanilla BART
 set.seed(MY_SEED)
