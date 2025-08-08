@@ -46,6 +46,164 @@ for (filename in filenames){
 
 ```{r}
 
+WBC <- cWBC %>% 
+    select(-`...1`) %>%
+    mutate(across(c("pid", "wbc", "exclude_reason"), as.factor)) %>%
+    filter(wbc %in% c("neutrophils", "lymphocytes", "monocytes")) %>%
+    mutate(across(c("eday", "anon-date", "anon-bmt-date"), as.integer)) %>%
+    drop_na(count) %>%
+    filter(is.na(exclude_reason)) %>%
+    select(-exclude_reason) %>%
+    distinct(`pid`, `wbc`, `anon-date`, .keep_all=TRUE) %>%
+    group_by(pid) %>%
+    filter(`anon-bmt-date` == min(`anon-bmt-date`)) %>%
+    ungroup() %>%
+    pivot_wider(names_from = "wbc", values_from = "count")
+
+# WBC <- WBC %>%
+#   group_by(pid, `anon-date`) %>%
+#   summarise(monocytes = mean(monocytes, na.rm = TRUE), .groups = "drop")
+
+
+# %>%
+#     filter(days_since_bmt == 21)
+
+
+INFECTION <- cINFECTION %>%
+    select(-c(`...1`, `value`, `infectious_agent`)) %>%
+    distinct() %>%
+    mutate(infection = "yes")
+
+
+combined_df <- left_join(WBC, INFECTION, by=c("pid", "anon-date")) %>%
+    mutate(infection = replace_na(infection, "no")) %>%
+    mutate(across(c("pid", "infection"), as.factor)) %>%
+    group_by(pid) %>%
+    fill("anon-bmt-date", .direction = "downup") %>%
+    ungroup() %>%
+    mutate(days_since_bmt = `anon-date` - `anon-bmt-date`) %>%
+    select(-c(`eday`, `anon-bmt-date`, `anon-date`))
+
+
+```
+
+
+```{r}
+missing_21_groups <- combined_df %>%
+    group_by(pid) %>%
+    summarise(has_21 = any(days_since_bmt==21)) %>%
+    filter(!has_21) %>%
+    pull("pid")
+
+missing_35_groups <- combined_df %>%
+    group_by(pid) %>%
+    summarise(has_35 = any(days_since_bmt==35)) %>%
+    filter(!has_35) %>%
+    pull("pid")
+```
+
+
+
+```{r}
+# Create missing rows
+rows_to_add_21 <- tibble(
+    pid = missing_21_groups,
+    days_since_bmt = 21
+)
+
+rows_to_add_35 <- tibble(
+    pid = missing_35_groups,
+    days_since_bmt = 35
+)
+
+# Combine with original data
+df_fixed <- combined_df %>%
+    bind_rows(rows_to_add_21) %>%
+    bind_rows(rows_to_add_35)
+
+```
+
+```{r}
+library(zoo)
+
+df_imputed <- df_fixed %>%
+    arrange(pid, days_since_bmt) %>%
+    group_by(pid) %>%
+    mutate(monocytes = na.approx(monocytes, x = days_since_bmt, na.rm = FALSE)) %>%
+    mutate(lymphocytes = na.approx(lymphocytes, x = days_since_bmt, na.rm = FALSE)) %>%
+    mutate(neutrophils = na.approx(neutrophils, x = days_since_bmt, na.rm = FALSE)) %>%
+    ungroup()
+
+```
+
+```{r}
+df_final <- df_imputed %>%
+    group_by(pid) %>%
+    mutate(
+        sick_14_days_later = map_lgl(days_since_bmt, function(d) {
+            any(infection[days_since_bmt %in% (d+2):(d + 7)] == "yes", na.rm = TRUE)
+        })
+    ) %>%
+    ungroup() %>%
+    filter(days_since_bmt == 21) %>%
+    select(monocytes, lymphocytes, neutrophils, sick_14_days_later) %>%
+    drop_na() %>%
+    mutate(sick_14_days_later = as.factor(as.integer(sick_14_days_later)))
+```
+
+
+
+```{r}
+
+model <- glm(sick_14_days_later ~ ., data = df_final, family = "binomial")
+
+summary(model)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+
+ggplot(WBC, aes(x = count, fill = wbc)) +
+    geom_histogram(position = "identity", alpha = 0.5, bins = 30) +
+    scale_x_continuous(limits=c(0, 25))
+```
+
+
+```{r}
+
+ggplot(WBC, aes(x=days_since_bmt)) +
+    geom_histogram()
+
+
+
 ```
 
 
