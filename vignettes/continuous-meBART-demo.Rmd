@@ -78,7 +78,7 @@ mdl_BART <- BART::wbart(df_me$X, df_me$y,
 
 # meBART
 set.seed(MY_SEED)
-mdl_meBART <- meBART::mebart(df_me$X, df_me$y, 
+mdl_meBART <- meBART::mebart_cont(df_me$X, df_me$y, 
                          nskip=nskip, ndpost=ndpost, ntree=ntree, 
                          meas_error_sigma=meas_error_sd,                         
                          x_mu = x_mu,

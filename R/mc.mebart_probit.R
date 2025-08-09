@@ -68,7 +68,7 @@
 #' @importFrom tools psnice
 #' @importFrom abind abind
 #' 
-mc.pbart <- function(x.train,
+mc.mebart_probit <- function(x.train,
                      y.train,
                      x.test = matrix(0.0, 0L, 0L),
                      sparse = FALSE,
@@ -98,7 +98,7 @@ mc.pbart <- function(x.train,
                      ##    treesaslists=FALSE,
                      mc.cores = 2L,
                      nice = 19L,
-                     seed = 99L)
+                     seed = 99L) # TODO: Add newly added parameters
 {
     if (.Platform$OS.type != 'unix')
         stop('parallel::mcparallel/mccollect do not exist on windows')
@@ -148,7 +148,7 @@ mc.pbart <- function(x.train,
         parallel::mcparallel({
             psnice(value = nice)
             
-            pbart(
+            mebart_probit(
                 x.train = x.train,
                 y.train = y.train,
                 x.test = x.test,
@@ -173,7 +173,7 @@ mc.pbart <- function(x.train,
                 ## nkeeptestmean=mc.nkeep, nkeeptreedraws=mc.nkeep,
                 printevery = printevery,
                 transposed = TRUE
-            )
+            ) # TODO: Add newly added parameters
         }, ##treesaslists=treesaslists)},
         silent = (i != 1))
         ## to avoid duplication of output
@@ -184,7 +184,7 @@ mc.pbart <- function(x.train,
     
     post <- post.list[[1]]
     
-    if (mc.cores == 1 | attr(post, 'class') != 'pbart')
+    if (mc.cores == 1 | attr(post, 'class') != 'mebart_probit')
         return(post)
     else {
         if (class(rm.const)[1] != 'logical')
@@ -261,7 +261,7 @@ mc.pbart <- function(x.train,
         post$varcount.mean <- apply(post$varcount, 2, mean)
         post$varprob.mean <- apply(post$varprob, 2, mean)
         
-        attr(post, 'class') <- 'pbart'
+        attr(post, 'class') <- 'mebart_probit'
         
         return(post)
     }

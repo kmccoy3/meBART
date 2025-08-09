@@ -17,7 +17,7 @@ test_that("pbart objects are identical to previous commits", {
     # Run meBART model
     Sigma <- matrix(c(1, 0, 0, 1), nrow = 2)
     set.seed(0)
-    pbart_mdl <- meBART::pbart(data[, 1:2], data[, 3], 
+    pbart_mdl <- meBART::mebart_probit(data[, 1:2], data[, 3], 
                                     meas_error_sigma = Sigma,
                                     x_mu = matrix(c(0, 0), nrow=2),
                                     x_sigma = matrix(c(1, 0, 0, 1), nrow=2))

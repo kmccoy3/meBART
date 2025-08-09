@@ -27,14 +27,14 @@
 #include <R_ext/Rdynload.h>
 
 /* .Call calls */
-extern SEXP cpmebart(SEXP, SEXP, SEXP);
-extern SEXP cmebart(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
+extern SEXP cpwbart(SEXP, SEXP, SEXP);
+extern SEXP cwbart(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 extern SEXP cpbart(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP,SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 extern SEXP mc_cores_openmp(void);
 
 static const R_CallMethodDef CallEntries[] = {
-    {"cpmebart", (DL_FUNC)&cpmebart, 3},
-    {"cmebart", (DL_FUNC)&cmebart, 35},
+    {"cpwbart", (DL_FUNC)&cpwbart, 3},
+    {"cwbart", (DL_FUNC)&cwbart, 35},
     {"cpbart", (DL_FUNC)&cpbart, 31},
     {"mc_cores_openmp", (DL_FUNC)&mc_cores_openmp, 0},
     {NULL, NULL, 0}};

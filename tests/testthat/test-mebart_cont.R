@@ -25,7 +25,7 @@ test_that("1-D meBART objects are identical to previous commits", {
     # Run meBART model
     Sigma <- matrix(c(1), nrow = 1)
     set.seed(0)
-    meBART_mdl_1D <- meBART::mebart(data[, 1], data[, 2], 
+    meBART_mdl_1D <- meBART::mebart_cont(data[, 1], data[, 2], 
                                     meas_error_sigma = Sigma,
                                     x_mu = matrix(0),
                                     x_sigma = matrix(1))
@@ -69,7 +69,7 @@ test_that("2-D meBART objects are identical to previous commits", {
     # Run meBART model
     Sigma <- matrix(c(1, 0, 0, 1), nrow = 2)
     set.seed(0)
-    meBART_mdl_2D <- meBART::mebart(data[, 1:2], data[, 3], 
+    meBART_mdl_2D <- meBART::mebart_cont(data[, 1:2], data[, 3], 
                                     meas_error_sigma = Sigma,
                                     x_mu = matrix(c(0, 0), nrow=2),
                                     x_sigma = matrix(c(1, 0, 0, 1), nrow=2))

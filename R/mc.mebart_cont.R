@@ -20,7 +20,7 @@
 ## https://www.R-project.org/Licenses/GPL-2
 
 
-#' @title Multicore BART
+#' @title (Multi-core) Fit a meBART Model with \emph{Continuous} Output Data
 #' 
 #' @description This function performs Bayesian Additive Regression Trees (BART) using multiple cores.
 #' 
@@ -68,7 +68,7 @@
 #' @importFrom tools psnice
 #' @importFrom abind abind
 #' 
-mc.mebart <- function(
+mc.mebart_cont <- function(
     x.train, 
     y.train, 
     x.test = matrix(0.0, 0, 0),
@@ -145,7 +145,7 @@ mc.mebart <- function(
         parallel::mcparallel(
             {
                 psnice(value = nice)
-                mebart(
+                mebart_cont(
                     x.train = x.train, y.train = y.train, x.test = x.test,
                     sparse = sparse, theta = theta, omega = omega,
                     a = a, b = b, augment = augment, rho = rho,
@@ -175,7 +175,7 @@ mc.mebart <- function(
 
 
 
-    if (mc.cores == 1 | attr(post, "class") != "mebart") {
+    if (mc.cores == 1 | attr(post, "class") != "mebart_cont") {
         return(post)
     } else {
         if (class(rm.const)[1] != "logical") post$rm.const <- rm.const
@@ -258,7 +258,7 @@ mc.mebart <- function(
             post$varprob.mean <- apply(post$varprob, 2, mean)
         }
 
-        attr(post, "class") <- "mebart"
+        attr(post, "class") <- "mebart_cont"
 
         return(post)
     }

@@ -85,7 +85,7 @@ mdl_BART <- BART::wbart(df_train[,1:2], df_train$y, x.test=df_test[,1:2],
 
 # meBART
 set.seed(0)
-mdl_meBART <- meBART::mebart(df_train[,1:2], df_train$y, x.test=df_test[,1:2],
+mdl_meBART <- meBART::mebart_cont(df_train[,1:2], df_train$y, x.test=df_test[,1:2],
                          nskip=nskip, ndpost=ndpost, ntree=ntree, 
                          meas_error_sigma=sigma_meas)
 

@@ -33,7 +33,7 @@
 #define TRDRAW(a, b) trdraw(a, b) // pre-processor directive to replace former with latter
 #define TEDRAW(a, b) tedraw(a, b) // same as above
 
-RcppExport SEXP cmebart(
+RcppExport SEXP cwbart(
     SEXP _in,              // number of observations in training data
     SEXP _ip,              // dimension of x
     SEXP _inp,             // number of observations in test data

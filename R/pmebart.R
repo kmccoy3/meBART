@@ -59,7 +59,7 @@ pmebart <- function(x.test,
     
     # Call the C++ function for predictions
     res <- .Call(
-        "cpmebart",
+        "cpwbart",
         treedraws,
         x.test,
         mc.cores

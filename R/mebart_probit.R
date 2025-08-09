@@ -89,7 +89,7 @@
 #' result <- mebart(x.train, y.train, ntree = 50)
 #' print(result$yhat.train.mean)
 #'
-pbart = function(x.train,
+mebart_probit = function(x.train,
                  y.train,
                  x.test = matrix(0.0, 0, 0),
                  sparse = FALSE,
@@ -305,6 +305,6 @@ pbart = function(x.train,
     res$varprob.mean <- apply(res$varprob, 2, mean)
     res$rm.const <- rm.const
     res$binaryOffset = binaryOffset
-    attr(res, 'class') <- 'pbart'
+    attr(res, 'class') <- 'mebart_probit'
     return(res)
 }

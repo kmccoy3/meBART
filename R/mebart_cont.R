@@ -101,7 +101,7 @@
 # Function header for meBART
 # ==================================================================================================
 
-mebart <- function(x.train, # explanatory variables for training data, matrix or dataframe
+mebart_cont <- function(x.train, # explanatory variables for training data, matrix or dataframe
                    y.train, # continuous outcome variable
                    x.test = matrix(0.0, 0, 0), # x test data, same structure as x.train
                    sparse = FALSE, # use Dirichlet prior (aka DART) for variable selection 
@@ -265,7 +265,7 @@ mebart <- function(x.train, # explanatory variables for training data, matrix or
     ptm <- proc.time() # how much real and CPU time (in seconds) the currently running R process has already taken.
 
     res <- .Call(
-        "cmebart",
+        "cwbart",
         n, # number of observations in training data
         p, # dimension of x
         np, # number of observations in test data
@@ -330,6 +330,6 @@ mebart <- function(x.train, # explanatory variables for training data, matrix or
     res$rm.const <- rm.const # Which columns were removed from x.train, if any
 
     # Return result with class "mebart"
-    attr(res, "class") <- "mebart"
+    attr(res, "class") <- "mebart_cont"
     return(res)
 }

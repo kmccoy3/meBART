@@ -37,7 +37,7 @@ df <- data.frame(x_true, y_true, x_meas, y_meas)
 
 ```{r}
 
-mdl_meBART <- meBART::pbart(df$x_meas, df$y_meas,
+mdl_meBART <- meBART::mebart_probit(df$x_meas, df$y_meas,
                      meas_error_sigma = matrix(0.1^2),
                      x_mu = matrix(0.0),
                      x_sigma = matrix(0.2^2))
