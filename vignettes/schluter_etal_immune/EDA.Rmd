@@ -6,158 +6,188 @@ output: html_document
 
 ```{r}
 library(tidyverse)
+library(pROC)
 ```
 
 ```{r}
-setwd("C:/Users/kevin/Documents/research/meBART/vignettes/schluter_etal_immune")
 
-url <- "https://static-content.springer.com/esm/art%3A10.1038%2Fs41586-020-2971-8/MediaObjects/41586_2020_2971_MOESM3_ESM.zip"
+set.seed(0)
+n <- nrow(df_final)
 
-download.file(url, destfile = "schluter_etal_immune.zip")
+train_size <- floor(0.8 * n)
+train_indices <- sample(1:n, size = train_size)
 
-# List files in the zip archive
-zip_contents <- unzip("schluter_etal_immune.zip", list = TRUE)
-
-# Filter out problematic files (e.g., those with "Icon" or "__MACOSX")
-valid_files <- zip_contents$Name[!grepl("Icon|__MACOSX", zip_contents$Name)]
-
-# Unzip only the valid files
-unzip("schluter_etal_immune.zip", files = valid_files, exdir = "data", junkpaths = TRUE)
-
+# 4. Create the training and test sets
+df_train <- df_final[train_indices, ]
+df_test <- df_final[-train_indices, ]
 
 ```
 
 
+
+
 ```{r}
 
-data_dir <- "./data/"
-list_of_files = list.files(path = data_dir)
-filenames <- basename(list_of_files)
-filenames <- filenames[grepl("\\.csv$", filenames)]
+mdl_lr <- glm(sick_14_days_later ~ ., data = df_train, family = "binomial")
 
-for (filename in filenames){
-
-  assign(sub("\\.csv$", "", filename), read_csv(paste0(data_dir, filename), show_col_types = FALSE))
-  
-}
+summary(mdl_lr)
 
 ```
 
 
 ```{r}
 
-WBC <- cWBC %>% 
-    select(-`...1`) %>%
-    mutate(across(c("pid", "wbc", "exclude_reason"), as.factor)) %>%
-    filter(wbc %in% c("neutrophils", "lymphocytes", "monocytes")) %>%
-    mutate(across(c("eday", "anon-date", "anon-bmt-date"), as.integer)) %>%
-    drop_na(count) %>%
-    filter(is.na(exclude_reason)) %>%
-    select(-exclude_reason) %>%
-    distinct(`pid`, `wbc`, `anon-date`, .keep_all=TRUE) %>%
-    group_by(pid) %>%
-    filter(`anon-bmt-date` == min(`anon-bmt-date`)) %>%
-    ungroup() %>%
-    pivot_wider(names_from = "wbc", values_from = "count")
+X <- as.data.frame(df_train[,1:3])
+y <- as.vector(as.integer(df_train$sick_14_days_later) - 1)
 
-# WBC <- WBC %>%
-#   group_by(pid, `anon-date`) %>%
-#   summarise(monocytes = mean(monocytes, na.rm = TRUE), .groups = "drop")
-
-
-# %>%
-#     filter(days_since_bmt == 21)
-
-
-INFECTION <- cINFECTION %>%
-    select(-c(`...1`, `value`, `infectious_agent`)) %>%
-    distinct() %>%
-    mutate(infection = "yes")
-
-
-combined_df <- left_join(WBC, INFECTION, by=c("pid", "anon-date")) %>%
-    mutate(infection = replace_na(infection, "no")) %>%
-    mutate(across(c("pid", "infection"), as.factor)) %>%
-    group_by(pid) %>%
-    fill("anon-bmt-date", .direction = "downup") %>%
-    ungroup() %>%
-    mutate(days_since_bmt = `anon-date` - `anon-bmt-date`) %>%
-    select(-c(`eday`, `anon-bmt-date`, `anon-date`))
-
+set.seed(0)
+mdl_BART <- BART::pbart(X, y)
 
 ```
 
 
 ```{r}
-missing_21_groups <- combined_df %>%
-    group_by(pid) %>%
-    summarise(has_21 = any(days_since_bmt==21)) %>%
-    filter(!has_21) %>%
-    pull("pid")
 
-missing_35_groups <- combined_df %>%
-    group_by(pid) %>%
-    summarise(has_35 = any(days_since_bmt==35)) %>%
-    filter(!has_35) %>%
-    pull("pid")
+X <- as.data.frame(df_train[,1:3])
+y <- as.vector(as.integer(df_train$sick_14_days_later) - 1)
+
+x_mu <- colMeans(X)
+x_sigma <- var(X)
+meas_error_sigma <- diag(c(0.1, 0.1, 1))
+
+```
+
+```{r}
+
+
+set.seed(0)
+mdl_meBART <- meBART::mebart_probit(X, y,
+                                    meas_error_sigma = meas_error_sigma,
+                                    x_mu = x_mu,
+                                    x_sigma = x_sigma)
 ```
 
 
+# Training Results
+
 
 ```{r}
-# Create missing rows
-rows_to_add_21 <- tibble(
-    pid = missing_21_groups,
-    days_since_bmt = 21
+# Training Results
+
+X_train <- as.data.frame(df_train[,1:3])
+y_train <- as.vector(as.integer(df_train$sick_14_days_later) - 1)
+
+X_test <- as.data.frame(df_test[,1:3])
+y_test <- as.vector(as.integer(df_test$sick_14_days_later) - 1)
+
+pred_lr <- predict(mdl_lr, df_train, type="response")
+pred_BART  <- predict(mdl_BART,  X_train)$prob.test.mean
+pred_meBART  <- predict(mdl_meBART,  X_train)$prob.test.mean
+pred_meBART2  <- mdl_meBART$prob.train.mean
+
+# 
+# 
+# # Create ROC objects for each model
+roc_lr <- roc(y_train, pred_lr)
+roc_BART  <- roc(y_train, pred_BART)
+roc_meBART  <- roc(y_train, pred_meBART)
+roc_meBART2  <- roc(y_train, pred_meBART2)
+
+```
+
+
+```{r}
+
+
+
+# Combine the ROC objects into a list
+roc_list <- list(
+  "Logistic Regression" = roc_lr,
+  "BART" = roc_BART,
+  "meBART" = roc_meBART,
+  "meBART2" = roc_meBART2
 )
 
-rows_to_add_35 <- tibble(
-    pid = missing_35_groups,
-    days_since_bmt = 35
+# Plot using ggroc
+ggroc(roc_list) +
+  ggtitle("ROC Curves on Training Data") +
+  xlab("1 - Specificity (False Positive Rate)") +
+  ylab("Sensitivity (True Positive Rate)") +
+  geom_abline(intercept = 1, slope = 1, color = "grey", linetype = "dashed") +
+  theme_minimal() +
+  labs(color = "Model") # Legend title
+
+```
+
+
+```{r}
+# Print the AUC for each model
+cat("AUC for Logistic Regression:", auc(roc_lr), "\n")
+cat("AUC for BART:", auc(roc_BART), "\n")
+cat("AUC for meBART:", auc(roc_meBART), "\n")
+cat("AUC for meBART2:", auc(roc_meBART2), "\n")
+
+```
+
+
+# Testing Results
+
+
+```{r}
+# Testing Results
+
+X_train <- as.data.frame(df_train[,1:3])
+y_train <- as.vector(as.integer(df_train$sick_14_days_later) - 1)
+
+X_test <- as.data.frame(df_test[,1:3])
+y_test <- as.vector(as.integer(df_test$sick_14_days_later) - 1)
+
+pred_lr <- predict(mdl_lr, df_test, type="response")
+pred_BART  <- predict(mdl_BART,  X_test)$prob.test.mean
+pred_meBART  <- predict(mdl_meBART,  X_test)$prob.test.mean
+pred_meBART2  <- mdl_meBART$prob.train.mean
+
+# 
+# 
+# # Create ROC objects for each model
+roc_lr <- roc(y_test, pred_lr)
+roc_BART  <- roc(y_test, pred_BART)
+roc_meBART  <- roc(y_test, pred_meBART)
+# roc_meBART2  <- roc(y, pred_meBART2)
+
+```
+
+
+```{r}
+
+
+
+# Combine the ROC objects into a list
+roc_list <- list(
+  "Logistic Regression" = roc_lr,
+  "BART" = roc_BART,
+  "meBART" = roc_meBART
+  #"meBART2" = roc_meBART2
 )
 
-# Combine with original data
-df_fixed <- combined_df %>%
-    bind_rows(rows_to_add_21) %>%
-    bind_rows(rows_to_add_35)
+# Plot using ggroc
+ggroc(roc_list) +
+  ggtitle("ROC Curves for Testing Data") +
+  xlab("1 - Specificity (False Positive Rate)") +
+  ylab("Sensitivity (True Positive Rate)") +
+  geom_abline(intercept = 1, slope = 1, color = "grey", linetype = "dashed") +
+  theme_minimal() +
+  labs(color = "Model") # Legend title
 
 ```
 
-```{r}
-library(zoo)
-
-df_imputed <- df_fixed %>%
-    arrange(pid, days_since_bmt) %>%
-    group_by(pid) %>%
-    mutate(monocytes = na.approx(monocytes, x = days_since_bmt, na.rm = FALSE)) %>%
-    mutate(lymphocytes = na.approx(lymphocytes, x = days_since_bmt, na.rm = FALSE)) %>%
-    mutate(neutrophils = na.approx(neutrophils, x = days_since_bmt, na.rm = FALSE)) %>%
-    ungroup()
-
-```
 
 ```{r}
-df_final <- df_imputed %>%
-    group_by(pid) %>%
-    mutate(
-        sick_14_days_later = map_lgl(days_since_bmt, function(d) {
-            any(infection[days_since_bmt %in% (d+2):(d + 7)] == "yes", na.rm = TRUE)
-        })
-    ) %>%
-    ungroup() %>%
-    filter(days_since_bmt == 21) %>%
-    select(monocytes, lymphocytes, neutrophils, sick_14_days_later) %>%
-    drop_na() %>%
-    mutate(sick_14_days_later = as.factor(as.integer(sick_14_days_later)))
-```
-
-
-
-```{r}
-
-model <- glm(sick_14_days_later ~ ., data = df_final, family = "binomial")
-
-summary(model)
+# Print the AUC for each model
+cat("AUC for Logistic Regression:", auc(roc_lr), "\n")
+cat("AUC for BART:", auc(roc_BART), "\n")
+cat("AUC for meBART:", auc(roc_meBART), "\n")
+# cat("AUC for meBART2:", auc(roc_meBART2), "\n")
 
 ```
 
@@ -166,6 +196,38 @@ summary(model)
 
 
 
+```{r}
+# Accuracy
+preds_lr <- as.integer(pred_lr > 0.5)
+preds_BART  <- as.integer(pred_BART > 0.5)
+preds_meBART  <- as.integer(pred_meBART > 0.5)
+preds_meBART2  <- as.integer(pred_meBART2 > 0.5)
+
+print(paste0("Accuracy for Logistic Regression: ", mean(preds_lr == y)))
+print(paste0("Accuracy for BART: ", mean(preds_BART == y)))
+print(paste0("Accuracy for meBART: ", mean(preds_meBART == y)))
+print(paste0("Accuracy for meBART2: ", mean(preds_meBART2 == y)))
+
+# Precision
+print(paste0("Precision for Logistic Regression: ", caret::posPredValue(factor(preds_lr), factor(y))))
+print(paste0("Precision for BART: ", caret::posPredValue(factor(preds_BART), factor(y))))
+print(paste0("Precision for meBART: ", caret::posPredValue(factor(preds_meBART), factor(y))))
+print(paste0("Precision for meBART2: ", caret::posPredValue(factor(preds_meBART2), factor(y))))
+
+# Recall / Sensitivity
+print(paste0("Sensitivity for Logistic Regression: ", caret::sensitivity(factor(preds_lr), factor(y), pos="1")))
+print(paste0("Sensitivity for BART: ", caret::sensitivity(factor(preds_BART), factor(y))))
+print(paste0("Sensitivity for meBART: ", caret::sensitivity(factor(preds_meBART), factor(y))))
+print(paste0("Sensitivity for meBART2: ", caret::sensitivity(factor(preds_meBART2), factor(y))))
+
+# Specificity 
+print(paste0("Specificity for Logistic Regression: ", caret::specificity(factor(preds_lr), factor(y))))
+print(paste0("Specificity for BART: ", caret::specificity(factor(preds_BART), factor(y))))
+print(paste0("Specificity for meBART: ", caret::specificity(factor(preds_meBART), factor(y))))
+print(paste0("Specificity for meBART2: ", caret::specificity(factor(preds_meBART2), factor(y))))
+
+
+```
 
 
 
@@ -183,15 +245,24 @@ summary(model)
 
 
 
+# Actual EDA
 
 
+```{r}
+# Class Imbalance
+
+print(paste0("Proportion of sick 14 days later: ", mean(df_final$sick_14_days_later == "1")))
+
+print(paste0("# of negative labels: ", sum(df_final$sick_14_days_later == "0")))
+print(paste0("# of positive labels: ", sum(df_final$sick_14_days_later == "1")))
 
 
+```
 
 
 ```{r}
 
-ggplot(WBC, aes(x = count, fill = wbc)) +
+ggplot(cWBC, aes(x = count, fill = wbc)) +
     geom_histogram(position = "identity", alpha = 0.5, bins = 30) +
     scale_x_continuous(limits=c(0, 25))
 ```
@@ -199,7 +270,7 @@ ggplot(WBC, aes(x = count, fill = wbc)) +
 
 ```{r}
 
-ggplot(WBC, aes(x=days_since_bmt)) +
+ggplot(WBC, aes(x=`anon-date`-`anon-bmt-date`)) +
     geom_histogram()
 
 
