@@ -8,20 +8,22 @@ library(tidyverse)
 ```
 
 ```{r}
-setwd("C:/Users/kevin/Documents/research/meBART/vignettes/schluter_etal_immune")
+setwd("./vignettes/schluter_etal_immune")
 
-url <- "https://static-content.springer.com/esm/art%3A10.1038%2Fs41586-020-2971-8/MediaObjects/41586_2020_2971_MOESM3_ESM.zip"
 
-download.file(url, destfile = "schluter_etal_immune.zip")
-
-# List files in the zip archive
-zip_contents <- unzip("schluter_etal_immune.zip", list = TRUE)
-
-# Filter out problematic files (e.g., those with "Icon" or "__MACOSX")
-valid_files <- zip_contents$Name[!grepl("Icon|__MACOSX", zip_contents$Name)]
-
-# Unzip only the valid files
-unzip("schluter_etal_immune.zip", files = valid_files, exdir = "data", junkpaths = TRUE)
+## Uncomment if you have not downloaded data yet
+# url <- "https://static-content.springer.com/esm/art%3A10.1038%2Fs41586-020-2971-8/MediaObjects/41586_2020_2971_MOESM3_ESM.zip"
+# 
+# download.file(url, destfile = "schluter_etal_immune.zip")
+# 
+# # List files in the zip archive
+# zip_contents <- unzip("schluter_etal_immune.zip", list = TRUE)
+# 
+# # Filter out problematic files (e.g., those with "Icon" or "__MACOSX")
+# valid_files <- zip_contents$Name[!grepl("Icon|__MACOSX", zip_contents$Name)]
+# 
+# # Unzip only the valid files
+# unzip("schluter_etal_immune.zip", files = valid_files, exdir = "data", junkpaths = TRUE)
 
 
 ```
@@ -29,16 +31,22 @@ unzip("schluter_etal_immune.zip", files = valid_files, exdir = "data", junkpaths
 
 ```{r}
 
-data_dir <- "./data/"
-list_of_files = list.files(path = data_dir)
-filenames <- basename(list_of_files)
-filenames <- filenames[grepl("\\.csv$", filenames)]
+## Use this code to load in all data files
+# data_dir <- "./data/"
+# list_of_files = list.files(path = data_dir)
+# filenames <- basename(list_of_files)
+# filenames <- filenames[grepl("\\.csv$", filenames)]
+# 
+# for (filename in filenames){
+# 
+#   assign(sub("\\.csv$", "", filename), read_csv(paste0(data_dir, filename), show_col_types = FALSE))
+#   
+# }
 
-for (filename in filenames){
 
-  assign(sub("\\.csv$", "", filename), read_csv(paste0(data_dir, filename), show_col_types = FALSE))
-  
-}
+## Use this code to load in specific data files
+cWBC <- read_csv("./data/cWBC.csv", show_col_types = FALSE)
+cINFECTION <- read_csv("./data/cINFECTION.csv", show_col_types = FALSE)
 
 ```
 
@@ -58,15 +66,6 @@ WBC <- cWBC %>%
     filter(`anon-bmt-date` == min(`anon-bmt-date`)) %>%
     ungroup() %>%
     pivot_wider(names_from = "wbc", values_from = "count")
-
-# WBC <- WBC %>%
-#   group_by(pid, `anon-date`) %>%
-#   summarise(monocytes = mean(monocytes, na.rm = TRUE), .groups = "drop")
-
-
-# %>%
-#     filter(days_since_bmt == 21)
-
 
 INFECTION <- cINFECTION %>%
     select(-c(`...1`, `value`, `infectious_agent`)) %>%
@@ -140,7 +139,7 @@ df_final <- df_imputed %>%
     group_by(pid) %>%
     mutate(
         sick_14_days_later = map_lgl(days_since_bmt, function(d) {
-            any(infection[days_since_bmt %in% (d+2):(d + 7)] == "yes", na.rm = TRUE)
+            any(infection[days_since_bmt %in% (d+1):(d + 14)] == "yes", na.rm = TRUE)
         })
     ) %>%
     ungroup() %>%
@@ -149,3 +148,19 @@ df_final <- df_imputed %>%
     drop_na() %>%
     mutate(sick_14_days_later = as.factor(as.integer(sick_14_days_later)))
 ```
+
+
+
+```{r}
+# Class Imbalance
+
+print(paste0("Proportion of sick 14 days later: ", mean(df_final$sick_14_days_later == "1")))
+
+print(paste0("# of negative labels: ", sum(df_final$sick_14_days_later == "0")))
+print(paste0("# of positive labels: ", sum(df_final$sick_14_days_later == "1")))
+
+
+```
+
+
+
