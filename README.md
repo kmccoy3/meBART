@@ -7,7 +7,7 @@ $$y_i = f(X_i) + \varepsilon_i, ~~~~~~~~ \varepsilon_i \sim \mathcal{N}(0, \sigm
 
 $$f(X_i) = \sum\limits_{h=1}^m g(X_i; T_h, M_h)$$
 
-meBART, however, represents the true unobserved feature values $X_i$ as latent variables in a Bayesian hierarchical model, and uses these latent variables as inputs to the prediction model. Our observed data is thus $(X_i^*, y_i)$, where $X_i^*$ is a noisy realization of $X_i$. We assume that the measurement error is additive and normal:
+meBART, however, represents the true unobserved feature values $X_i$ as latent variables in a Bayesian hierarchical model, and uses these latent variables as inputs to the prediction model. Our observed data is thus $(X_i^\*, y_i)$, where $X_i^\*$ is a noisy realization of $X_i$. We assume that the measurement error is additive and normal:
 
 $$X_i^* = X_i + e_i ~~~~~~~~ e_i \sim \mathcal{N}(0, \sigma_e^2)$$
 
