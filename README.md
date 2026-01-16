@@ -25,6 +25,33 @@ install.packages("remotes")
 remotes::install_github("kmccoy3/meBART")
 ```
 
+# Getting Started
+
+The two basic functions in meBART are mebart_cont and mebart_probit for continuous and binary outcomes, respectively. See below for a minimal example:
+
+
+```{r}
+library(meBART)
+
+set.seed(0)
+x.train <- matrix(rnorm(1000), ncol = 10)
+y.train <- rnorm(100)
+x.test <- matrix(rnorm(100), ncol = 10)
+y.test <- rnorm(10)
+
+mdl <- mebart_cont(x.train, y.train, x.test,
+               meas_error_sigma = diag(10),
+               x_mu = matrix(0, nrow=10, ncol=1),
+               x_sigma = diag(10))
+
+preds <- mdl$yhat.test.mean
+print(paste0("Test MSE: ", round(mean((y.test - preds)^2), 3)))
+
+```
+
+
+For more extensive demonstrations, review `vignettes/continuous-meBART-demo.Rmd`, `vignettes/probit-meBART-demo.Rmd`, and `vignettes/meBART-multivariate-demo.Rmd`.
+
 # Relevant Works
 
 The original BART article:
