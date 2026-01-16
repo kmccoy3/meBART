@@ -19,10 +19,6 @@ library(tidyverse)
 library(MASS)
 ```
 
-# Toy Example
-
-$$f(x) = 1_{[0.5, \infty)}(x)$$
-
 # Generate Synthetic Data
 
 ```{r}
@@ -31,38 +27,42 @@ $$f(x) = 1_{[0.5, \infty)}(x)$$
 set.seed(0)
 
 # number of observations
-n <- 200
-p <- 5
+n <- 100
+p <- 2
 
 # variance of measurement error and output, respectively
 sigma_meas <- 0.01 * diag(x=1, nrow=p, ncol=p)
-sigma_y <- 0.1
+sigma_y <- 0.1 # standard deviation
+
+# X prior info
+x_mu = rep(0, p)
+x_sigma = 0.3^2*diag(x=1, nrow=p, ncol=p)
 
 # Generate x values uniformly and add measurement error
-x_true <- matrix(runif(n*p, 0, 1), nrow=n, ncol=p)
+x_true <- MASS::mvrnorm(n=n, mu=x_mu, Sigma=x_sigma)
 x_meas <- x_true + MASS::mvrnorm(n=n, mu=rep(0, p), Sigma=sigma_meas)
-y_true <- 1 * (x_true[,1] >= 0.5) + 1 * (x_true[,2] >= 0.5)
+y_true <- 1 * (x_true[,1] >= 0) + 2 * (x_true[,2] >= 0)
 y_obs <- y_true + rnorm(n, 0, sigma_y)
 
 # Convert to df
-df_me <- data.frame(x_meas)
-df_me$y <- y_obs
+df_me <- data.frame(x_meas, y=y_obs)
 
-df_train <- df_me[1:100,]
-df_test <- df_me[101:200,]
 ```
 
+# Plot Raw Data
 
 ```{r}
+
 ggplot(df_me) +
     geom_point(aes(x = X1, y = X2, color = y)) +
     scale_color_gradient(low = "blue", high = "red") +
     labs(title = "Synthetic Data with Measurement Error", x = "X1", y = "X2") +
     theme_minimal() +
     theme(legend.position="none")
+
 ```
 
-
+# Fit BART and meBART Models
 
 
 ```{r}
@@ -72,22 +72,22 @@ f = file()
 sink(f)
 
 # Parameters
-ndpost <- 5000 # (Default: 1000L)
-nskip <- 100 # (Default: 100L)
+ndpost <- 2000 # (Default: 1000L)
+nskip <- 200 # (Default: 100L)
 ntree <- 50 # (Default: 200L)
-
-# proposal_sd = 0.10
 
 # Vanilla BART
 set.seed(0)
-mdl_BART <- BART::wbart(df_train[,1:2], df_train$y, x.test=df_test[,1:2],
+mdl_BART <- BART::wbart(df_me[,1:2], df_me$y,
                          nskip=nskip, ndpost=ndpost, ntree=ntree)
 
 # meBART
 set.seed(0)
-mdl_meBART <- meBART::mebart_cont(df_train[,1:2], df_train$y, x.test=df_test[,1:2],
+mdl_meBART <- meBART::mebart_cont(df_me[,1:2], df_me$y, 
                          nskip=nskip, ndpost=ndpost, ntree=ntree, 
-                         meas_error_sigma=sigma_meas)
+                         meas_error_sigma=sigma_meas,
+                         x_mu=x_mu,
+                         x_sigma=x_sigma)
 
 closeAllConnections()
 
@@ -97,22 +97,7 @@ cat("Time taken for meBART: ", mdl_meBART$proc.time[[3]], "s\n", sep="")
 
 ```
 
-
-
-```{r}
-
-mse_BART <- mean((mdl_BART$yhat.train.mean - y_true[1:100])^2)
-mse_meBART <- mean((mdl_meBART$yhat.train.mean - y_true[1:100])^2)
-
-print(paste("Training MSE BART: ", round(mse_BART, 4)))
-print(paste("Training MSE meBART: ", round(mse_meBART, 4)))
-
-mse_BART_test <- mean((mdl_BART$yhat.test.mean - y_true[101:200])^2)
-mse_meBART_test <- mean((mdl_meBART$yhat.test.mean - y_true[101:200])^2)
-
-print(paste("Test MSE BART: ", round(mse_BART_test, 4)))
-print(paste("Test MSE meBART: ", round(mse_meBART_test, 4)))
-```
+# Plot Sigma Posterior Draws
 
 ```{r}
 
@@ -122,7 +107,7 @@ sigma_df <- rbind(sigma_df, data.frame(iter_num = seq_along(mdl_meBART$sigma), s
                  Method = rep("meBART", length(mdl_meBART$sigma))))
 colnames(sigma_df) <- c("iter_num", "sigma", "method")
 
-df$method <- factor(sigma_df$method, levels = c("Vanilla BART", "meBART"))
+sigma_df$method <- factor(sigma_df$method, levels = c("Vanilla BART", "meBART"))
 
 
 # Create the ggplot line plot
@@ -136,3 +121,32 @@ sigma_plot
 
 ```
 
+# Plot Prediction Contours
+
+
+```{r}
+
+df1 <- expand.grid(X1 = seq(-1, 1, length.out = 50),
+                  X2 = seq(-1, 1, length.out = 50))
+
+y <- colMeans(predict(mdl_BART, newdata = as.matrix(df1)))
+df1$y <- y
+df1$method <- "BART"
+
+df2 <- expand.grid(X1 = seq(-1, 1, length.out = 50),
+                  X2 = seq(-1, 1, length.out = 50))
+
+y <- colMeans(predict(mdl_meBART, newdata = as.matrix(df2)))
+df2$y <- y
+df2$method <- "meBART"
+
+df <- rbind(df1, df2)
+
+ggplot(df, aes(x = X1, y = X2, z = y)) +
+    facet_wrap(~method) +
+    geom_contour_filled(bins = 15) +
+    coord_fixed() +
+    theme_minimal() +
+    guides(fill = guide_legend(title = "Y Value")) +
+    labs(title = "BART vs. meBART Prediction Contours", x = "X1", y = "X2")
+```

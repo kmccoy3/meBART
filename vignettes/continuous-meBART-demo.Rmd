@@ -1,8 +1,8 @@
 ---
-title: "mebart-demo"
+title: "continuous-mebart-demo"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{mebart-demo}
+  %\VignetteIndexEntry{continuous-mebart-demo}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -18,19 +18,18 @@ knitr::opts_chunk$set(
 library(meBART)
 library(tidyverse)
 library(latex2exp)
-library(ggridges)
 ```
 
 # Toy Example
 
-$$f(x) = 1_{[0.5, \infty)}(x)$$
+$$f(x) = 1_{[0, \infty)}(x)$$
 
 # Generate Synthetic Data
 
 ```{r}
 
 # Set overall seed
-MY_SEED <- 19
+MY_SEED <- 0
 
 # Fix random seed to make the results reproducible
 set.seed(MY_SEED)
@@ -38,37 +37,36 @@ set.seed(MY_SEED)
 # number of observations
 n <- 100
 
-# variance of measurement error and output, respectively
+# standard deviation of measurement error and output, respectively
 sigma_meas <- 0.1
 sigma_y <- 0.1
 
-# Generate x values uniformly and add measurement error
+# Generate x values ~ N(0, 0.3) and add measurement error
 x_true <- rnorm(n, 0, 0.3)
 x_meas <- x_true + rnorm(n, 0, sigma_meas)
 y_true <- -1 + 2 * (x_true >= 0) # Indicator function
-# y_true <- sin(2*pi*x_true) # Sin function
 y_obs <- y_true + rnorm(n, 0, sigma_y)
 
 # Convert to df
 df_me <- data.frame(X=x_meas, y=y_obs, X_true=x_true, y_true=y_true)
 ```
 
-
+# Run Models
 
 ```{r}
 
 f = file()
 sink(f)
 
-# Parameters
+# Hyper-parameters
 ndpost <- 2000 # (Default: 1000L)
 nskip <- 200 # (Default: 100L)
 ntree <- 200 # (Default: 200L)
 
-# proposal_sd = 0.10
-meas_error_sd <- 0.01*diag(x=1, nrow=1, ncol=1)
-x_mu = matrix(0)
-x_sigma = matrix(0.3^2)
+# Extra meBART parameters
+meas_error_sigma <- 0.01*diag(x=1, nrow=1, ncol=1) # Covariance matrix for measurement error
+x_mu = matrix(0) # Mean vector for X
+x_sigma = matrix(0.3^2) # Covariance matrix for X
 
 # Vanilla BART
 set.seed(MY_SEED)
@@ -80,7 +78,7 @@ mdl_BART <- BART::wbart(df_me$X, df_me$y,
 set.seed(MY_SEED)
 mdl_meBART <- meBART::mebart_cont(df_me$X, df_me$y, 
                          nskip=nskip, ndpost=ndpost, ntree=ntree, 
-                         meas_error_sigma=meas_error_sd,                         
+                         meas_error_sigma=meas_error_sigma,                         
                          x_mu = x_mu,
                          x_sigma = x_sigma)
 
@@ -94,56 +92,52 @@ cat("Time taken for meBART: ", mdl_meBART$proc.time[[3]], "s\n", sep="")
 ```
 
 
+# Make Predictions Along Domain of X
 
 ```{r}
-
-
+# Make predictions at every unique cutpoint value for BART
 values <- mdl_BART$treedraws$cutpoints[[1]]
 output <- predict(mdl_BART, data.frame(values))
 means <- colMeans(output)
 
+# Extract 95% CI for BART
 lower_CI <- c()
 upper_CI <- c()
-
 for (i in 1:ncol(output)) {
     lower_CI <- c(lower_CI, quantile(output[,i], 0.025))
     upper_CI <- c(upper_CI, quantile(output[,i], 0.975))
 }
-
 ci_df <- data.frame(X=values, y=means, lower_CI=lower_CI, upper_CI=upper_CI)
-
 ci_df$model <- "Vanilla BART"
 
-
+# Make predictions at every unique cutpoint value for meBART
 values <- mdl_meBART$treedraws$cutpoints[[1]]
-output <- predict(mdl_meBART, data.frame(values))# [500:1000,]
+output <- predict(mdl_meBART, data.frame(values))
 means <- colMeans(output)
 
+# Extract 95% CI for meBART
 lower_CI <- c()
 upper_CI <- c()
-
 for (i in 1:ncol(output)) {
     lower_CI <- c(lower_CI, quantile(output[,i], 0.025))
     upper_CI <- c(upper_CI, quantile(output[,i], 0.975))
 }
-
 ci_df2 <- data.frame(X=values, y=means, lower_CI=lower_CI, upper_CI=upper_CI)
-
 ci_df2$model <- "meBART"
 
+# Combine dataframes
 ci_df_combined <- rbind(ci_df, ci_df2)
-
 ci_df_combined$model <- factor(ci_df_combined$model, levels = c("Vanilla BART", "meBART"))
-
-
-mse_BART <- mean((mdl_BART$yhat.train.mean - y_true)^2)
-mse_meBART <- mean((mdl_meBART$yhat.train.mean - y_true)^2)
 
 ```
 
+
+
+
+# Plot Learned Functions
+
+
 ```{r}
-
-
 
 ci_plot <- ggplot(ci_df_combined) +
     facet_grid(cols = vars(model)) +
@@ -158,35 +152,23 @@ ci_plot <- ggplot(ci_df_combined) +
     annotate("point", x = 0, y = -1, size = 3, shape = 1) +
     annotate("point", x = 0, y = 1, size = 3, shape = 16) 
 
-    #coord_fixed(ratio=1)
-
-# ci_plot <- ggplot(ci_df_combined) +
-#     facet_grid(cols = vars(model)) +
-#     geom_line(aes(x=X, y=y), linetype=3) +
-#     geom_ribbon(aes(x=X, ymin=lower_CI, ymax=upper_CI), alpha=0.2) +
-#     labs(title = "meBART: Mean Prediction with 95% CI", x = "X", y = "Y") +
-#     geom_point(data=df_me, aes(x = X, y = y), color="#619CFF") +
-#     scale_x_continuous(breaks = seq(0, 1, 0.25)) +
-#     geom_line(data=data.frame(x=x_true, y=y_true), aes(x = x, y = y), color="#F8766D")
-    
-ggsave("../scratch/figures/ci_comparison.png", ci_plot, width = 6, height = 4, dpi=600)
-
 ci_plot
 
 ```
 
 
-
+# Sigma Trace Plots
 
 
 
 ```{r}
 
+# Extract sigma draws
 sigma_df <- data.frame(iter_num = seq_along(mdl_meBART$sigma), sigma = mdl_meBART$sigma, method = "meBART")
 sigma_df2 <- data.frame(iter_num = seq_along(mdl_BART$sigma), sigma = mdl_BART$sigma, method = "Vanilla BART")
 
+# Combine dfs
 sigma_df <- rbind(sigma_df, sigma_df2)
-
 sigma_df$method <- factor(sigma_df$method, levels = c("Vanilla BART", "meBART"))
 
 # Create the ggplot line plot
@@ -197,40 +179,32 @@ sigma_plot <- ggplot(sigma_df, aes(x = iter_num, y = sigma, color=method)) +
     geom_hline(yintercept=sigma_y, color="black", linetype="dashed") +
     theme(legend.position = "bottom")
 
-library("ggExtra")
-sigma_plot2 <- ggMarginal(sigma_plot, groupColour = TRUE, groupFill = TRUE, margins="y")
-
-ggsave("../scratch/figures/sigma_comparison1.png", dpi=600)
-
 sigma_plot
 
-ggsave("../scratch/figures/sigma_comparison2.png", dpi=600)
 ```
-
+# Coverage Calculation
 
 
 ```{r}
-# Coverage calculation
 
+# Get Vanilla BART coverage
 BART_coverage <- c()
 
 for (i in 1:nrow(ci_df)){
-    x_val <- 1*(ci_df$X[i] > 0.5)
-    
+    x_val <- -1+2*(ci_df$X[i] > 0) # Apply known true function
     if (ci_df$lower_CI[i] <= x_val && ci_df$upper_CI[i] >= x_val){
         BART_coverage <- c(BART_coverage, 1)
     } else {
         BART_coverage <- c(BART_coverage, 0)
     }
 }
-
-
 print(paste("Vanilla BART coverage: ", mean(BART_coverage), sep=""))
 
+
+# Get meBART coverage
 meBART_coverage <- c()
 for (i in 1:nrow(ci_df2)){
-    x_val <- 1*(ci_df2$X[i] > 0.5)
-    
+    x_val <- -1+2*(ci_df2$X[i] > 0) # Apply known true function
     if (ci_df2$lower_CI[i] <= x_val && ci_df2$upper_CI[i] >= x_val){
         meBART_coverage <- c(meBART_coverage, 1)
     } else {
@@ -243,63 +217,46 @@ print(paste("meBART coverage: ", mean(meBART_coverage), sep=""))
 
 ```
 
-
+# Updated Estimation of X
 
 
 ```{r}
 
-mdl <- mdl_meBART
 
-x_draws <- mdl$x_draws[1,,]
-x_draws_means <- rowMeans(x_draws)
-
-df_me <- df_me[, c("X", "X_true")]
-
-df_me$x_true_est <- x_draws_means
-
-# 
-# df <- data.frame(x_meas=x_meas, x_true = x_true, x_true_est = x_draws_means)
-df <- df_me[order(df_me$X_true), ]
-df$y <- 1:n
-
-df2 <- reshape2::melt(df, id="y")
-
-plot <- ggplot(df2) +
-geom_point(aes(x=value, y=y, color=variable), 
-           shape=19, 
-           size=2) + 
-theme(axis.text.y=element_blank(),
-      axis.title.y=element_blank(),
-      axis.ticks.y=element_blank(),
-      legend.position = "bottom") +
-labs(title=TeX("Estimation of True Value of $X_i$"), 
-     x="X",
-     color="Variable") +
-geom_segment(data=df, 
-             aes(x=X, xend=x_true_est, y=y, yend=y), 
-             arrow=arrow(length=unit(0.2,"cm"))) +
-# scale_x_continuous(limits = c(-1, 1), breaks = seq(-1.2, 1.2, 0.2)) +
-scale_color_discrete(labels = unname(TeX(c("Measured Value, $X_i^*$", "True Value, $X_i$", "Estimated True Value, $\\hat{X_i}$"))))
+# Extract x draws from meBART
+x_draws <- mdl_meBART$x_draws[1,,]
+x_draws_means <- rowMeans(x_draws) # Get means of posteriors
 
 
-plot
+df_xdata <- df_me[, c("X", "X_true")]
+df_xdata$x_true_est <- x_draws_means
+
+
+df_xdata <- df_xdata[order(df_xdata$X_true), ]
+df_xdata$y <- 1:n
+
+df2 <- reshape2::melt(df_xdata, id="y")
+
+xdraws_plot <- ggplot(df2) +
+    geom_point(aes(x=value, y=y, color=variable), 
+               shape=19, 
+               size=2) + 
+    theme(axis.text.y=element_blank(),
+          axis.title.y=element_blank(),
+          axis.ticks.y=element_blank(),
+          legend.position = "bottom") +
+    labs(title=TeX("Estimation of True Value of $X_i$"), 
+         x="X",
+         color="Variable") +
+    geom_segment(data=df_xdata, 
+                 aes(x=X, xend=x_true_est, y=y, yend=y), 
+                 arrow=arrow(length=unit(0.2,"cm"))) +
+    scale_color_discrete(labels = unname(TeX(c("Measured Value, $X_i^*$", "True Value, $X_i$", "Estimated True Value, $\\hat{X_i}$"))))
+
+
+xdraws_plot
 
 ```
 
-```{r}
-library(patchwork)
 
-layout <- "
-AAAACC
-BBBBCC
-"
-
-ci_plot + sigma_plot2 + plot + 
-  plot_layout(design=layout)
-    
-    
-
-ggsave("tmp.png", width = 8, height = 6, dpi=600)
-
-```
 

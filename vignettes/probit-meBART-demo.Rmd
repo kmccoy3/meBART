@@ -1,8 +1,8 @@
 ---
-title: "pbart-demo"
+title: "probit-mebart-demo"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{pbart-demo}
+  %\VignetteIndexEntry{probit-mebart-demo}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -12,27 +12,29 @@ library(tidyverse)
 library(latex2exp)
 ```
 
-
-
+# Generate Data
 
 ```{r}
-
+# Set random seed
 set.seed(0)
-x_true <- rnorm(100, 0.0, 0.2)
+
+# Generate true data
+x_true <- rnorm(100, 0.0, 0.3)
 y_true <- as.numeric(x_true > 0.0)
 
+# Add measurement error
+x_meas <- x_true + rnorm(100, 0, 0.1)
 
-x_meas <- x_true + rnorm(100, sd = 0.1) # add some noise
-
+# Randomly flip some of the binary outcomes
 subset <- sample(1:100, 5)
 y_meas <- y_true
 y_meas[subset] <- y_meas[subset]*-1+1
 
+# Collect data into df
 df <- data.frame(x_true, y_true, x_meas, y_meas)
-
 ```
 
-
+# Fit BART and meBART models
 
 
 ```{r}
@@ -40,7 +42,7 @@ df <- data.frame(x_true, y_true, x_meas, y_meas)
 mdl_meBART <- meBART::mebart_probit(df$x_meas, df$y_meas,
                      meas_error_sigma = matrix(0.1^2),
                      x_mu = matrix(0.0),
-                     x_sigma = matrix(0.2^2))
+                     x_sigma = matrix(0.3^2))
 
 
 mdl_BART <- BART::pbart(df$x_meas, df$y_meas)
@@ -49,28 +51,20 @@ mdl_BART <- BART::pbart(df$x_meas, df$y_meas)
 
 
 ```{r}
+
+# make predictions for BART
 xs <- mdl_BART$treedraws$cutpoints[[1]]
-
 preds_BART <- predict(mdl_BART, data.frame(xs))
-
-preds_meBART <- predict(mdl_meBART, data.frame(xs))
-
-
-```
-
-```{r}
-
 quantiles <- t(apply(preds_BART$prob.test, 2, quantile, probs = c(0.025, 0.975)))
 
+# Collect data into df
+df2 <- data.frame(x=xs, # input X
+                  probs=preds_BART$prob.test.mean, # Mean probability
+                  z=preds_BART$prob.test.mean>0.5, # output prediction
+                  lower = quantiles[, 1], # Probability lower bound
+                  upper = quantiles[, 2]) # Probability upper bound
 
-
-df2 <- data.frame(x=xs,
-                  probs=preds_BART$prob.test.mean,
-                  # y = y,
-                  z=preds_BART$prob.test.mean>0.5,
-                  lower = quantiles[, 1],
-                  upper = quantiles[, 2])
-
+# Plot BART results
 ggplot() +
     geom_point(data=df2, aes(x = x, y = probs, color=z)) + 
     geom_line(data=df2, aes(x = x, y = probs), linetype=2) + 
@@ -89,184 +83,12 @@ ggplot() +
 
 ```{r}
 
-
-quantiles <- t(apply(preds_meBART$prob.test, 2, quantile, probs = c(0.025, 0.975)))
-
-
-
-df3 <- data.frame(x=xs,
-                  probs=preds_meBART$prob.test.mean,
-                  # y = y,
-                  z=preds_meBART$prob.test.mean>0.5,
-                  lower = quantiles[, 1],
-                  upper = quantiles[, 2])
-
-ggplot() +
-    geom_point(data=df3, aes(x = x, y = probs, color=z)) + 
-    geom_line(data=df3, aes(x = x, y = probs), linetype=2) + 
-    geom_ribbon(data=df3, aes(x=x, ymin=lower, ymax=upper), alpha=0.1) +
-    geom_point(data=df, aes(x=x_meas, y=y_meas, color=y_true==1)) + 
-    geom_vline(xintercept=0.0) +
-    labs(title = "meBART Probit",
-       x = "x",
-       y = TeX("$p(Y=1)$"),
-       color="BART Prediction") +
-    scale_y_continuous(limits = c(0, 1), breaks=c(0, 0.25, 0.5, 0.75, 1))
-
-
-
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-```{r}
-
-mdl <- mdl_meBART
-
-x_draws <- mdl$x_draws[1,,]
-x_draws_means <- rowMeans(x_draws)
-
-df_me <- data.frame(X = x_meas,
-                    X_true= x_true)
-
-df_me <- df_me[, c("X", "X_true")]
-
-df_me$x_true_est <- x_draws_means
-
-old_mse <- mean((df_me$X_true - df_me$X)^2)
-new_mse <- mean((df_me$X_true - df_me$x_true_est)^2)
-
-
-df <- df_me[order(df_me$X_true), ]
-df$y <- 1:100
-
-df2 <- reshape2::melt(df, id="y")
-
-plot <- ggplot(df2) +
-    geom_point(aes(x=value, y=y, color=variable), 
-               shape=19, 
-               size=2) + 
-    theme(axis.text.y=element_blank(),
-          axis.title.y=element_blank(),
-          axis.ticks.y=element_blank(),
-          legend.position = "bottom") +
-    labs(title=TeX("Estimation of True Value of $X_i$"), 
-         x="X",
-         color="Variable") +
-    geom_segment(data=df, 
-                 aes(x=X, xend=x_true_est, y=y, yend=y), 
-                 arrow=arrow(length=unit(0.2,"cm"))) +
-    # scale_x_continuous(limits = c(-1, 1), breaks = seq(-1.2, 1.2, 0.2)) +
-    scale_color_discrete(labels = unname(TeX(c("Measured Value, $X_i^*$", "True Value, $X_i$", "Estimated True Value, $\\hat{X_i}$"))))
-
-
-plot
-```
-
-
-# Square Wave
-
-
-
-
-
-```{r}
-
-set.seed(0)
-x_true <- rnorm(100, 0.0, 0.2)
-y_true <- as.numeric(round(0.5*sin(6*pi*x_true) + 0.5))
-
-
-x_meas <- x_true + rnorm(100, sd = 0.05) # add some noise
-
-subset <- sample(1:100, 5)
-y_meas <- y_true
-y_meas[subset] <- y_meas[subset]*-1+1
-
-df <- data.frame(x_true, y_true, x_meas, y_meas)
-
-ggplot(df, aes(x=x_meas, y=y_meas, color=y_true)) +
-    geom_point()
-
-```
-
-
-
-
-```{r}
-
-mdl_meBART <- meBART::pbart(df$x_meas, df$y_meas,
-                     meas_error_sigma = matrix(0.05^2),
-                     x_mu = matrix(0.0),
-                     x_sigma = matrix(0.2^2))
-
-
-mdl_BART <- BART::pbart(df$x_meas, df$y_meas)
-
-```
-
-```{r}
+# make predictions for meBART
 xs <- mdl_BART$treedraws$cutpoints[[1]]
-
-preds_BART <- predict(mdl_BART, data.frame(xs))
-
 preds_meBART <- predict(mdl_meBART, data.frame(xs))
-
-
-```
-
-```{r}
-
-quantiles <- t(apply(preds_BART$prob.test, 2, quantile, probs = c(0.025, 0.975)))
-
-
-
-df2 <- data.frame(x=xs,
-                  probs=preds_BART$prob.test.mean,
-                  # y = y,
-                  z=preds_BART$prob.test.mean>0.5,
-                  lower = quantiles[, 1],
-                  upper = quantiles[, 2])
-
-ggplot() +
-    geom_point(data=df2, aes(x = x, y = probs, color=z)) + 
-    geom_line(data=df2, aes(x = x, y = probs), linetype=2) + 
-    geom_ribbon(data=df2, aes(x=x, ymin=lower, ymax=upper), alpha=0.1) +
-    geom_point(data=df, aes(x=x_meas, y=y_meas, color=y_true==1)) + 
-    geom_vline(xintercept=0.0) +
-    labs(title = "BART Probit",
-       x = "x",
-       y = TeX("$p(Y=1)$")) +
-    scale_y_continuous(limits = c(0, 1), breaks=c(0, 0.25, 0.5, 0.75, 1))
-
-
-```
-
-
-
-```{r}
-
-
 quantiles <- t(apply(preds_meBART$prob.test, 2, quantile, probs = c(0.025, 0.975)))
 
-
-
+# Collect data into df
 df3 <- data.frame(x=xs,
                   probs=preds_meBART$prob.test.mean,
                   # y = y,
@@ -274,6 +96,7 @@ df3 <- data.frame(x=xs,
                   lower = quantiles[, 1],
                   upper = quantiles[, 2])
 
+# Plot meBART results
 ggplot() +
     geom_point(data=df3, aes(x = x, y = probs, color=z)) + 
     geom_line(data=df3, aes(x = x, y = probs), linetype=2) + 
@@ -290,48 +113,24 @@ ggplot() +
 
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# Plot Updated Estimates of X
 
 
 ```{r}
 
-mdl <- mdl_meBART
-
-x_draws <- mdl$x_draws[1,,]
+# Extract posterior draws of X from meBART model
+x_draws <- mdl_meBART$x_draws[1,,]
 x_draws_means <- rowMeans(x_draws)
 
-df_me <- data.frame(X = x_meas,
-                    X_true= x_true)
+df_xdraws <- data.frame(X = x_meas, X_true= x_true)
+df_xdraws$x_true_est <- x_draws_means
 
-df_me <- df_me[, c("X", "X_true")]
+df_xdraws <- df_xdraws[order(df_xdraws$X_true), ]
+df_xdraws$y <- 1:100
 
-df_me$x_true_est <- x_draws_means
+df_xdraws2 <- reshape2::melt(df_xdraws, id="y")
 
-old_mse <- mean((df_me$X_true - df_me$X)^2)
-new_mse <- mean((df_me$X_true - df_me$x_true_est)^2)
-
-
-df <- df_me[order(df_me$X_true), ]
-df$y <- 1:100
-
-df2 <- reshape2::melt(df, id="y")
-
-plot <- ggplot(df2) +
+xdraws_plot <- ggplot(df_xdraws2) +
     geom_point(aes(x=value, y=y, color=variable), 
                shape=19, 
                size=2) + 
@@ -342,22 +141,14 @@ plot <- ggplot(df2) +
     labs(title=TeX("Estimation of True Value of $X_i$"), 
          x="X",
          color="Variable") +
-    geom_segment(data=df, 
+    geom_segment(data=df_xdraws, 
                  aes(x=X, xend=x_true_est, y=y, yend=y), 
                  arrow=arrow(length=unit(0.2,"cm"))) +
     # scale_x_continuous(limits = c(-1, 1), breaks = seq(-1.2, 1.2, 0.2)) +
     scale_color_discrete(labels = unname(TeX(c("Measured Value, $X_i^*$", "True Value, $X_i$", "Estimated True Value, $\\hat{X_i}$"))))
 
 
-plot
+xdraws_plot
 ```
-
-
-
-
-
-
-
-
 
 
