@@ -1,0 +1,322 @@
+---
+title: "EDA"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(randomForest)
+library(bayesreg)
+library(cmdstanr)
+```
+
+
+```{r}
+blrme_model <- cmdstan_model("~/Documents/documents-main/research/rice_research/projects/meBART/codebase/meBART/vignettes/schluter_etal_immune/blrme_model.stan")
+```
+
+
+```{r}
+
+df_ST9  <- readxl::read_excel("fromentin_etal_IHD.xlsx", sheet="ST9", skip=1)
+
+df <- df_ST9 %>%
+    select("ID", "Status", "BMI (kg/m²)", "Physical activity (h/week)") %>%
+    rename(
+      BMI = "BMI (kg/m²)",
+      PA = "Physical activity (h/week)"
+    ) %>%
+    mutate_at(vars("ID", "Status"), factor) %>%
+    mutate_at(vars("BMI", "PA"), as.numeric) %>%
+    drop_na() %>% 
+    distinct(ID, .keep_all = TRUE)
+
+# df[2:8] <- scale(df[2:8])
+
+```
+
+
+
+```{r}
+
+ggplot(df, aes(x=PA, y=BMI)) +
+    geom_point() +
+    geom_smooth(method="lm")
+
+```
+
+```{r}
+set.seed(0)
+
+df <- df %>% 
+    sample_frac(1) %>% # randomly shuffle rows
+    mutate(fold = rep(1:5, length.out = n())) # partition into 5 folds
+
+```
+
+
+
+
+
+
+
+
+
+```{r}
+
+mse_results <- data.frame(
+    Fold = integer(),
+    MSE_BLR = double(),
+    MSE_BLRME = double(),
+    MSE_RF = double(),
+    MSE_BART = double()
+)
+
+for (i in 1:5){
+
+    df_train <- df %>% filter(fold != i)
+    df_test <- df %>% filter(fold == i)
+
+
+mdl_BART <- BART::wbart(df_train$PA, df_train$BMI, df_test$PA)
+
+mdl_rf <- randomForest(BMI ~ PA, data = df_train, ntree = 200)
+
+mdl_blr <- bayesreg(BMI ~ PA, data=df_train, n.samples=1000, burnin=100, n.cores=1)
+
+
+
+blrme_data <- list(x_meas = df_train$PA, y = df_train$BMI, N=length(df_train$PA), tau=sqrt(10),
+                   x_test=df_test$PA, N_test=length(df_test$PA))
+
+blrme_model_fit <- blrme_model$sample(
+        data = blrme_data,
+        chains = 1,
+        parallel_chains = 1,
+        iter_warmup = 100,
+        iter_sampling = 1000
+    )
+
+
+
+preds_BART <- mdl_BART$yhat.test.mean
+mse_BART <- mean((df_test$BMI - preds_BART)^2)
+
+preds_rf <- predict(mdl_rf, newdata = df_test)
+mse_rf <- mean((df_test$BMI - preds_rf)^2)
+
+preds_blr <- predict(mdl_blr, df_test)[,1]
+mse_blr <- mean((df_test$BMI - preds_blr)^2)
+
+blrme_preds <- colMeans(blrme_model_fit$draws("y_test", format="matrix"))
+mse_blrme <- mean((df_test$BMI - blrme_preds)^2)
+
+mse_results <- rbind(mse_results, data.frame(
+    Fold = i,
+    MSE_BLR = mse_blr,
+    MSE_BLRME = mse_blrme,
+    MSE_RF = mse_rf,
+    MSE_BART = mse_BART
+))
+
+
+
+}
+
+```
+
+
+
+
+
+
+
+```{r}
+
+for (i in 1:5){
+
+    df_train <- df %>% filter(fold != i)
+    df_test <- df %>% filter(fold == i)
+
+
+    mdl_meBART <- meBART::mebart_cont(df_train$PA, df_train$BMI,
+                                    meas_error_sigma = matrix(10),
+                                    x_mu = matrix(mean(df_train$PA)),
+                                    x_sigma = matrix(var(df_train$PA)))
+    
+    preds_meBART <- predict(mdl_meBART, as.matrix(df_test$PA))
+    mse_meBART <- mean((df_test$BMI - colMeans(preds_meBART))^2)
+    
+    mse_results$MSE_meBART[i] <- mse_meBART
+
+
+}
+
+```
+
+
+
+
+
+
+# Combining both plots
+
+```{r}
+
+xs <- seq(min(df$PA), max(df$PA), length.out=1000)
+
+preds_BART <- predict(mdl_BART, as.matrix(xs))
+
+mean_ci_data_BART <- data.frame(
+    X = xs,
+    y = colMeans(preds_BART),
+    lower_CI = apply(preds_BART, 2, quantile, probs=0.025),
+    upper_CI = apply(preds_BART, 2, quantile, probs=0.975),
+    method = "BART"
+)
+
+preds_meBART <- predict(mdl_meBART, as.matrix(xs))
+
+mean_ci_data_meBART <- data.frame(
+    X = xs,
+    y = colMeans(preds_meBART),
+    lower_CI = apply(preds_meBART, 2, quantile, probs=0.025),
+    upper_CI = apply(preds_meBART, 2, quantile, probs=0.975),
+    method = "meBART"
+)
+
+mean_ci_data <- rbind(mean_ci_data_BART, mean_ci_data_meBART)
+
+BART_sigmas <- mdl_BART$sigma[101:1100]
+
+preds_BART2 <- preds_BART + matrix(rnorm(nrow(preds_BART)*ncol(preds_BART), 0, BART_sigmas), nrow=nrow(preds_BART), ncol=ncol(preds_BART))
+
+pp_ci_data_BART <- data.frame(
+    X = xs,
+    lower_CI = apply(preds_BART2, 2, quantile, probs=0.025),
+    upper_CI = apply(preds_BART2, 2, quantile, probs=0.975),
+    method = "BART"
+)
+
+meBART_sigmas <- mdl_meBART$sigma[101:1100]
+
+preds_meBART2 <- preds_meBART + matrix(rnorm(nrow(preds_meBART)*ncol(preds_meBART), 0, meBART_sigmas), nrow=nrow(preds_meBART), ncol=ncol(preds_meBART))
+
+pp_ci_data_meBART <- data.frame(
+    X = xs,
+    lower_CI = apply(preds_meBART2, 2, quantile, probs=0.025),
+    upper_CI = apply(preds_meBART2, 2, quantile, probs=0.975),
+    method = "meBART"
+)
+
+pp_ci_data <- rbind(pp_ci_data_BART, pp_ci_data_meBART)
+
+# geom_line(aes(x=X, y=y), linetype=3) +
+#         geom_ribbon(aes(x=X, ymin=lower_CI, ymax=upper_CI), alpha=0.2) +
+```
+
+```{r}
+
+
+ggplot() +
+    geom_point(data=df, aes(x=PA, y=BMI), alpha=0.5, size=1) +
+    geom_line(data=mean_ci_data, aes(x=X, y=y), color="blue") +
+    geom_ribbon(data=mean_ci_data, aes(x=X, ymin=lower_CI, ymax=upper_CI), alpha=0.2, fill="blue") +
+    geom_ribbon(data=pp_ci_data, aes(x=X, ymin=lower_CI, ymax=upper_CI), alpha=0.1, fill="red") +
+    # geom_smooth(method="lm") +
+    facet_wrap(~method) +
+    labs(
+        x = "Physical Activity (h/week)",
+        y = "Body Mass Index (kg/m^2)",
+        title = "Body Mass Index vs. Self Reported Physical Activity"
+    ) +
+    legend() + 
+    theme_light() + 
+        theme(strip.background = element_rect(fill = "grey90", color = "black"),
+                strip.text = element_text(size = 12, color="black"),
+              legend.text = element_text(size = 12),  # Adjust legend key labels
+                legend.title = element_text(size = 12),
+                plot.title = element_text(size = 12, face="bold"),
+                axis.text=element_text(size=12),
+                axis.title=element_text(size=12, face="bold")) 
+    
+    
+ggsave("BMIvsPA.png", width = 7, height = 4, dpi=600)
+
+```
+
+
+
+```{r}
+ggplot() +
+    # 1. The Points (No changes needed here unless you want them in the legend)
+    geom_point(data=df, aes(x=PA, y=BMI), alpha=0.25, size=1) +
+
+    # 2. The Mean Line
+    # Map 'color' to a specific string inside aes() to create a legend entry
+    geom_line(data=mean_ci_data, aes(x=X, y=y, color="Mean Estimate")) +
+
+    # 3. The Mean Ribbon
+    # Map 'fill' to a string inside aes()
+    geom_ribbon(data=mean_ci_data, aes(x=X, ymin=lower_CI, ymax=upper_CI, fill="Mean 95% CI"), alpha=0.2) +
+
+    # 4. The Posterior Predictive Ribbon
+    # Map 'fill' to a different string inside aes()
+    geom_ribbon(data=pp_ci_data, aes(x=X, ymin=lower_CI, ymax=upper_CI, fill="Post. Pred. 95% CI"), alpha=0.1) +
+
+    facet_wrap(~method) +
+    
+    # 5. Define the colors manually
+    # We assign the color blue to "Mean Estimate"
+    scale_color_manual(name = "", values = c("Mean Estimate" = "blue")) +
+    
+    # We assign blue and red to the specific fill labels we created above
+    scale_fill_manual(name = "", values = c("Mean 95% CI" = "blue", "Post. Pred. 95% CI" = "red")) +
+
+    labs(
+        x = "Physical Activity (h/week)",
+        y = "Body Mass Index (kg/m^2)",
+        title = "Body Mass Index vs. Self Reported Physical Activity"
+    ) +
+    theme_light() + 
+    theme(
+        strip.background = element_rect(fill = "grey90", color = "black"),
+        strip.text = element_text(size = 12, color="black"),
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 12),
+        plot.title = element_text(size = 12, face="bold"),
+        axis.text = element_text(size=12),
+        axis.title = element_text(size=12, face="bold"),
+        # Optional: Place legend at the bottom or top if it takes up too much side space
+        legend.position = "bottom" 
+    ) +
+    # 6. Override the alpha in the legend so the colors are visible
+    # (Otherwise the legend squares might look too faint because of your alpha=0.1 setting)
+    guides(fill = guide_legend(override.aes = list(alpha = 0.5)))
+
+ggsave("BMIvsPA.png", width = 7, height = 4, dpi=600)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
