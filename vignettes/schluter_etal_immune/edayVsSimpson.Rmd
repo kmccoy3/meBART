@@ -11,7 +11,7 @@ library(cmdstanr)
 ```
 
 ```{r}
-blrme_model <- cmdstan_model("~/Documents/documents-main/research/rice_research/projects/meBART/codebase/meBART/vignettes/schluter_etal_immune/blrme_model.stan")
+blrme_model <- cmdstan_model("../blrme_model.stan")
 ```
 
 ```{r}
