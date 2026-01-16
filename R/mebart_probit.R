@@ -83,11 +83,19 @@
 #'
 #' @examples
 #' # Example usage:
-#' set.seed(42)
 #' x.train <- matrix(rnorm(1000), ncol = 10)
-#' y.train <- rnorm(100)
-#' result <- mebart(x.train, y.train, ntree = 50)
-#' print(result$yhat.train.mean)
+#' y.train <- rbinom(100, 1, 0.5)
+#' x.test <- matrix(rnorm(100), ncol = 10)
+#' y.test <- rbinom(10, 1, 0.5)
+#' mdl <- mebart_probit(x.train, y.train, x.test,
+#'                ndpost = 500,
+#'                ntree = 50,
+#'                meas_error_sigma = diag(10),
+#'                x_mu = matrix(0, nrow=10, ncol=1),
+#'                x_sigma = diag(10))
+#'  
+#' preds <- mdl$prob.test.mean
+#' print(paste0("Test Accuracy: ", mean((preds > 0.5) == y.test)))
 #'
 mebart_probit = function(x.train,
                  y.train,
