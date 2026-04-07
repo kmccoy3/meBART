@@ -16,6 +16,21 @@ blrme_model <- cmdstan_model("../blrme_model.stan")
 
 ```{r}
 
+## Uncomment if you have not downloaded data yet
+# url <- "https://static-content.springer.com/esm/art%3A10.1038%2Fs41586-020-2971-8/MediaObjects/41586_2020_2971_MOESM3_ESM.zip"
+# 
+# download.file(url, destfile = "schluter_etal_immune.zip")
+# 
+# # List files in the zip archive
+# zip_contents <- unzip("schluter_etal_immune.zip", list = TRUE)
+# 
+# # Filter out problematic files (e.g., those with "Icon" or "__MACOSX")
+# valid_files <- zip_contents$Name[!grepl("Icon|__MACOSX", zip_contents$Name)]
+# 
+# # Unzip only the valid files
+# unzip("schluter_etal_immune.zip", files = valid_files, exdir = "data", junkpaths = TRUE)
+
+
 ## Use this code to load in specific data files
 cWBC <- read_csv("./data/cWBC.csv", show_col_types = FALSE)
 cMISAMPLES <- read_csv("./data/cMISAMPLES.csv", show_col_types = FALSE)

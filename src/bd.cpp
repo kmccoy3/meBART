@@ -30,14 +30,14 @@ bool bd(tree &x, xinfo &xi, dinfo &di, pinfo &pi, double sigma,
     double PBx = getpb(x, xi, pi, goodbots); // prob of a birth at x, also updates goodbots
 
     if (gen.uniform() < PBx)
-    { // do birth or death
+    { // do birth or death // Im pretty sure this is just BIRTH
 
         //--------------------------------------------------
         // draw proposal
         tree::tree_p nx; // bottom node
         size_t v, c;     // variable and cutpoint
         double pr;       // part of metropolis ratio from proposal and prior
-        bprop(x, xi, pi, goodbots, PBx, nx, v, c, pr, nv, pv, aug, gen);
+        bprop(x, xi, pi, goodbots, PBx, nx, v, c, pr, nv, pv, aug, gen); // picks node, variable, and split point
 
         //--------------------------------------------------
         // compute sufficient statistics
@@ -79,7 +79,7 @@ bool bd(tree &x, xinfo &xi, dinfo &di, pinfo &pi, double sigma,
         }
     }
     else
-    {
+    { // do death
         //--------------------------------------------------
         // draw proposal
         double pr;       // part of metropolis ratio from proposal and prior

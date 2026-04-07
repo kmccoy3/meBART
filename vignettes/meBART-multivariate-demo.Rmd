@@ -142,11 +142,18 @@ df2$method <- "meBART"
 
 df <- rbind(df1, df2)
 
+```
+
+```{r}
+
 ggplot(df, aes(x = X1, y = X2, z = y)) +
     facet_wrap(~method) +
     geom_contour_filled(bins = 15) +
+    # scale_fill_viridis_d(option = 'turbo') +
     coord_fixed() +
     theme_minimal() +
     guides(fill = guide_legend(title = "Y Value")) +
     labs(title = "BART vs. meBART Prediction Contours", x = "X1", y = "X2")
+
+ggsave("meBART-2D-contours.png", width=8, height=4, dpi=800)
 ```

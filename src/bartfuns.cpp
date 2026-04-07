@@ -65,6 +65,8 @@ void makexinfo(size_t p, size_t n, double *x, xinfo &xi, int *nc)
 }
 //--------------------------------------------------
 // compute prob of a birth, goodbots will contain all the good bottom nodes
+// basically, outputs 1 if only 1 node, 0 if no good nodes (ie. not enough data in all bottom 
+// nodes), else pi.pb
 double getpb(tree &t, xinfo &xi, pinfo &pi, tree::npv &goodbots)
 {
     double pb;     // prob of birth to be returned
