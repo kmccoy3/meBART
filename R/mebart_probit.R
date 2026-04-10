@@ -62,7 +62,11 @@
 #' @param nkeeptreedraws An integer (default is equal to `ndpost`). The number of MCMC iterations to return for tree draws.
 #' @param printevery An integer (default is 100L). The number of iterations before progress is printed.
 #' @param transposed A logical value (default is FALSE). Used if called by `mc.wbart`.
-#'
+#' @param proposal_sigma A numeric value (default is `meas_error_sigma`). Covariance matrix of the proposal distribution.
+#' @param meas_error_sigma A numeric matrix. Covariance matrix of the measurement error, must be square and match the number of columns in `x.train`.
+#' @param x_mu A numeric column vector. Mean of the explanatory variables.
+#' @param x_sigma A numeric matrix. Covariance matrix of the explanatory variables.
+#' 
 #' @return A list with the following elements:
 #' \item{mu}{The mean of the outcome variable `y.train`, centered back in the predictions.}
 #' \item{yhat.train.mean}{The mean of the posterior predictions for the training data.}

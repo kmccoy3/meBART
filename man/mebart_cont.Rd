@@ -151,7 +151,7 @@ This function specifically handles \emph{continuous} output data.
 set.seed(0)
 x.train <- matrix(rnorm(1000), ncol = 10)
 y.train <- rnorm(100)
-mdl <- mebart(x.train, y.train,
+mdl <- mebart_cont(x.train, y.train,
               ndpost = 500,
               ntree = 50,
               meas_error_sigma = diag(10),

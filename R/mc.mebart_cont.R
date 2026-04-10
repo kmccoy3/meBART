@@ -58,7 +58,11 @@
 #' @param transposed Logical. If TRUE, the data is transposed.
 #' @param mc.cores Number of cores to use for parallel processing.
 #' @param nice Nice level for the process.
-#' @param seed Random seed for reproducibility.
+#' @param seed Random seed for reproducibility. 
+#' @param proposal_sigma A numeric value (default is `meas_error_sigma`). Covariance matrix of the proposal distribution.
+#' @param meas_error_sigma A numeric matrix. Covariance matrix of the measurement error, must be square and match the number of columns in `x.train`.
+#' @param x_mu A numeric column vector. Mean of the explanatory variables.
+#' @param x_sigma A numeric matrix. Covariance matrix of the explanatory variables.
 #' 
 #' @return A list containing the posterior samples, predictions, and other information.
 #' 

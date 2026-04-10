@@ -94,6 +94,14 @@ mebart_probit(
 
 \item{transposed}{A logical value (default is FALSE). Used if called by `mc.wbart`.}
 
+\item{proposal_sigma}{A numeric value (default is `meas_error_sigma`). Covariance matrix of the proposal distribution.}
+
+\item{meas_error_sigma}{A numeric matrix. Covariance matrix of the measurement error, must be square and match the number of columns in `x.train`.}
+
+\item{x_mu}{A numeric column vector. Mean of the explanatory variables.}
+
+\item{x_sigma}{A numeric matrix. Covariance matrix of the explanatory variables.}
+
 \item{sigest}{A numeric value (default is NA). Prior estimate for sigma; if NA, it is estimated from the data.}
 
 \item{sigdf}{A numeric value (default is 3). Degrees of freedom for the sigma prior.}
@@ -133,10 +141,18 @@ This function specifically handles \emph{binary} output data.
 }
 \examples{
 # Example usage:
-set.seed(42)
 x.train <- matrix(rnorm(1000), ncol = 10)
-y.train <- rnorm(100)
-result <- mebart(x.train, y.train, ntree = 50)
-print(result$yhat.train.mean)
+y.train <- rbinom(100, 1, 0.5)
+x.test <- matrix(rnorm(100), ncol = 10)
+y.test <- rbinom(10, 1, 0.5)
+mdl <- mebart_probit(x.train, y.train, x.test,
+               ndpost = 500,
+               ntree = 50,
+               meas_error_sigma = diag(10),
+               x_mu = matrix(0, nrow=10, ncol=1),
+               x_sigma = diag(10))
+ 
+preds <- mdl$prob.test.mean
+print(paste0("Test Accuracy: ", mean((preds > 0.5) == y.test)))
 
 }

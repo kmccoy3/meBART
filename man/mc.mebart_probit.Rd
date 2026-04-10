@@ -33,7 +33,11 @@ mc.mebart_probit(
   transposed = FALSE,
   mc.cores = 2L,
   nice = 19L,
-  seed = 99L
+  seed = 99L,
+  proposal_sigma = meas_error_sigma,
+  meas_error_sigma,
+  x_mu,
+  x_sigma
 )
 }
 \arguments{
@@ -92,6 +96,14 @@ mc.mebart_probit(
 \item{nice}{Nice level for the process.}
 
 \item{seed}{Random seed for reproducibility.}
+
+\item{proposal_sigma}{A numeric value (default is `meas_error_sigma`). Covariance matrix of the proposal distribution.}
+
+\item{meas_error_sigma}{A numeric matrix. Covariance matrix of the measurement error, must be square and match the number of columns in `x.train`.}
+
+\item{x_mu}{A numeric column vector. Mean of the explanatory variables.}
+
+\item{x_sigma}{A numeric matrix. Covariance matrix of the explanatory variables.}
 
 \item{sigest}{Initial estimate of the error variance.}
 

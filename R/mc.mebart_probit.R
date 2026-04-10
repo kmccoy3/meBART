@@ -59,6 +59,10 @@
 #' @param mc.cores Number of cores to use for parallel processing.
 #' @param nice Nice level for the process.
 #' @param seed Random seed for reproducibility.
+#' @param proposal_sigma A numeric value (default is `meas_error_sigma`). Covariance matrix of the proposal distribution.
+#' @param meas_error_sigma A numeric matrix. Covariance matrix of the measurement error, must be square and match the number of columns in `x.train`.
+#' @param x_mu A numeric column vector. Mean of the explanatory variables.
+#' @param x_sigma A numeric matrix. Covariance matrix of the explanatory variables.
 #' 
 #' @return A list containing the posterior samples, predictions, and other information.
 #' 
@@ -98,7 +102,12 @@ mc.mebart_probit <- function(x.train,
                      ##    treesaslists=FALSE,
                      mc.cores = 2L,
                      nice = 19L,
-                     seed = 99L) # TODO: Add newly added parameters
+                     seed = 99L,
+                     proposal_sigma = meas_error_sigma, # standard deviation of the proposal distribution
+                     meas_error_sigma, # standard deviation of the measurement error
+                     x_mu,
+                     x_sigma
+                     )
 {
     if (.Platform$OS.type != 'unix')
         stop('parallel::mcparallel/mccollect do not exist on windows')
@@ -172,8 +181,12 @@ mc.mebart_probit <- function(x.train,
                 ## nkeeptrain=mc.nkeep, nkeeptest=mc.nkeep,
                 ## nkeeptestmean=mc.nkeep, nkeeptreedraws=mc.nkeep,
                 printevery = printevery,
-                transposed = TRUE
-            ) # TODO: Add newly added parameters
+                transposed = TRUE,
+                    proposal_sigma = meas_error_sigma, # standard deviation of the proposal distribution
+                   meas_error_sigma = meas_error_sigma, # standard deviation of the measurement error
+                   x_mu = x_mu,
+                   x_sigma = x_sigma
+            ) 
         }, ##treesaslists=treesaslists)},
         silent = (i != 1))
         ## to avoid duplication of output
