@@ -20,42 +20,46 @@
 ## https://www.R-project.org/Licenses/GPL-2
 
 
-#' @title (Multi-core) Fit a meBART Model with \emph{Continuous} Output Data
-#' 
-#' @description This function performs Bayesian Additive Regression Trees (BART) using multiple cores.
-#' 
-#' @param x.train Training data matrix.
-#' @param y.train Response variable for training data.
-#' @param x.test Test data matrix (optional).
-#' @param sparse Logical. If TRUE, sparse matrix is used.
-#' @param theta Parameter for the model.
-#' @param omega Parameter for the model.
-#' @param a Parameter for the model.
-#' @param b Parameter for the model.
-#' @param augment Logical. If TRUE, augmentation is used.
-#' @param rho Parameter for the model.
-#' @param xinfo Information about the model matrix.
-#' @param usequants Logical. If TRUE, quantiles are used for cut points.
-#' @param cont Logical. If TRUE, continuous variables are treated as such.
-#' @param rm.const Logical. If TRUE, constant variables are removed.
-#' @param sigest Initial estimate of the error variance.
-#' @param sigdf Degrees of freedom for the error variance.
-#' @param sigquant Quantile for the error variance.
-#' @param k Parameter for the model.
-#' @param power Parameter for the model.
-#' @param base Parameter for the model.
-#' @param sigmaf Parameter for the model.
-#' @param lambda Parameter for the model.
-#' @param fmean Mean of the response variable.
-#' @param w Weights for the response variable.
-#' @param ntree Number of trees to grow.
-#' @param numcut Number of cut points for each variable.
-#' @param ndpost Number of posterior samples to draw.
-#' @param nskip Number of samples to skip.
-#' @param keepevery Keep every nth sample.
-#' @param printevery Print progress every nth sample.
-#' @param keeptrainfits Logical. If TRUE, training fits are kept.
-#' @param transposed Logical. If TRUE, the data is transposed.
+#' @title Fit a meBART Model with \emph{Continuous} Output Data (Multi-core Version)
+#'
+#' @description This function fits a Bayesian Additive Regression Tree (BART) model which also also models measurement error in the explanatory variables. 
+#' This function specifically handles \emph{continuous} output data.
+#'
+#' @param x.train A matrix or data frame containing the explanatory variables for the training data.
+#' @param y.train An integer vector containing the binary outcome variable for the training data.
+#' @param x.test A matrix or data frame of test data (optional, default is an empty matrix). The structure should match `x.train`.
+#' @param sparse Whether to use Dirichlet additive regression trees (DART).
+#' @param theta alpha parameter in Linero 2018 equation (2), governs DART prior (DART ONLY).
+#' @param omega omega parameter for DART.
+#' @param a Beta prior parameters, used in DART only.
+#' @param b Beta prior parameters, used in DART only.
+#' @param augment FALSE uses Assumption 2.2 in Linero 2018, TRUE uses assumption 2.1 (DART ONLY).
+#' @param rho rho sparsity parameter, used in DART only.
+#' @param xinfo A matrix of cutpoints (default is an empty matrix). Specifies cutpoints for the model if desired.
+#' @param usequants If TRUE, uniform quantiles are used for cutpoints; otherwise, uniform cutpoints are used.
+#' @param cont Specifies if all variables are continuous.
+#' @param rm.const If TRUE, removes constant columns from `x.train`.
+#' @param sigest Prior estimate for sigma; if NA, it is estimated from the data.
+#' @param sigdf  Degrees of freedom for the sigma prior.
+#' @param sigquant Quantile for the sigma prior.
+#' @param k Prior parameter for the mean of the output data.
+#' @param power Power parameter for the BART tree-depth prior (beta in original BART paper).
+#' @param base Base parameter for the BART tree-depth prior (alpha in original BART paper).
+#' @param sigmaf Parameter for the sigma prior, not scaled by the number of trees.
+#' @param lambda Scale parameter used in the sigma prior.
+#' @param fmean A numeric value (default is the mean of `y.train`). The mean of the output variable `y.train`.
+#' @param w A numeric vector (default is a vector of ones). Weights to multiply the standard deviation. Must be of length n.
+#' @param ntree The number of trees to use in the model.
+#' @param numcut The number of cutpoints to consider for each variable.
+#' @param ndpost The number of posterior draws to return.
+#' @param nskip The number of observations for burn-in (MCMC).
+#' @param keepevery The thinning parameter for MCMC.
+#' @param nkeeptrain Number of training predictions to keep.
+#' @param nkeeptest Number of test predictions to keep.
+#' @param nkeeptestmean The number of MCMC iterations to return for the test mean.
+#' @param nkeeptreedraws Number of tree draws to keep.
+#' @param printevery How often to print progress during MCMC.
+#' @param transposed Is the input data transposed? Used if called by `mc.wbart`.
 #' @param mc.cores Number of cores to use for parallel processing.
 #' @param nice Nice level for the process.
 #' @param seed Random seed for reproducibility. 
@@ -63,15 +67,42 @@
 #' @param meas_error_sigma A numeric matrix. Covariance matrix of the measurement error, must be square and match the number of columns in `x.train`.
 #' @param x_mu A numeric column vector. Mean of the explanatory variables.
 #' @param x_sigma A numeric matrix. Covariance matrix of the explanatory variables.
-#' 
-#' @return A list containing the posterior samples, predictions, and other information.
-#' 
+#'
+#' @return A list with the following elements:
+#' \item{mu}{The mean of the outcome variable `y.train`.}
+#' \item{yhat.train.mean}{The mean of the posterior predictions for the training data.}
+#' \item{yhat.train}{The posterior predictions for the training data.}
+#' \item{yhat.test.mean}{The mean of the posterior predictions for the test data.}
+#' \item{yhat.test}{The posterior predictions for the test data.}
+#' \item{varcount}{An (ndpost * p) matrix of variable counts in the model.}
+#' \item{varprob}{An (ndpost * p) matrix of variable probabilities in the model.}
+#' \item{treedraws}{A list of posterior tree draws.}
+#' \item{x_draws}{Tensor with posterior draws for the training data.}
+#' \item{acceptances}{Whether or not the proposal was accepted.}
+#' \item{proc.time}{The time taken for the C++ code to run.}
+#' \item{varcount.mean}{The mean of the variable counts.}
+#' \item{varprob.mean}{The mean of the variable probabilities.}
+#' \item{rm.const}{A vector specifying which columns were removed from `x.train`.}
+#' \item{ndpost}{The number of posterior draws returned.}
 #' @export
 #' 
 #' @importFrom parallel detectCores
 #' @importFrom tools psnice
 #' @importFrom abind abind
-#' 
+#'
+#' @examples
+#' # Example usage:
+#' set.seed(0)
+#' x.train <- matrix(rnorm(1000), ncol = 10)
+#' y.train <- rnorm(100)
+#' mdl <- mc.mebart_cont(x.train, y.train,
+#'               ndpost = 500,
+#'               ntree = 50,
+#'               meas_error_sigma = diag(10),
+#'               x_mu = matrix(0, nrow=10, ncol=1),
+#'               x_sigma = diag(10))
+#' preds <- mdl$yhat.train.mean
+#' print(paste0("Training MSE: ", round(mean((y.train - preds)^2), 3)))
 mc.mebart_cont <- function(
     x.train, 
     y.train, 
