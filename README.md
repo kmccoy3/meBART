@@ -1,5 +1,6 @@
 
-# <img src="images/meBART_sticker.png" align="right" height="139" /> measurement error Bayesian additive regression trees (meBART)
+# <img src="images/meBART_sticker.png" align="right" height="200" /> measurement error Bayesian additive regression trees (meBART)
+
 
 We propose measurement error Bayesian additive regression trees (meBART), a novel extension to the BART model ([Chipman et al., 2010](https://doi.org/10.1214/09-AOAS285)) that directly incorporates measurement error in the independent variable(s). BART assumes that data is generated according to some unknown function $f$ that can be modeled as a sum of decision trees:
 
