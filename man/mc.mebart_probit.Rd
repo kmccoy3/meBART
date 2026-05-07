@@ -2,7 +2,7 @@
 % Please edit documentation in R/mc.mebart_probit.R
 \name{mc.mebart_probit}
 \alias{mc.mebart_probit}
-\title{Multicore PROBIT BART}
+\title{Fit a meBART Model with \emph{Binary} Output Data (Multi-core Version)}
 \usage{
 mc.mebart_probit(
   x.train,
@@ -41,61 +41,63 @@ mc.mebart_probit(
 )
 }
 \arguments{
-\item{x.train}{Training data matrix.}
+\item{x.train}{A matrix or data frame containing the explanatory variables for the training data.}
 
-\item{y.train}{Response variable for training data.}
+\item{y.train}{An integer vector containing the binary outcome variable for the training data.}
 
-\item{x.test}{Test data matrix (optional).}
+\item{x.test}{A matrix or data frame of test data (optional, default is an empty matrix). The structure should match `x.train`.}
 
-\item{sparse}{Logical. If TRUE, sparse matrix is used.}
+\item{sparse}{Whether to use Dirichlet additive regression trees (DART).}
 
-\item{theta}{Parameter for the model.}
+\item{theta}{alpha parameter in Linero 2018 equation (2), governs DART prior (DART ONLY).}
 
-\item{omega}{Parameter for the model.}
+\item{omega}{omega parameter for DART.}
 
-\item{a}{Parameter for the model.}
+\item{a}{Beta prior parameters, used in DART only.}
 
-\item{b}{Parameter for the model.}
+\item{b}{Beta prior parameters, used in DART only.}
 
-\item{augment}{Logical. If TRUE, augmentation is used.}
+\item{augment}{FALSE uses Assumption 2.2 in Linero 2018, TRUE uses assumption 2.1 (DART ONLY).}
 
-\item{rho}{Parameter for the model.}
+\item{rho}{rho sparsity parameter, used in DART only.}
 
-\item{xinfo}{Information about the model matrix.}
+\item{xinfo}{A matrix of cutpoints (default is an empty matrix). Specifies cutpoints for the model if desired.}
 
-\item{usequants}{Logical. If TRUE, quantiles are used for cut points.}
+\item{usequants}{If TRUE, uniform quantiles are used for cutpoints; otherwise, uniform cutpoints are used.}
 
-\item{cont}{Logical. If TRUE, continuous variables are treated as such.}
+\item{cont}{Specifies if all variables are continuous.}
 
-\item{rm.const}{Logical. If TRUE, constant variables are removed.}
+\item{rm.const}{If TRUE, removes constant columns from `x.train`.}
 
-\item{k}{Parameter for the model.}
+\item{k}{Prior parameter for the mean of the output data.}
 
-\item{power}{Parameter for the model.}
+\item{power}{Power parameter for the BART tree-depth prior (beta in original BART paper).}
 
-\item{base}{Parameter for the model.}
+\item{base}{Base parameter for the BART tree-depth prior (alpha in original BART paper).}
 
-\item{ntree}{Number of trees to grow.}
+\item{binaryOffset}{Offset for binary outcomes. Defaults to Phi(mean(y.train)).}
 
-\item{numcut}{Number of cut points for each variable.}
+\item{ntree}{The number of trees to use in the model.}
 
-\item{ndpost}{Number of posterior samples to draw.}
+\item{numcut}{The number of cutpoints to consider for each variable.}
 
-\item{nskip}{Number of samples to skip.}
+\item{ndpost}{The number of posterior draws to return.}
 
-\item{keepevery}{Keep every nth sample.}
+\item{nskip}{The number of observations for burn-in (MCMC).}
 
-\item{printevery}{Print progress every nth sample.}
+\item{keepevery}{The thinning parameter for MCMC.}
 
-\item{keeptrainfits}{Logical. If TRUE, training fits are kept.}
+\item{printevery}{How often to print progress during MCMC.}
 
-\item{transposed}{Logical. If TRUE, the data is transposed.}
+\item{keeptrainfits}{Whether to keep the training fits in the output.}
 
-\item{mc.cores}{Number of cores to use for parallel processing.}
+\item{transposed}{Is the input data transposed? Used if called by `mc.wbart`.}
 
-\item{nice}{Nice level for the process.}
+\item{mc.cores}{The number of cores to use for parallel processing.}
 
-\item{seed}{Random seed for reproducibility.}
+\item{nice}{The niceness level for the parallel processes (default is 19, which is the lowest priority).}
+
+\item{seed}{The random seed for reproducibility.}
 
 \item{proposal_sigma}{A numeric value (default is `meas_error_sigma`). Covariance matrix of the proposal distribution.}
 
@@ -104,24 +106,44 @@ mc.mebart_probit(
 \item{x_mu}{A numeric column vector. Mean of the explanatory variables.}
 
 \item{x_sigma}{A numeric matrix. Covariance matrix of the explanatory variables.}
-
-\item{sigest}{Initial estimate of the error variance.}
-
-\item{sigdf}{Degrees of freedom for the error variance.}
-
-\item{sigquant}{Quantile for the error variance.}
-
-\item{sigmaf}{Parameter for the model.}
-
-\item{lambda}{Parameter for the model.}
-
-\item{fmean}{Mean of the response variable.}
-
-\item{w}{Weights for the response variable.}
 }
 \value{
-A list containing the posterior samples, predictions, and other information.
+A list with the following elements:
+\item{yhat.train}{An (ndpost * n) matrix of the posterior predictions for the training data.}
+\item{yhat.test}{An (ndpost * np) matrix of the posterior predictions for the test data.}
+\item{varcount}{An (ndpost * p) matrix of variable counts in the model.}
+\item{varprob}{An (ndpost * p) matrix of variable probabilities in the model.}
+\item{treedraws}{A list of posterior tree draws.}
+\item{x_draws}{Tensor with posterior draws for the training data.}
+\item{acceptances}{Whether or not the proposal was accepted.}
+\item{proc.time}{The time taken for the C++ code to run.}
+\item{prob.train}{An (ndpost * n) matrix of the posterior probabilities for the training data.}
+\item{prob.train.mean}{The mean of the posterior probabilities for the training data.}
+\item{prob.test}{An (ndpost * np) matrix of the posterior probabilities for the test data.}
+\item{prob.test.mean}{The mean of the posterior probabilities for the test data.}
+\item{varcount.mean}{The mean of the variable counts.}
+\item{varprob.mean}{The mean of the variable probabilities.}
+\item{rm.const}{A vector specifying which columns were removed from `x.train`.}
+\item{binaryOffset}{The offset used for binary outcomes.}
 }
 \description{
-This function performs Bayesian Additive Regression Trees (BART) using multiple cores.
+This function fits a Bayesian Additive Regression Tree (BART) model which also also models measurement error in the explanatory variables. This function specifically handles \emph{binary} output data.
+}
+\examples{
+# Example usage:
+x.train <- matrix(rnorm(1000), ncol = 10)
+y.train <- rbinom(100, 1, 0.5)
+x.test <- matrix(rnorm(100), ncol = 10)
+y.test <- rbinom(10, 1, 0.5)
+mdl <- mc.mebart_probit(x.train, y.train, x.test,
+               ndpost = 500,
+               ntree = 50,
+               meas_error_sigma = diag(10),
+               x_mu = matrix(0, nrow=10, ncol=1),
+               x_sigma = diag(10),
+               mc.cores = 2)
+ 
+preds <- mdl$prob.test.mean
+print(paste0("Test Accuracy: ", mean((preds > 0.5) == y.test)))
+
 }

@@ -1,8 +1,8 @@
 ---
-title: "mebart-multivariate-demo"
+title: "meBART-multivariate-demo"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{mebart-multivariate-demo}
+  %\VignetteIndexEntry{meBART-multivariate-demo}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -17,6 +17,7 @@ knitr::opts_chunk$set(
 ```{r setup}
 library(tidyverse)
 library(MASS)
+library(latex2exp)
 ```
 
 # Generate Synthetic Data

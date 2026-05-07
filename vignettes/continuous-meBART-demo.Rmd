@@ -1,8 +1,8 @@
 ---
-title: "continuous-mebart-demo"
+title: "continuous-meBART-demo"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{continuous-mebart-demo}
+  %\VignetteIndexEntry{continuous-meBART-demo}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

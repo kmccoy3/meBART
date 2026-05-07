@@ -47,10 +47,8 @@
 #' @param ndpost The number of posterior draws to return.
 #' @param nskip The number of observations for burn-in (MCMC).
 #' @param keepevery The thinning parameter for MCMC.
-#' @param nkeeptrain Number of training predictions to keep.
-#' @param nkeeptest Number of test predictions to keep.
-#' @param nkeeptreedraws Number of tree draws to keep.
 #' @param printevery How often to print progress during MCMC.
+#' @param keeptrainfits Whether to keep the training fits in the output.
 #' @param transposed Is the input data transposed? Used if called by `mc.wbart`.
 #' @param mc.cores The number of cores to use for parallel processing.
 #' @param nice The niceness level for the parallel processes (default is 19, which is the lowest priority).

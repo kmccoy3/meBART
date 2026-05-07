@@ -5,3 +5,9 @@
 
 ^doc$
 ^Meta$
+^vignettes/blrme_model
+^vignettes/results
+^images
+^scratch
+^.github
+^.vscode

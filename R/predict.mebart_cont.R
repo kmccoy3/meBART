@@ -40,7 +40,7 @@
 #' set.seed(0)
 #' x.train <- matrix(rnorm(1000), ncol = 10)
 #' y.train <- rnorm(100)
-#' mdl <- meBART::mebart(x.train, y.train,
+#' mdl <- meBART::mebart_cont(x.train, y.train,
 #'               ndpost = 500,
 #'               ntree = 50,
 #'               meas_error_sigma = diag(10),

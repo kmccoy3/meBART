@@ -2,7 +2,7 @@
 % Please edit documentation in R/mc.mebart_cont.R
 \name{mc.mebart_cont}
 \alias{mc.mebart_cont}
-\title{(Multi-core) Fit a meBART Model with \emph{Continuous} Output Data}
+\title{Fit a meBART Model with \emph{Continuous} Output Data (Multi-core Version)}
 \usage{
 mc.mebart_cont(
   x.train,
@@ -47,69 +47,69 @@ mc.mebart_cont(
 )
 }
 \arguments{
-\item{x.train}{Training data matrix.}
+\item{x.train}{A matrix or data frame containing the explanatory variables for the training data.}
 
-\item{y.train}{Response variable for training data.}
+\item{y.train}{An integer vector containing the binary outcome variable for the training data.}
 
-\item{x.test}{Test data matrix (optional).}
+\item{x.test}{A matrix or data frame of test data (optional, default is an empty matrix). The structure should match `x.train`.}
 
-\item{sparse}{Logical. If TRUE, sparse matrix is used.}
+\item{sparse}{Whether to use Dirichlet additive regression trees (DART).}
 
-\item{theta}{Parameter for the model.}
+\item{theta}{alpha parameter in Linero 2018 equation (2), governs DART prior (DART ONLY).}
 
-\item{omega}{Parameter for the model.}
+\item{omega}{omega parameter for DART.}
 
-\item{a}{Parameter for the model.}
+\item{a}{Beta prior parameters, used in DART only.}
 
-\item{b}{Parameter for the model.}
+\item{b}{Beta prior parameters, used in DART only.}
 
-\item{augment}{Logical. If TRUE, augmentation is used.}
+\item{augment}{FALSE uses Assumption 2.2 in Linero 2018, TRUE uses assumption 2.1 (DART ONLY).}
 
-\item{rho}{Parameter for the model.}
+\item{rho}{rho sparsity parameter, used in DART only.}
 
-\item{xinfo}{Information about the model matrix.}
+\item{xinfo}{A matrix of cutpoints (default is an empty matrix). Specifies cutpoints for the model if desired.}
 
-\item{usequants}{Logical. If TRUE, quantiles are used for cut points.}
+\item{usequants}{If TRUE, uniform quantiles are used for cutpoints; otherwise, uniform cutpoints are used.}
 
-\item{cont}{Logical. If TRUE, continuous variables are treated as such.}
+\item{cont}{Specifies if all variables are continuous.}
 
-\item{rm.const}{Logical. If TRUE, constant variables are removed.}
+\item{rm.const}{If TRUE, removes constant columns from `x.train`.}
 
-\item{sigest}{Initial estimate of the error variance.}
+\item{sigest}{Prior estimate for sigma; if NA, it is estimated from the data.}
 
-\item{sigdf}{Degrees of freedom for the error variance.}
+\item{sigdf}{Degrees of freedom for the sigma prior.}
 
-\item{sigquant}{Quantile for the error variance.}
+\item{sigquant}{Quantile for the sigma prior.}
 
-\item{k}{Parameter for the model.}
+\item{k}{Prior parameter for the mean of the output data.}
 
-\item{power}{Parameter for the model.}
+\item{power}{Power parameter for the BART tree-depth prior (beta in original BART paper).}
 
-\item{base}{Parameter for the model.}
+\item{base}{Base parameter for the BART tree-depth prior (alpha in original BART paper).}
 
-\item{sigmaf}{Parameter for the model.}
+\item{sigmaf}{Parameter for the sigma prior, not scaled by the number of trees.}
 
-\item{lambda}{Parameter for the model.}
+\item{lambda}{Scale parameter used in the sigma prior.}
 
-\item{fmean}{Mean of the response variable.}
+\item{fmean}{A numeric value (default is the mean of `y.train`). The mean of the output variable `y.train`.}
 
-\item{w}{Weights for the response variable.}
+\item{w}{A numeric vector (default is a vector of ones). Weights to multiply the standard deviation. Must be of length n.}
 
-\item{ntree}{Number of trees to grow.}
+\item{ntree}{The number of trees to use in the model.}
 
-\item{numcut}{Number of cut points for each variable.}
+\item{numcut}{The number of cutpoints to consider for each variable.}
 
-\item{ndpost}{Number of posterior samples to draw.}
+\item{ndpost}{The number of posterior draws to return.}
 
-\item{nskip}{Number of samples to skip.}
+\item{nskip}{The number of observations for burn-in (MCMC).}
 
-\item{keepevery}{Keep every nth sample.}
+\item{keepevery}{The thinning parameter for MCMC.}
 
-\item{printevery}{Print progress every nth sample.}
+\item{printevery}{How often to print progress during MCMC.}
 
-\item{keeptrainfits}{Logical. If TRUE, training fits are kept.}
+\item{keeptrainfits}{Whether to keep the training fits in the output.}
 
-\item{transposed}{Logical. If TRUE, the data is transposed.}
+\item{transposed}{Is the input data transposed? Used if called by `mc.wbart`.}
 
 \item{mc.cores}{Number of cores to use for parallel processing.}
 
@@ -126,8 +126,38 @@ mc.mebart_cont(
 \item{x_sigma}{A numeric matrix. Covariance matrix of the explanatory variables.}
 }
 \value{
-A list containing the posterior samples, predictions, and other information.
+A list with the following elements:
+\item{mu}{The mean of the outcome variable `y.train`.}
+\item{yhat.train.mean}{The mean of the posterior predictions for the training data.}
+\item{yhat.train}{The posterior predictions for the training data.}
+\item{yhat.test.mean}{The mean of the posterior predictions for the test data.}
+\item{yhat.test}{The posterior predictions for the test data.}
+\item{varcount}{An (ndpost * p) matrix of variable counts in the model.}
+\item{varprob}{An (ndpost * p) matrix of variable probabilities in the model.}
+\item{treedraws}{A list of posterior tree draws.}
+\item{x_draws}{Tensor with posterior draws for the training data.}
+\item{acceptances}{Whether or not the proposal was accepted.}
+\item{proc.time}{The time taken for the C++ code to run.}
+\item{varcount.mean}{The mean of the variable counts.}
+\item{varprob.mean}{The mean of the variable probabilities.}
+\item{rm.const}{A vector specifying which columns were removed from `x.train`.}
+\item{ndpost}{The number of posterior draws returned.}
 }
 \description{
-This function performs Bayesian Additive Regression Trees (BART) using multiple cores.
+This function fits a Bayesian Additive Regression Tree (BART) model which also also models measurement error in the explanatory variables. 
+This function specifically handles \emph{continuous} output data.
+}
+\examples{
+# Example usage:
+set.seed(0)
+x.train <- matrix(rnorm(1000), ncol = 10)
+y.train <- rnorm(100)
+mdl <- mc.mebart_cont(x.train, y.train,
+              ndpost = 500,
+              ntree = 50,
+              meas_error_sigma = diag(10),
+              x_mu = matrix(0, nrow=10, ncol=1),
+              x_sigma = diag(10))
+preds <- mdl$yhat.train.mean
+print(paste0("Training MSE: ", round(mean((y.train - preds)^2), 3)))
 }

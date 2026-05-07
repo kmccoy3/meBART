@@ -6,14 +6,18 @@ Date: 2025-02-18
 Description: Bayesian Additive Regression Trees (BART) sum-of-trees model expanded to incorporate measurement errors in the independent variables. It is a modification of the BART package available at https://cran.r-project.org/package=BART.
 License: GPL (>= 2)
 Depends: R (>= 3.6)
-Imports: Rcpp (>= 0.12.3), parallel, tools
+Imports: Rcpp (>= 0.12.3), parallel, tools, abind
 LinkingTo: Rcpp,
     RcppArmadillo
 Suggests: 
     MASS,
     knitr,
     rmarkdown,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    BART,
+    reshape2,
+    tidyverse,
+    latex2exp
 VignetteBuilder: knitr
 NeedsCompilation: yes
 Config/testthat/edition: 3

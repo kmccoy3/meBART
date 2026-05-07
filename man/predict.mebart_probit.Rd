@@ -32,7 +32,7 @@ This function makes predictions using a meBART model with \emph{binary} outcomes
 set.seed(0)
 x.train <- matrix(rnorm(1000), ncol = 10)
 y.train <- rbinom(100, 1, 0.5)
-mdl <- meBART::pbart(x.train, y.train,
+mdl <- meBART::mebart_probit(x.train, y.train,
               ndpost = 500,
               ntree = 50,
               meas_error_sigma = diag(10),

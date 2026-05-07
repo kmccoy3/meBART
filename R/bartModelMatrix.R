@@ -38,6 +38,8 @@
 #' them, use the xinfo argument to specify a list (matrix) where the items (rows) are the 
 #' covariates and the contents of the items (columns) are the cutpoints.
 #' 
+#' @importFrom stats quantile
+#' 
 #' @return A list containing the cleaned input data, number of cut points, removed variables, and cut point information.
 #' 
 #' @keywords internal

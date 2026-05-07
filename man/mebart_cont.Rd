@@ -49,73 +49,73 @@ mebart_cont(
 \arguments{
 \item{x.train}{A matrix or data frame containing the explanatory variables for the training data.}
 
-\item{y.train}{A numeric vector containing the continuous outcome variable for the training data.}
+\item{y.train}{An integer vector containing the binary outcome variable for the training data.}
 
 \item{x.test}{A matrix or data frame of test data (optional, default is an empty matrix). The structure should match `x.train`.}
 
-\item{sparse}{A logical value (default is FALSE). If TRUE, uses a Dirichlet prior for variable selection, i.e. performs DART.}
+\item{sparse}{Whether to use Dirichlet additive regression trees (DART).}
 
-\item{theta}{A numeric value (default is 0). alpha parameter in Linero 2018 equation (2), governs DART prior (DART ONLY)}
+\item{theta}{alpha parameter in Linero 2018 equation (2), governs DART prior (DART ONLY).}
 
-\item{omega}{A numeric value (default is 1). Unknown DART parameter. (DART ONLY)}
+\item{omega}{omega parameter for DART.}
 
-\item{a}{A numeric value (default is 0.5). Beta prior parameter. (DART ONLY)}
+\item{a}{Beta prior parameters, used in DART only.}
 
-\item{b}{A numeric value (default is 1). Beta prior parameter. (DART ONLY)}
+\item{b}{Beta prior parameters, used in DART only.}
 
-\item{augment}{A logical value (default is FALSE). FALSE uses Assumption 2.2 in Linero 2018, TRUE uses assumption 2.1 (DART ONLY)}
+\item{augment}{FALSE uses Assumption 2.2 in Linero 2018, TRUE uses assumption 2.1 (DART ONLY).}
 
-\item{rho}{A numeric value (default is NULL). Sparsity parameter used in DART. (DART ONLY)}
+\item{rho}{rho sparsity parameter, used in DART only.}
 
 \item{xinfo}{A matrix of cutpoints (default is an empty matrix). Specifies cutpoints for the model if desired.}
 
-\item{usequants}{A logical value (default is FALSE). If TRUE, quantiles are used for cutpoints; otherwise, uniform cutpoints are used.}
+\item{usequants}{If TRUE, uniform quantiles are used for cutpoints; otherwise, uniform cutpoints are used.}
 
-\item{cont}{A logical value (default is FALSE). Specifies if all variables are continuous.}
+\item{cont}{Specifies if all variables are continuous.}
 
-\item{rm.const}{A logical value (default is TRUE). If TRUE, removes constant columns from `x.train`.}
+\item{rm.const}{If TRUE, removes constant columns from `x.train`.}
 
-\item{sigest}{A numeric value (default is NA). Prior estimate for sigma; if NA, it is estimated from the data.}
+\item{sigest}{Prior estimate for sigma; if NA, it is estimated from the data.}
 
-\item{sigdf}{A numeric value (default is 3). Degrees of freedom for the sigma prior.}
+\item{sigdf}{Degrees of freedom for the sigma prior.}
 
-\item{sigquant}{A numeric value (default is 0.90). Quantile for the sigma prior.}
+\item{sigquant}{Quantile for the sigma prior.}
 
-\item{k}{A numeric value (default is 2.0). Prior parameter for leaf nodes.}
+\item{k}{Prior parameter for the mean of the output data.}
 
-\item{power}{A numeric value (default is 2.0). Tree depth prior, beta in CGM18.}
+\item{power}{Power parameter for the BART tree-depth prior (beta in original BART paper).}
 
-\item{base}{A numeric value (default is 0.95). Tree depth prior, alpha in CGM18.}
+\item{base}{Base parameter for the BART tree-depth prior (alpha in original BART paper).}
 
-\item{sigmaf}{A numeric value (default is NA). Parameter for the sigma prior, not scaled by the number of trees.}
+\item{sigmaf}{Parameter for the sigma prior, not scaled by the number of trees.}
 
-\item{lambda}{A numeric value (default is NA). Scale parameter used in the sigma prior.}
+\item{lambda}{Scale parameter used in the sigma prior.}
 
 \item{fmean}{A numeric value (default is the mean of `y.train`). The mean of the output variable `y.train`.}
 
 \item{w}{A numeric vector (default is a vector of ones). Weights to multiply the standard deviation. Must be of length n.}
 
-\item{ntree}{An integer (default is 200L). The number of trees to use in the model.}
+\item{ntree}{The number of trees to use in the model.}
 
-\item{numcut}{An integer (default is 100L). The number of cutpoints to consider for each variable.}
+\item{numcut}{The number of cutpoints to consider for each variable.}
 
-\item{ndpost}{An integer (default is 1000L). The number of posterior draws to return.}
+\item{ndpost}{The number of posterior draws to return.}
 
-\item{nskip}{An integer (default is 100L). The number of observations for burn-in (MCMC).}
+\item{nskip}{The number of observations for burn-in (MCMC).}
 
-\item{keepevery}{An integer (default is 1L). The thinning parameter for MCMC.}
+\item{keepevery}{The thinning parameter for MCMC.}
 
-\item{nkeeptrain}{An integer (default is equal to `ndpost`). The number of training data posterior draws to keep.}
+\item{nkeeptrain}{Number of training predictions to keep.}
 
-\item{nkeeptest}{An integer (default is equal to `ndpost`). The number of test data posterior draws to keep.}
+\item{nkeeptest}{Number of test predictions to keep.}
 
-\item{nkeeptestmean}{An integer (default is equal to `ndpost`). The number of MCMC iterations to return for the test mean.}
+\item{nkeeptestmean}{The number of MCMC iterations to return for the test mean.}
 
-\item{nkeeptreedraws}{An integer (default is equal to `ndpost`). The number of MCMC iterations to return for tree draws.}
+\item{nkeeptreedraws}{Number of tree draws to keep.}
 
-\item{printevery}{An integer (default is 100L). The number of iterations before progress is printed.}
+\item{printevery}{How often to print progress during MCMC.}
 
-\item{transposed}{A logical value (default is FALSE). Whether or not the input data is transposed.}
+\item{transposed}{Is the input data transposed? Used if called by `mc.wbart`.}
 
 \item{proposal_sigma}{A numeric value (default is `meas_error_sigma`). Covariance matrix of the proposal distribution.}
 
@@ -127,14 +127,14 @@ mebart_cont(
 }
 \value{
 A list with the following elements:
-\item{mu}{The mean of the outcome variable `y.train`, centered back in the predictions.}
+\item{mu}{The mean of the outcome variable `y.train`.}
 \item{yhat.train.mean}{The mean of the posterior predictions for the training data.}
-\item{yhat.train}{The posterior predictions for the training data, centered.}
+\item{yhat.train}{The posterior predictions for the training data.}
 \item{yhat.test.mean}{The mean of the posterior predictions for the test data.}
-\item{yhat.test}{The posterior predictions for the test data, centered.}
-\item{varcount}{A matrix of variable counts in the model.}
-\item{varprob}{A matrix of variable probabilities in the model.}
-\item{treedraws}{A list of posterior tree draws (if `nkeeptreedraws > 0`).}
+\item{yhat.test}{The posterior predictions for the test data.}
+\item{varcount}{An (ndpost * p) matrix of variable counts in the model.}
+\item{varprob}{An (ndpost * p) matrix of variable probabilities in the model.}
+\item{treedraws}{A list of posterior tree draws.}
 \item{x_draws}{Tensor with posterior draws for the training data.}
 \item{acceptances}{Whether or not the proposal was accepted.}
 \item{proc.time}{The time taken for the C++ code to run.}

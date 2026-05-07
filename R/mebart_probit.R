@@ -38,9 +38,6 @@
 #' @param usequants If TRUE, uniform quantiles are used for cutpoints; otherwise, uniform cutpoints are used.
 #' @param cont Specifies if all variables are continuous.
 #' @param rm.const If TRUE, removes constant columns from `x.train`.
-#' @param sigest Prior estimate for sigma; if NA, it is estimated from the data.
-#' @param sigdf  Degrees of freedom for the sigma prior.
-#' @param sigquant Quantile for the sigma prior.
 #' @param k Prior parameter for the mean of the output data.
 #' @param power Power parameter for the BART tree-depth prior (beta in original BART paper).
 #' @param base Base parameter for the BART tree-depth prior (alpha in original BART paper).
@@ -78,7 +75,7 @@
 #' \item{rm.const}{A vector specifying which columns were removed from `x.train`.}
 #' \item{binaryOffset}{The offset used for binary outcomes.}
 #' @export
-#' @importFrom stats lm
+#' @importFrom stats lm pnorm qnorm
 #'
 #' @examples
 #' # Example usage:
