@@ -1,7 +1,6 @@
 
 # <img src="images/meBART_sticker.png" align="right" height="200" /> measurement error Bayesian additive regression trees (meBART)
 
-
 We propose measurement error Bayesian additive regression trees (meBART), a novel extension to the BART model ([Chipman et al., 2010](https://doi.org/10.1214/09-AOAS285)) that directly incorporates measurement error in the independent variable(s). BART assumes that data is generated according to some unknown function $f$ that can be modeled as a sum of decision trees:
 
 $$y_i = f(X_i) + \varepsilon_i, ~~~~~~~~ \varepsilon_i \sim \mathcal{N}(0, \sigma^2)$$
@@ -12,10 +11,7 @@ meBART, however, represents the true unobserved feature values $X_i$ as latent v
 
 $$X_i^* = X_i + e_i ~~~~~~~~ e_i \sim \mathcal{N}(0, \sigma_e^2)$$
 
-
-This code repository accompanies the preprint titled "Tree-Based Prediction Models for Noisy Input Data" (McCoy et al., 2026). The manuscript is currently being prepared for submission to a suitable journal. This README will be updated as the article gets closer to publication. That being said, the source code contained in this repository is complete, and the code used to generate the plots contained in the manuscript can be found in `/vignettes/`.
-
-
+This code repository accompanies the preprint titled ["Tree-Based Predictive Models for Noisy Input Data" (McCoy et al., 2026)](https://doi.org/10.48550/arXiv.2603.07409). The manuscript is currently being prepared for submission to a suitable journal. This README will be updated as the article gets closer to publication. That being said, the source code contained in this repository is complete, and the code used to generate the plots contained in the manuscript can be found in `/vignettes/`.
 
 # Installation Instructions
 
@@ -29,7 +25,6 @@ remotes::install_github("kmccoy3/meBART")
 # Getting Started
 
 The two basic functions in meBART are mebart_cont and mebart_probit for continuous and binary outcomes, respectively. See below for a minimal example:
-
 
 ```{r}
 library(meBART)
@@ -49,7 +44,6 @@ preds <- mdl$yhat.test.mean
 print(paste0("Test MSE: ", round(mean((y.test - preds)^2), 3)))
 
 ```
-
 
 For more extensive demonstrations, review `vignettes/continuous-meBART-demo.Rmd`, `vignettes/probit-meBART-demo.Rmd`, and `vignettes/meBART-multivariate-demo.Rmd`.
 
